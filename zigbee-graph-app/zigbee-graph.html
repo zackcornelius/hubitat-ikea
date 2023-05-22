@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hubitat - Zigbee Graph</title>
+    <meta charset="utf-8">
+    <meta name="description" content="Visual render of Hubitat's Zigbee data">
+    <meta name="keywords" content="hubitat, zigbee, graph">
+    <meta name="author" content="Agamemnon Dandanache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <meta name="robots" content="noindex">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" sizes="180x180" href="/ui2/images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/ui2/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/ui2/images/favicon-16x16.png">
+    <link rel="icon" sizes="192x192" href="/ui2/images/favicon.ico">
+    <link rel="manifest" href="/ui2/images/site.webmanifest">
+    <link rel="mask-icon" href="/ui2/images/safari-pinned-tab.svg" color="#5bbad5">
+    <link rel="shortcut icon" href="/ui2/images/favicon.ico">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-config" content="/ui2/images/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+
+    <script src="//unpkg.com/@github/tab-container-element@latest/dist/index.js" type="module"></script>
+    <script src="//unpkg.com/force-graph"></script>
+    <link rel="stylesheet" type="text/css" href="//necolas.github.io/normalize.css/8.0.1/normalize.css">
+    <style>
+
+    body {
+        margin: 0;
+        padding: 0;
+        font: 1rem sans-serif;
+    }
+
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    /* Tabs */
+    [role="tablist"] {
+        margin: 0 0 -.1em;
+        overflow: visible;
+    }
+
+    [role="tab"] {
+        position: relative;
+        margin: 0;
+        padding: .3em .5em .4em;
+        border: 1px solid hsl(219, 1%, 72%);
+        border-radius: .2em .2em 0 0;
+        box-shadow: 0 0 .2em hsl(219, 1%, 72%);
+        overflow: visible;
+        font-family: inherit;
+        font-size: inherit;
+        background: hsl(220, 20%, 94%);
+    }
+
+    [role="tab"]:hover::before,
+    [role="tab"]:focus::before,
+    [role="tab"][aria-selected="true"]::before {
+        position: absolute;
+        bottom: 100%;
+        right: -1px;
+        left: -1px;
+        border-radius: 0.2em 0.2em 0 0;
+        border-top: 3px solid hsl(20, 96%, 48%);
+        content: '';
+    }
+
+    [role="tab"][aria-selected="true"] {
+        border-radius: 0;
+        background: hsl(220, 43%, 99%);
+        outline: 0;
+    }
+
+    [role="tab"][aria-selected="true"]::after {
+        position: absolute;
+        z-index: 3;
+        bottom: -1px;
+        right: 0;
+        left: 0;
+        height: .3em;
+        background: hsl(220, 43%, 99%);
+        box-shadow: none;
+        content: '';
+    }
+
+    [role="tab"]:hover,
+    [role="tab"]:focus,
+    [role="tab"]:active {
+        outline: 0;
+        border-radius: 0;
+        color: inherit;
+    }
+
+    [role="tab"]:hover::before,
+    [role="tab"]:focus::before {
+        border-color: hsl(20, 96%, 48%);
+    }
+
+    [role="tabpanel"] {
+        position: relative;
+        z-index: 2;
+        padding: .5em .5em .7em;
+        border: 1px solid hsl(219, 1%, 72%);
+        border-radius: 0 .2em .2em .2em;
+        box-shadow: 0 0 .2em hsl(219, 1%, 72%);
+        background: hsl(220, 43%, 99%);
+
+    }
+
+    /* Form */
+    #form {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: white;
+        opacity: 0.7;
+    }
+
+    #pasted {
+        display: block;
+        width: 120em;
+        height: 56em;
+        margin-bottom: 10px;
+        font: 0.75rem monospace;
+        background-color: #F8F8F8;
+    }
+
+    /* Help */
+    .tooltip {
+        position: relative;
+        display: inline-block;
+        width: 1em; height: 1em;
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJDYXBhXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHdpZHRoPSI0MzguNTMzcHgiIGhlaWdodD0iNDM4LjUzM3B4IiB2aWV3Qm94PSIwIDAgNDM4LjUzMyA0MzguNTMzIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA0MzguNTMzIDQzOC41MzM7IgoJIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8Zz4KCTxwYXRoIGQ9Ik00MDkuMTMzLDEwOS4yMDNjLTE5LjYwOC0zMy41OTItNDYuMjA1LTYwLjE4OS03OS43OTgtNzkuNzk2QzI5NS43MzYsOS44MDEsMjU5LjA1OCwwLDIxOS4yNzMsMAoJCWMtMzkuNzgxLDAtNzYuNDcsOS44MDEtMTEwLjA2MywyOS40MDdjLTMzLjU5NSwxOS42MDQtNjAuMTkyLDQ2LjIwMS03OS44LDc5Ljc5NkM5LjgwMSwxNDIuOCwwLDE3OS40ODksMCwyMTkuMjY3CgkJYzAsMzkuNzgsOS44MDQsNzYuNDYzLDI5LjQwNywxMTAuMDYyYzE5LjYwNywzMy41OTIsNDYuMjA0LDYwLjE4OSw3OS43OTksNzkuNzk4YzMzLjU5NywxOS42MDUsNzAuMjgzLDI5LjQwNywxMTAuMDYzLDI5LjQwNwoJCXM3Ni40Ny05LjgwMiwxMTAuMDY1LTI5LjQwN2MzMy41OTMtMTkuNjAyLDYwLjE4OS00Ni4yMDYsNzkuNzk1LTc5Ljc5OGMxOS42MDMtMzMuNTk2LDI5LjQwMy03MC4yODQsMjkuNDAzLTExMC4wNjIKCQlDNDM4LjUzMywxNzkuNDg1LDQyOC43MzIsMTQyLjc5NSw0MDkuMTMzLDEwOS4yMDN6IE0yNTUuODIsMzU2LjMwOWMwLDIuNjYyLTAuODYyLDQuODUzLTIuNTczLDYuNTYzCgkJYy0xLjcwNCwxLjcxMS0zLjg5NSwyLjU2Ny02LjU1NywyLjU2N2gtNTQuODIzYy0yLjY2NCwwLTQuODU0LTAuODU2LTYuNTY3LTIuNTY3Yy0xLjcxNC0xLjcxMS0yLjU3LTMuOTAxLTIuNTctNi41NjN2LTU0LjgyMwoJCWMwLTIuNjYyLDAuODU1LTQuODUzLDIuNTctNi41NjNjMS43MTMtMS43MDgsMy45MDMtMi41NjMsNi41NjctMi41NjNoNTQuODIzYzIuNjYyLDAsNC44NTMsMC44NTUsNi41NTcsMi41NjMKCQljMS43MTEsMS43MTEsMi41NzMsMy45MDEsMi41NzMsNi41NjNWMzU2LjMwOXogTTMyNS4zMzgsMTg3LjU3NGMtMi4zODIsNy4wNDMtNS4wNDQsMTIuODA0LTcuOTk0LDE3LjI3NQoJCWMtMi45NDksNC40NzMtNy4xODcsOS4wNDItMTIuNzA5LDEzLjcwM2MtNS41MSw0LjY2My05Ljg5MSw3Ljk5Ni0xMy4xMzUsOS45OThjLTMuMjMsMS45OTUtNy44OTgsNC43MTMtMTMuOTgyLDguMTM1CgkJYy02LjI4MywzLjYxMy0xMS40NjUsOC4zMjYtMTUuNTU1LDE0LjEzNGMtNC4wOTMsNS44MDQtNi4xMzksMTAuNTEzLTYuMTM5LDE0LjEyNmMwLDIuNjctMC44NjIsNC44NTktMi41NzQsNi41NzEKCQljLTEuNzA3LDEuNzExLTMuODk3LDIuNTY2LTYuNTYsMi41NjZoLTU0LjgyYy0yLjY2NCwwLTQuODU0LTAuODU1LTYuNTY3LTIuNTY2Yy0xLjcxNS0xLjcxMi0yLjU2OC0zLjkwMS0yLjU2OC02LjU3MXYtMTAuMjc5CgkJYzAtMTIuNzUyLDQuOTkzLTI0LjcwMSwxNC45ODctMzUuODMyYzkuOTk0LTExLjEzNiwyMC45ODYtMTkuMzY4LDMyLjk3OS0yNC42OThjOS4xMy00LjE4NiwxNS42MDQtOC40NywxOS40MS0xMi44NDcKCQljMy44MTItNC4zNzcsNS43MTUtMTAuMTg4LDUuNzE1LTE3LjQxN2MwLTYuMjgzLTMuNTcyLTExLjg5Ny0xMC43MTEtMTYuODQ5Yy03LjEzOS00Ljk0Ny0xNS4yNy03LjQyMS0yNC40MDktNy40MjEKCQljLTkuOSwwLTE4LjA4MiwyLjI4NS0yNC41NTUsNi44NTVjLTYuMjgzLDQuNTY1LTE0LjQ2NSwxMy4zMjItMjQuNTU0LDI2LjI2M2MtMS43MTMsMi4yODYtNC4wOTMsMy40MzEtNy4xMzksMy40MzEKCQljLTIuMjg0LDAtNC4wOTMtMC41Ny01LjQyNC0xLjcwOUwxMjEuMzUsMTQ1Ljg5Yy00LjM3Ny0zLjQyNy01LjEzOC03LjQyMi0yLjI4Ni0xMS45OTEKCQljMjQuMzY2LTQwLjU0Miw1OS42NzItNjAuODEzLDEwNS45MjItNjAuODEzYzE2LjU2MywwLDMyLjc0NCwzLjkwMyw0OC41NDEsMTEuNzA4YzE1Ljc5Niw3LjgwMSwyOC45NzksMTguODQyLDM5LjU0NiwzMy4xMTkKCQljMTAuNTU0LDE0LjI3MiwxNS44NDUsMjkuNzg3LDE1Ljg0NSw0Ni41MzdDMzI4LjkwNCwxNzIuODI0LDMyNy43MSwxODAuNTI5LDMyNS4zMzgsMTg3LjU3NHoiLz4KPC9nPgo8L3N2Zz4=');
+        background-size: 1em;
+        line-height: 20px;
+    }
+
+    /* Tooltip text */
+    .tooltip span {
+        font-size: 0.8em;
+        visibility: hidden;
+        width: 20em;
+        top: 100%;
+        left: 50%;
+        margin-left: -11em; /* Use half of the width (120/2 = 60), to center the tooltip */
+        margin-top: 5px;
+        background-color: black;
+        color: #fff;
+        padding: 0.5em 1em;
+        border-radius: 6px;
+        
+        /* Position the tooltip text - see examples below! */
+        position: absolute;
+        z-index: 1;
+    }
+
+    .tooltip span::after {
+        content: " ";
+        position: absolute;
+        bottom: 100%;  /* At the top of the tooltip */
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: transparent transparent black transparent;
+    }
+
+    /* Show the tooltip text when you mouse over the tooltip container */
+    .tooltip:hover span {
+        visibility: visible;
+    }
+    </style>
+</head>
+<body>
+    <!-- Graph placeholder -->
+    <div id="graph"></div>
+
+    <!-- Collect form -->
+    <div id="form">
+        <tab-container>
+            <div role="tablist">
+                <button type="button" id="status" role="tab" tabindex="0" aria-selected="true">Status</button>
+                <button type="button" id="zigbee-data" role="tab" tabindex="-1">Data</button>
+                <button type="button" id="help" role="tab" tabindex="-1">Help</button>
+            </div>
+
+            <!-- Status -->
+            <div role="tabpanel" aria-labelledby="status">
+                <div id="lastRefresh"></div>
+                <div id="nodesCount"></div>
+            </div>
+
+            <!-- Zigbee data -->
+            <div role="tabpanel" aria-labelledby="zigbee-data" hidden>
+                <textarea id="pasted" placeholder="Parent child parameters
+EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000, parentNodeId=65535]
+...
+
+# Paste here the output from http://{HUBITAT_IP}/hub/zigbee/getChildAndRouteInfo
+                "></textarea>
+                <button onclick="renderData()">Render data</button>
+            </div>
+
+            <!-- Help -->
+            <div role="tabpanel" aria-labelledby="help" hidden>
+                <b>Devices</b> (dots)
+                <ul>
+                    <li><b style="color:#f79647">orange</b> &#10132; hub <span class="tooltip"><span>This is your beloved Hubitat hub, always a good boy...</span></span></li>
+                    <li><b style="color:#4f81bc">blue</b> &#10132; repeater <span class="tooltip"><span>This is either a hub 'neighbor' or is used by at least one other device to route through it</span></span></li>
+                    <li><b style="color:#9ACD32">green</b> &#10132; lonely <span class="tooltip"><span>No one routes through this device; it is either battery-powered or the other devices are just mean to it (awww...)</span></span></li>
+                    <li><b style="color:#696969">grey</b> &#10132; bad neighbor <span class="tooltip"><span>Hub neighbor that is either powered off or something might be wrong with it (outCost:0)</span></span></li>
+                    <li><b style="color:#FF00FF">pink</b> &#10132; new <span class="tooltip"><span>We just discovered this device and highlighted it to make it more visible; it will change to its true color after 5 seconds</span></span></li>
+                </ul>
+
+                <b>Connections</b> (lines)
+                <ul>
+                    <li><b style="color:#4f81bc">blue</b> &#10132; child <span class="tooltip"><span>Connection taken from 'Child Data' table</span></span></li>
+                    <li><b style="color:#f79647">orange</b> &#10132; neighbor <span class="tooltip"><span>Connection taken from 'Neighbor Table Entry'</span></span></li>
+                    <li><b style="color:#9ACD32">green</b> &#10132; route <span class="tooltip"><span>Connection taken from 'Route Table Entry'</span></span></li>
+                    <li><b style="color:#FF00FF">pink</b> &#10132; new <span class="tooltip"><span>We just discovered this connection and highlighted it to make it more visible; it will change to its true color after 5 seconds</span></span></li>
+                    <li>dotted line &#10132; old <span class="tooltip"><span>This connection was present in the past in 'Route Table Entry'</span></span></li>
+                </ul>
+
+                <b>More info</b>
+                <ul>
+                    <li>zigbee data is refreshed every 5 seconds</li>
+                    <li>drag any node to fix its position, click it again to reset</li>
+                    <li>double-click anywhere to center the graph and reset zooming</li>
+                </ul>
+            </div>
+        </tab-container>
+    </div>
+  
+    <script>
+    class ZigbeeData {
+        constructor() {
+            this.nodes = [];
+            this.links = [];
+            this.empty = true;
+        }
+
+        addLink(sourceName, sourceAddr, targetName, targetAddr, type, label) {
+            this.addNode(sourceName, sourceAddr);
+            this.addNode(targetName, targetAddr);
+
+            // Update existing link; if the case
+            const existingLink = this.links.find(link => link.sourceAddr === sourceAddr && link.targetAddr === targetAddr && link.type === type);
+            if (existingLink) {
+                existingLink.sourceName = sourceName;
+                existingLink.targetName = targetName;
+                existingLink.label = label;
+                existingLink.alive = true;
+                return false;
+            }
+
+            // Add new link
+            this.links.push({ sourceName, sourceAddr, targetName, targetAddr, type, label, alive: true, new: this.empty === false });
+            return true;
+        }
+
+        addNode(name, addr) {
+
+            // Update existing node; if the case
+            const existingNode = this.nodes.find(node => node.addr === addr);
+            if (existingNode) {
+                existingNode.name = name;
+                return;
+            }
+
+            // Add new node
+            this.nodes.push({ name, addr, new: this.empty === false });
+        }
+
+        removeLink(link) {
+            const idx = this.links.findIndex(oldLink => oldLink.sourceAddr === link.sourceAddr && oldLink.targetAddr === link.targetAddr && oldLink.type === link.type);
+            if (idx < 0) return false;
+
+            // Just mark 'route' links as not 'alive' - don't actually remove them
+            if (link.type === 'route') {
+                if (!link.alive) return false;
+                link.alive = false;
+                link.label = `route last seen ${new Date().toLocaleString()}`;
+                return false;
+            }
+
+            // Remove link, then the nodes
+            this.links.splice(idx, 1);
+            this.removeNode(link.sourceAddr);
+            this.removeNode(link.targetAddr);
+            return true;
+        }
+
+        removeNode(addr) {
+            const idx = this.nodes.findIndex(node => node.addr === addr);
+            if (idx < 0) return;
+
+            // This node still has some links
+            if (this.links.some(link => link.sourceAddr === addr || link.targetAddr === addr)) return;
+
+            // Remove node
+            this.nodes.splice(idx, 1);
+        }
+
+        get data() {
+
+            // Update node types
+            this.nodes.forEach(node => {
+                if (node.addr === 'XXXX') {
+                    node.type = 'hub';
+                    return;
+                }
+
+                if (!this.links.some(link => link.targetAddr == node.addr)) {
+                    node.type = 'passive';
+                    return;
+                }
+
+                if(this.links.some(link => link.targetAddr == node.addr && link.type === 'neighbor' && link.label.endsWith('outCost:0'))) {
+                    node.type = 'badNeighbor';
+                    return;
+                }
+
+                node.type = 'active';
+            });
+
+            // Return data
+            return {
+                nodes: this.nodes,
+                links: this.links
+            };
+        }
+
+        merge(newData) {
+            let somethingChanged = false;
+
+            // Remove new flag
+            this.nodes.forEach(node => node.new = undefined);
+            this.links.forEach(link => link.new = undefined);
+
+            // Add new links; if any
+            newData.links.forEach(link => somethingChanged = this.addLink(
+                link.sourceName, link.sourceAddr, link.targetName, link.targetAddr, link.type, link.label
+            ) || somethingChanged);
+
+            // Remove old links, if any
+            this.links
+                .filter(link => !newData.links.some(newLink => link.sourceAddr === newLink.sourceAddr && link.targetAddr === newLink.targetAddr && link.type === newLink.type))
+                .forEach(deadLink => somethingChanged = this.removeLink(deadLink) || somethingChanged);
+
+            this.empty = false;
+            return somethingChanged;
+        }
+    }
+
+    let Graph = null;
+    const zigbeeData = new ZigbeeData();
+    let fetchTimeout = null;
+
+    // Settings
+    const url = '/hub/zigbee/getChildAndRouteInfo';
+    const pollingIntervalMs = 5000;
+   
+    // Auto-start fetch
+    fetchData();
+    window.ondblclick = () => Graph && Graph.zoomToFit(300, 30);
+
+    function fetchData() {
+        clearTimeout(fetchTimeout);
+        console.log(`Retrieving data from ${url}...`);       
+        return fetch(new Request(url), {cache: 'no-store'})
+            .then((response) => {
+                if (response.status === 404) {
+                    document.getElementById('zigbee-data').click();
+                    document.getElementById('pasted').focus();
+                    throw new Error('Please paste the zigbee data from http://hubitat.local/hub/zigbee/getChildAndRouteInfo');
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error, status = ${response.status}`);
+                }
+                return response.text();
+            })
+            .then((text) => {
+                document.getElementById('pasted').value = text;
+                renderGraph(text);
+                fetchTimeout = setTimeout(fetchData, pollingIntervalMs);
+                document.getElementById('lastRefresh').innerText = `Last refresh: ${new Date().toLocaleString()}`;
+                document.getElementById('nodesCount').innerText = `Discovered devices: ${zigbeeData.nodes.length}`;
+            })
+            .catch((error) => {
+                console.log(error);
+                alert(error.message);
+            });
+    }
+
+    function renderData() {
+        const text = document.getElementById('pasted').value;
+        if (text == '') {
+            document.getElementById('pasted').focus();
+            return;
+        }
+        document.getElementById('status').click();
+        renderGraph(text);
+        document.getElementById('lastRefresh').innerText = `Last refresh: ${new Date().toLocaleString()}`;
+        document.getElementById('nodesCount').innerText = `Discovered devices: ${zigbeeData.nodes.length}`;
+    }
+
+    function parseData(text) {
+        const data = new ZigbeeData();
+
+        let state = null;
+        let counter = 0;
+        text.split(/\r?\n/).forEach(line => {
+            if (line == '') return;
+
+            // Parse markers
+            if (line == 'Child Data') {
+                state = 'children';
+                return;
+            }
+
+            if (line == 'Neighbor Table Entry') {
+                state = 'neighbors';
+                return;
+            }
+
+            if (line == 'Route Table Entry') {
+                state = 'routes';
+                return;
+            }
+
+            if (state === 'children') {
+                if (!line.startsWith('child:') && !line.startsWith('[')) return;
+
+                // child:[Dorm - Wall Button, 7C42, type:EMBER_SLEEPY_END_DEVICE]
+                const childRx = /\[([^,]*), ([^,]*), .*\]/g;
+                const childResults = childRx.exec(line);
+                data.addLink(
+                    childResults[1], childResults[2],          // source
+                    'Hubitat', 'XXXX',                         // target
+                    'child',                                   // link type
+                    'child'                                    // link label
+                );
+                return;
+            }
+
+            if (state === 'neighbors') {
+                if (!line.startsWith('[')) return;
+
+                // [Bathroom - Fan, 1764], LQI:221, age:4, inCost:5, outCost:5
+                const neighborRx = /\[([^,]*), ([^\]]*)\], (.*)/g;
+                const neighborResults = neighborRx.exec(line);
+                data.addLink(
+                    'Hubitat', 'XXXX',                           // source
+                    neighborResults[1], neighborResults[2],      // target
+                    'neighbor',                                  // link type
+                    neighborResults[3].replaceAll(', ', ' ')     // link label
+                );
+                return;
+            }
+
+            if (state === 'routes') {
+                if (!line.startsWith('status:Active')) return;
+
+                // status:Active, age:64, routeRecordState:0, concentratorType:None, [Livingroom - Wall Buttons #02, A198] via [Livingroom - Window Downlight Bulb #05, 6DA0]
+                const routeRx = /\[([^,]*), ([^\]]*)\] via \[([^,]*), ([^\]]*)\]/g;
+                const routeResult = routeRx.exec(line);
+                data.addLink(
+                    routeResult[1], routeResult[2],              // source
+                    routeResult[3], routeResult[4],              // target
+                    'route',                                     // link type
+                    'route'                                      // link label
+                );
+                return;
+            }
+        });
+        
+        return data;
+    }
+
+    function renderGraph(text) {
+        const data = parseData(text);
+        console.log('New data', data);
+
+        // This is not our first rodeo, cowboy!
+        if (Graph !== null) {
+            updateGraph(data);
+            return;
+        }
+
+        // Load graph for the first time
+        zigbeeData.merge(data);
+        console.log('zigbeeData.data', zigbeeData.data);
+        const dashLen = 2;
+        const gapLen = 2;
+        Graph = ForceGraph()(document.getElementById('graph'))
+            .graphData(zigbeeData.data)
+            .nodeId('addr')
+            .nodeLabel('addr')
+            .linkSource('sourceAddr')
+            .linkTarget('targetAddr')
+            .nodeCanvasObject((node, ctx) => nodePaint(node, null, ctx))
+            .linkLabel('label')
+            .linkColor(link => link.new ? '#FF00FF' : { child: '#4f81bc', neighbor: '#f79647', route: '#779e27' }[link.type])
+            .linkCurvature(link => link.sourceAddr == link.targetAddr ? 1 : 0)
+            .linkDirectionalParticles(1)
+            .linkLineDash(link => link.alive === false && [dashLen, gapLen])
+            .onNodeDragEnd(node => {
+                node.fx = node.x;
+                node.fy = node.y;
+            })
+            .onNodeClick(node => {
+                node.fx = undefined;
+                node.fy = undefined;
+                Graph.graphData(Graph.graphData());
+            });
+
+        // Zoom to fit
+        setTimeout(() => Graph.zoomToFit(300, 30), 1500);
+    }
+
+    function updateGraph(data) {
+        let needsRedraw = zigbeeData.merge(data);
+        if (needsRedraw) {
+            Graph.graphData(zigbeeData.data);
+        }
+    }
+
+    // Render Node
+    function nodePaint(node, color, ctx) {
+        
+        // Circle
+        ctx.fillStyle = node.new ? '#FF00FF' : { active: '#4f81bc', badNeighbor: '#696969', passive: '#9ACD32', hub: '#f79647' }[node.type];
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, 3, 0, 2 * Math.PI, false);
+        ctx.fill();
+
+        ctx.lineWidth = 0.2;
+        ctx.strokeStyle = node.new ? '#ab00ab' : { active: '#33558b', badNeighbor: '#4c4c4c', passive: '#779e27', hub: '#c35c08' }[node.type];
+        ctx.stroke();
+
+        // Text
+        ctx.fillStyle = '#33558b';
+        ctx.font = '3px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(node.name, node.x, node.y + 5);
+    }
+    </script>
+</body>
+</html>
