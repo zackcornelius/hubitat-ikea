@@ -8,7 +8,7 @@
             "category": "Utility",
             "location": "https://raw.githubusercontent.com/dan-danache/hubitat/main/zigbee-graph-app/packageManifest.json",
             "description": "Eye-candy visual render for data we get from /hub/zigbee/getChildAndRouteInfo",
-            "tags": [ "zigbee", "graph" ]
+            "tags": [ "Zigbee", "Tools & Utilities" ]
         }
     ]
 }
