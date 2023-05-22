@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "dateReleased": "2023-05-23",
     "communityLink": "https://community.hubitat.com/t/zigbee-visual-render-for-getchildandrouteinfo",
-    "licenseFile": "https://github.com/dan-danache/hubitat/blob/main/LICENSE",
+    "licenseFile": "https://raw.githubusercontent.com/dan-danache/hubitat/master/LICENSE",
     "releaseNotes": "Initial release",
     "apps" : [
         {
