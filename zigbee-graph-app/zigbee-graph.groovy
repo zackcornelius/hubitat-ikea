@@ -15,7 +15,7 @@ definition(
 	singleInstance: true,
 	iconUrl: "",
 	iconX2Url: "",
-	oauth: true,
+	oauth: false,
 	importUrl: "https://raw.githubusercontent.com/dan-danache/hubitat/master/zigbee-graph-app/zigbee-graph.groovy"
 )
 
