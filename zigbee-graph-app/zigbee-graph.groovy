@@ -27,18 +27,31 @@ private htmlFileDst() { return "zigbee-graph.html" }
 /**********************************************************************************************************************************************/
 preferences {
     page name: "mainPage"
+    page name: "downloadPage"
 }
 
 def mainPage() {
-    dynamicPage (name: "mainPage", title: "Zigbee Graph - v${releaseVer() + ' - ' + appVerDate()}", install: true, uninstall: true) {
-        if (app.getInstallationState() != "COMPLETE") {
+    def showInstall = app.getInstallationState() == "INCOMPLETE"
+    dynamicPage (name: "mainPage", title: "Zigbee Graph - v${releaseVer() + ' - ' + appVerDate()}", install: showInstall, uninstall: !showInstall) {
+        if (app.getInstallationState() == "COMPLETE") {
             section {
-                label title: "Once you click the [Done] button, we will try to retrieve the 'zigbee-graph.html' from Github and store it in the File Manager."
+			    paragraph "What would you like to do?"
+			    href name: "show", title: "Show zigbee graph", required: false, url: "/local/${htmlFileDst()}", description: "Tap Here to go to the zigbee graph."
+			    href name: "download", title: "Get latest version", required: false, page: "downloadPage", description: "Tap here to download the 'zigbee-graph.html' file from Github and store it in the File Manager."
             }
         } else {
             section {
-                href name: "zigbee-graph-href", title: "Show zigbee graph", url: "/local/${htmlFileDst()}", style: "embedded", required: false, description: "Tap Here to go to the zigbee graph", image: ""
+                paragraph "Tap the [Done] button to create the application instance, download the 'zigbee-graph.html' file from Github and store it in the File Manager."
             }
+        }
+    }
+}
+
+def downloadPage() {
+    downloadGraphHTML();
+    return dynamicPage (name: "downloadPage", title: "Zigbee Graph - Update successful!", install: false, uninstall: false) {
+        section {
+            href name: "show", title: "Show zigbee graph", required: false, url: "/local/${htmlFileDst()}", description: "Tap Here to go to the zigbee graph."
         }
     }
 }
