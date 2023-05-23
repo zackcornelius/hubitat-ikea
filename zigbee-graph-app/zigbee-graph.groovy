@@ -10,7 +10,7 @@ definition(
     name: "Zigbee Graph",
     namespace: "dandanache",
     author: "Dan Danache",
-    description: "Eye-candy visual render for data we get from /hub/zigbee/getChildAndRouteInfo",
+    description: "Allows you to visually render getChildAndRouteInfo of your Hubitat system.",
     category: "Utility",
     singleInstance: true,
     iconUrl: "",
@@ -20,7 +20,7 @@ definition(
 )
 
 /**********************************************************************************************************************************************/
-private releaseVer() { return "1.0.0" }
+private releaseVer() { return "1.1.0" }
 private appVerDate() { return "2023-05-23" }
 private htmlFileSrc() { return "https://raw.githubusercontent.com/dan-danache/hubitat/master/zigbee-graph-app/zigbee-graph.html" }
 private htmlFileDst() { return "zigbee-graph.html" }

@@ -1,12 +1,15 @@
 {
-    "packageName": "Zigbee Graph",
+    "packageName": "zigbee-graph",
+    "version": "1.1.0",
+    "releaseNotes": "v1.1.0 - Integrate zigbee logs into the graph",
     "minimumHEVersion": "2.1.9",
     "author": "Dan Danache (@agamemnon.dandanache)",
-    "version": "1.0.0",
     "dateReleased": "2023-05-23",
-    "communityLink": "https://community.hubitat.com/t/zigbee-visual-render-for-getchildandrouteinfo",
+    "documentationLink": "https://community.hubitat.com/t/zigbee-visual-render-for-getchildandrouteinfo/119074",
+    "communityLink": "https://community.hubitat.com/t/zigbee-visual-render-for-getchildandrouteinfo/119074",
     "licenseFile": "https://raw.githubusercontent.com/dan-danache/hubitat/master/LICENSE",
-    "releaseNotes": "Initial release",
+    "category": "Utility",
+    "tags": [ "Zigbee", "Tools & Utilities" ]
     "apps" : [
         {
             "id" : "d39ec476-b4e0-4663-96c8-952c60c83525",
@@ -14,7 +17,8 @@
             "namespace": "dandanache",
             "location": "https://raw.githubusercontent.com/dan-danache/hubitat/master/zigbee-graph-app/zigbee-graph.groovy",
             "required": true,
-            "oauth": false
+            "oauth": false,
+            "description": "Allows you to visually render getChildAndRouteInfo of your Hubitat system."
         }
 	]
 }

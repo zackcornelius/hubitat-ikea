@@ -3,7 +3,7 @@
 <head>
     <title>Hubitat - Zigbee Graph</title>
     <meta charset="utf-8">
-    <meta name="description" content="Visual render of Hubitat's Zigbee data">
+    <meta name="description" content="Allows you to visually render getChildAndRouteInfo of your Hubitat system">
     <meta name="keywords" content="hubitat, zigbee, graph">
     <meta name="author" content="Agamemnon Dandanache">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -271,7 +271,7 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
             }
 
             // Add new node
-            this.nodes.push({ name, addr, new: this.empty === false });
+            this.nodes.push({ name, addr, tooltip: `Address: ${addr}`, new: this.empty === false });
         }
 
         removeLink(link) {
@@ -353,6 +353,17 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
             this.empty = false;
             return somethingChanged;
         }
+
+        onMessage(message) {
+            const addr = message.id.toString(16).toUpperCase();
+            const node = this.nodes.find(node => node.addr === addr);
+            if (node) {
+                clearTimeout(node.timeout);
+                node.timeout = setTimeout(() => node.talking = false, 3000);
+                node.talking = true;
+                node.tooltip = `Address: ${addr}<br>Last log message:<br>  - time: ${message.time}<br>  - LQI: ${message.lastHopLqi}<br>  - RSSI: ${message.lastHopRssi}`
+            }
+        }
     }
 
     let Graph = null;
@@ -362,14 +373,21 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
     // Settings
     const url = '/hub/zigbee/getChildAndRouteInfo';
     const pollingIntervalMs = 5000;
-   
+
     // Auto-start fetch
     fetchData();
     window.ondblclick = () => Graph && Graph.zoomToFit(300, 30);
 
+    // Auto-start websocket
+    const socket = new WebSocket("ws://192.168.1.201/zigbeeLogsocket");
+    socket.onmessage = function(event) {
+        console.log('[message] Data received from websocket', event.data);
+        zigbeeData.onMessage(JSON.parse(event.data));
+    };
+
     function fetchData() {
         clearTimeout(fetchTimeout);
-        console.log(`Retrieving data from ${url}...`);       
+        console.log(`Retrieving data from ${url}...`);
         return fetch(new Request(url), {cache: 'no-store'})
             .then((response) => {
                 if (response.status === 404) {
@@ -499,7 +517,7 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
         Graph = ForceGraph()(document.getElementById('graph'))
             .graphData(zigbeeData.data)
             .nodeId('addr')
-            .nodeLabel('addr')
+            .nodeLabel('tooltip')
             .linkSource('sourceAddr')
             .linkTarget('targetAddr')
             .nodeCanvasObject((node, ctx) => nodePaint(node, null, ctx))
@@ -530,17 +548,38 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
     }
 
     // Render Node
+    const st = +new Date();
+    const animateTime = 1000;
     function nodePaint(node, color, ctx) {
-        
+
+        // Pulse chatty devices
+        let t = 0;
+        if (node.talking) {
+            t = ((+new Date() - st) % animateTime) / animateTime;
+            if (t < 0.10) {
+                t = t * 10
+            } else {
+                t = 1 - (t - 0.10) * 1.1111;
+            }
+        }
+
         // Circle
         ctx.fillStyle = node.new ? '#FF00FF' : { active: '#4f81bc', badNeighbor: '#696969', passive: '#9ACD32', hub: '#f79647' }[node.type];
         ctx.beginPath();
-        ctx.arc(node.x, node.y, 3, 0, 2 * Math.PI, false);
+        ctx.arc(node.x, node.y, 3 + 2 * t, 0, 2 * Math.PI, false);
         ctx.fill();
 
         ctx.lineWidth = 0.2;
-        ctx.strokeStyle = node.new ? '#ab00ab' : { active: '#33558b', badNeighbor: '#4c4c4c', passive: '#779e27', hub: '#c35c08' }[node.type];
+        ctx.strokeStyle = adjustColor(ctx.fillStyle, -30);
         ctx.stroke();
+
+        if (node.talking === true || node.talking === false) {
+            ctx.fillStyle = adjustColor(ctx.fillStyle, 40);
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 1 + 2 * t, 0, 2 * Math.PI, false);
+            ctx.fill();
+            console.log('xxx');
+        }
 
         // Text
         ctx.fillStyle = '#33558b';
@@ -548,6 +587,10 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(node.name, node.x, node.y + 5);
+    }
+
+    function adjustColor(color, amount) {
+        return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
     }
     </script>
 </body>

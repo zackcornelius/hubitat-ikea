@@ -4,10 +4,10 @@
     "packages": [
         {
             "id": "4e186d70-b8b5-4069-8ae4-f6a5c25ca734",
-            "name": "Zigbee Graph",
+            "name": "zigbee-graph",
             "category": "Utility",
             "location": "https://raw.githubusercontent.com/dan-danache/hubitat/main/zigbee-graph-app/packageManifest.json",
-            "description": "Eye-candy visual render for data we get from /hub/zigbee/getChildAndRouteInfo",
+            "description": "Allows you to visually render getChildAndRouteInfo of your Hubitat system.",
             "tags": [ "Zigbee", "Tools & Utilities" ]
         }
     ]
