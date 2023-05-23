@@ -379,7 +379,10 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
     window.ondblclick = () => Graph && Graph.zoomToFit(300, 30);
 
     // Auto-start websocket
-    const socket = new WebSocket("ws://192.168.1.201/zigbeeLogsocket");
+    const socketURL = `${window.location.href.startsWith('https://') ? 'wss' : 'ws'}://${new URL(window.location.href).host}/zigbeeLogsocket`;
+    //const socketURL = 'ws://192.168.1.201/zigbeeLogsocket';
+    console.log('Websocket URL', socketURL);
+    const socket = new WebSocket(socketURL);
     socket.onmessage = function(event) {
         console.log('[message] Data received from websocket', event.data);
         zigbeeData.onMessage(JSON.parse(event.data));
