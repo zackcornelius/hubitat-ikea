@@ -9,7 +9,7 @@
     "communityLink": "https://community.hubitat.com/t/zigbee-visual-render-for-getchildandrouteinfo/119074",
     "licenseFile": "https://raw.githubusercontent.com/dan-danache/hubitat/master/LICENSE",
     "category": "Utility",
-    "tags": [ "Zigbee", "Tools & Utilities" ]
+    "tags": [ "Zigbee", "Tools & Utilities" ],
     "apps" : [
         {
             "id" : "d39ec476-b4e0-4663-96c8-952c60c83525",
