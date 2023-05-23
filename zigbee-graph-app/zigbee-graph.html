@@ -111,6 +111,10 @@
     }
 
     /* Form */
+    body.embedded #form {
+        visibility: hidden;
+    }
+
     #form {
         position: absolute;
         top: 10px;
@@ -227,7 +231,8 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
                 <b>More info</b>
                 <ul>
                     <li>zigbee data is refreshed every 5 seconds</li>
-                    <li>drag any node to fix its position, click it again to reset</li>
+                    <li>click any node to go to the device edit page</li>
+                    <li>drag any node to fix its position, right-click it again to reset</li>
                     <li>double-click anywhere to center the graph and reset zooming</li>
                 </ul>
             </div>
@@ -374,6 +379,11 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
     const url = '/hub/zigbee/getChildAndRouteInfo';
     const pollingIntervalMs = 5000;
 
+    // Embed mode
+    if (window.location.href.includes('embed=true')) {
+        document.body.classList.add('embedded');
+    }
+
     // Auto-start fetch
     fetchData();
     window.ondblclick = () => Graph && Graph.zoomToFit(300, 30);
@@ -381,12 +391,42 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
     // Auto-start websocket
     const socketURL = `${window.location.href.startsWith('https://') ? 'wss' : 'ws'}://${new URL(window.location.href).host}/zigbeeLogsocket`;
     //const socketURL = 'ws://192.168.1.201/zigbeeLogsocket';
-    console.log('Websocket URL', socketURL);
+    console.log('Using websocket URL', socketURL);
     const socket = new WebSocket(socketURL);
     socket.onmessage = function(event) {
         console.log('[message] Data received from websocket', event.data);
         zigbeeData.onMessage(JSON.parse(event.data));
     };
+
+    // Auto-retrieve all zigbee devices list
+    const allZigbeeDevices = [];
+    retrieveAllZigbeeDevices();
+    function retrieveAllZigbeeDevices() {
+        fetch(new Request('/hub/zigbeeInfo'), {cache: 'no-store'})
+            .then(response => response.text())
+            .then(text => {
+                allZigbeeDevices.splice(0, allZigbeeDevices.length);
+                Array.from(new DOMParser()
+                    .parseFromString(text, 'text/html')
+                    .getElementsByClassName('mdl-js-data-table')[0]
+                    .getElementsByTagName('tbody')[0]
+                    .getElementsByTagName('tr')
+                ).forEach(tr => {
+                    allZigbeeDevices.push({
+                        addr: tr.cells[0].innerText,
+                        id: tr.cells[2].innerText,
+                        name: tr.cells[3].innerText,
+                    });
+                });
+                console.log('Retrieved all zigbee devices list', allZigbeeDevices);
+
+                // Refresh zigbee devices list every 2 minutes
+                setTimeout(retrieveAllZigbeeDevices, 120000);
+            })
+            .catch((error) => {
+                console.log('Failed to retrieve all zigbee devices list', error);
+            });
+    }
 
     function fetchData() {
         clearTimeout(fetchTimeout);
@@ -409,7 +449,7 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
                 renderGraph(text);
                 fetchTimeout = setTimeout(fetchData, pollingIntervalMs);
                 document.getElementById('lastRefresh').innerText = `Last refresh: ${new Date().toLocaleString()}`;
-                document.getElementById('nodesCount').innerText = `Discovered devices: ${zigbeeData.nodes.length}`;
+                document.getElementById('nodesCount').innerText = `Discovered devices: ${zigbeeData.nodes.length}${allZigbeeDevices.length > 0 ? '/' + allZigbeeDevices.length : ''}`;
             })
             .catch((error) => {
                 console.log(error);
@@ -533,10 +573,16 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
                 node.fx = node.x;
                 node.fy = node.y;
             })
-            .onNodeClick(node => {
+            .onNodeRightClick(node => {
                 node.fx = undefined;
                 node.fy = undefined;
                 Graph.graphData(Graph.graphData());
+            })
+            .onNodeClick(node => {
+                const device = allZigbeeDevices.find(device => device.addr === node.addr);
+                if (device) {
+                    window.open(`/device/edit/${device.id}`);
+                }
             });
 
         // Zoom to fit
@@ -581,7 +627,6 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
             ctx.beginPath();
             ctx.arc(node.x, node.y, 1 + 2 * t, 0, 2 * Math.PI, false);
             ctx.fill();
-            console.log('xxx');
         }
 
         // Text

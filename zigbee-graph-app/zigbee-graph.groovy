@@ -20,7 +20,7 @@ definition(
 )
 
 /**********************************************************************************************************************************************/
-private releaseVer() { return "1.1.0" }
+private releaseVer() { return "1.2.0" }
 private appVerDate() { return "2023-05-23" }
 private htmlFileSrc() { return "https://raw.githubusercontent.com/dan-danache/hubitat/master/zigbee-graph-app/zigbee-graph.html" }
 private htmlFileDst() { return "zigbee-graph.html" }
