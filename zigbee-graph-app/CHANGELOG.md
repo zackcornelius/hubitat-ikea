@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Click a node to go to the device edit page
 - Add `embed=true` URL parameter to hide controls
 
+### Changed
+- Make application interface friendlier
+
 ## [1.1.0] - 2023-05-23
 
 ### Added
