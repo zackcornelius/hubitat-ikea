@@ -44,19 +44,19 @@ def mainPage() {
 }
 
 // Standard device methods
-void installed() {
+def installed() {
     log.debug "Installing ${app?.getLabel()}..."
     downloadGraphHTML();
     log.debug "${app?.getLabel()} has been installed"
 }
 
-void updated() {
+def updated() {
     log.debug "Updating ${app?.getLabel()}..."
     downloadGraphHTML();
     log.debug "${app?.getLabel()} has been updated"
 }
 
-void refresh() {
+def refresh() {
     log.debug "Refreshing ${app?.getLabel()}..."
     downloadGraphHTML();
     log.debug "${app?.getLabel()} has been refreshed"
