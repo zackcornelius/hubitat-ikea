@@ -142,6 +142,29 @@
         line-height: 20px;
     }
 
+    /* Devices list */
+    table {
+        border-spacing: 0;
+    }
+    table td, table th {
+        border-bottom: 1px #DCDCDC solid;
+        text-align: left;
+        padding: 3px;
+    }
+
+    table td:first-child {
+        font-family: monospace;
+    }
+
+    table tr:last-child td {
+        border-bottom: 0;
+    }
+
+    table a {
+        text-decoration: none;
+        color: #3d719d;
+    }
+
     /* Tooltip text */
     .tooltip span {
         font-size: 0.8em;
@@ -188,6 +211,7 @@
             <div role="tablist">
                 <button type="button" id="status" role="tab" tabindex="0" aria-selected="true">Status</button>
                 <button type="button" id="zigbee-data" role="tab" tabindex="-1">Data</button>
+                <button type="button" id="zigbee-devices" role="tab" tabindex="-1">Devices</button>
                 <button type="button" id="help" role="tab" tabindex="-1">Help</button>
             </div>
 
@@ -206,6 +230,22 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
 # Paste here the output from http://{HUBITAT_IP}/hub/zigbee/getChildAndRouteInfo
                 "></textarea>
                 <button onclick="renderData()">Render data</button>
+            </div>
+
+            <!-- Zigbee devices -->
+            <div role="tabpanel" aria-labelledby="zigbee-devices" hidden>
+                <table id="zigbee-devices-list">
+                    <thead>
+                        <tr>
+                            <th>Addr</th>
+                            <th>&nbsp;</th>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="3">Please wait. This might take a bit...</td></tr>
+                    </tbody>
+                </table>
             </div>
 
             <!-- Help -->
@@ -419,12 +459,30 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
                     });
                 });
                 console.log('Retrieved all zigbee devices list', allZigbeeDevices);
+                setTimeout(updateDevicesTable, 1000);
 
                 // Refresh zigbee devices list every 2 minutes
                 setTimeout(retrieveAllZigbeeDevices, 120000);
             })
             .catch((error) => {
                 console.log('Failed to retrieve all zigbee devices list', error);
+            });
+    }
+
+    function updateDevicesTable() {
+        const tbl = document.getElementById('zigbee-devices-list');
+        tbl.getElementsByTagName("tbody")[0].innerHTML = '';
+        allZigbeeDevices
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .forEach(device => {
+                const tr = tbl.insertRow();
+                tr.insertCell().appendChild(document.createTextNode(device.addr));
+                tr.insertCell().appendChild(document.createTextNode(zigbeeData.nodes.some(node => node.addr === device.addr) ? '✅' : '⛔'));
+
+                const link = document.createElement('a');
+                link.setAttribute('href', `/device/edit/${device.id}`);
+                link.innerText = device.name;
+                tr.insertCell().appendChild(link);
             });
     }
 
