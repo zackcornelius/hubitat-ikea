@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hubitat - Zigbee Graph</title>
+    <title>Hubitat - Zigbee Graph - v1.3.1</title>
     <meta charset="utf-8">
     <meta name="description" content="Allows you to visually render getChildAndRouteInfo of your Hubitat system">
     <meta name="keywords" content="hubitat, zigbee, graph">
@@ -471,7 +471,7 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
 
     function updateDevicesTable() {
         const tbl = document.getElementById('zigbee-devices-list');
-        tbl.getElementsByTagName("tbody")[0].innerHTML = '';
+        while (tbl.rows.length > 1) tbl.deleteRow(1);
         allZigbeeDevices
             .sort((a, b) => a.name.localeCompare(b.name))
             .forEach(device => {
