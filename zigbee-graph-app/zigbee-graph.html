@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hubitat - Zigbee Graph - v1.3.1</title>
+    <title>Hubitat - Zigbee Graph - v1.4.0</title>
     <meta charset="utf-8">
     <meta name="description" content="Allows you to visually render getChildAndRouteInfo of your Hubitat system">
     <meta name="keywords" content="hubitat, zigbee, graph">
@@ -110,12 +110,12 @@
 
     }
 
-    /* Form */
-    body.embedded #form {
+    /* Tabs */
+    body.embedded #tabs-container {
         visibility: hidden;
     }
 
-    #form {
+    #tabs-container {
         position: absolute;
         top: 10px;
         left: 10px;
@@ -139,7 +139,8 @@
         width: 1em; height: 1em;
         background-image: url('data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJDYXBhXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHdpZHRoPSI0MzguNTMzcHgiIGhlaWdodD0iNDM4LjUzM3B4IiB2aWV3Qm94PSIwIDAgNDM4LjUzMyA0MzguNTMzIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA0MzguNTMzIDQzOC41MzM7IgoJIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8Zz4KCTxwYXRoIGQ9Ik00MDkuMTMzLDEwOS4yMDNjLTE5LjYwOC0zMy41OTItNDYuMjA1LTYwLjE4OS03OS43OTgtNzkuNzk2QzI5NS43MzYsOS44MDEsMjU5LjA1OCwwLDIxOS4yNzMsMAoJCWMtMzkuNzgxLDAtNzYuNDcsOS44MDEtMTEwLjA2MywyOS40MDdjLTMzLjU5NSwxOS42MDQtNjAuMTkyLDQ2LjIwMS03OS44LDc5Ljc5NkM5LjgwMSwxNDIuOCwwLDE3OS40ODksMCwyMTkuMjY3CgkJYzAsMzkuNzgsOS44MDQsNzYuNDYzLDI5LjQwNywxMTAuMDYyYzE5LjYwNywzMy41OTIsNDYuMjA0LDYwLjE4OSw3OS43OTksNzkuNzk4YzMzLjU5NywxOS42MDUsNzAuMjgzLDI5LjQwNywxMTAuMDYzLDI5LjQwNwoJCXM3Ni40Ny05LjgwMiwxMTAuMDY1LTI5LjQwN2MzMy41OTMtMTkuNjAyLDYwLjE4OS00Ni4yMDYsNzkuNzk1LTc5Ljc5OGMxOS42MDMtMzMuNTk2LDI5LjQwMy03MC4yODQsMjkuNDAzLTExMC4wNjIKCQlDNDM4LjUzMywxNzkuNDg1LDQyOC43MzIsMTQyLjc5NSw0MDkuMTMzLDEwOS4yMDN6IE0yNTUuODIsMzU2LjMwOWMwLDIuNjYyLTAuODYyLDQuODUzLTIuNTczLDYuNTYzCgkJYy0xLjcwNCwxLjcxMS0zLjg5NSwyLjU2Ny02LjU1NywyLjU2N2gtNTQuODIzYy0yLjY2NCwwLTQuODU0LTAuODU2LTYuNTY3LTIuNTY3Yy0xLjcxNC0xLjcxMS0yLjU3LTMuOTAxLTIuNTctNi41NjN2LTU0LjgyMwoJCWMwLTIuNjYyLDAuODU1LTQuODUzLDIuNTctNi41NjNjMS43MTMtMS43MDgsMy45MDMtMi41NjMsNi41NjctMi41NjNoNTQuODIzYzIuNjYyLDAsNC44NTMsMC44NTUsNi41NTcsMi41NjMKCQljMS43MTEsMS43MTEsMi41NzMsMy45MDEsMi41NzMsNi41NjNWMzU2LjMwOXogTTMyNS4zMzgsMTg3LjU3NGMtMi4zODIsNy4wNDMtNS4wNDQsMTIuODA0LTcuOTk0LDE3LjI3NQoJCWMtMi45NDksNC40NzMtNy4xODcsOS4wNDItMTIuNzA5LDEzLjcwM2MtNS41MSw0LjY2My05Ljg5MSw3Ljk5Ni0xMy4xMzUsOS45OThjLTMuMjMsMS45OTUtNy44OTgsNC43MTMtMTMuOTgyLDguMTM1CgkJYy02LjI4MywzLjYxMy0xMS40NjUsOC4zMjYtMTUuNTU1LDE0LjEzNGMtNC4wOTMsNS44MDQtNi4xMzksMTAuNTEzLTYuMTM5LDE0LjEyNmMwLDIuNjctMC44NjIsNC44NTktMi41NzQsNi41NzEKCQljLTEuNzA3LDEuNzExLTMuODk3LDIuNTY2LTYuNTYsMi41NjZoLTU0LjgyYy0yLjY2NCwwLTQuODU0LTAuODU1LTYuNTY3LTIuNTY2Yy0xLjcxNS0xLjcxMi0yLjU2OC0zLjkwMS0yLjU2OC02LjU3MXYtMTAuMjc5CgkJYzAtMTIuNzUyLDQuOTkzLTI0LjcwMSwxNC45ODctMzUuODMyYzkuOTk0LTExLjEzNiwyMC45ODYtMTkuMzY4LDMyLjk3OS0yNC42OThjOS4xMy00LjE4NiwxNS42MDQtOC40NywxOS40MS0xMi44NDcKCQljMy44MTItNC4zNzcsNS43MTUtMTAuMTg4LDUuNzE1LTE3LjQxN2MwLTYuMjgzLTMuNTcyLTExLjg5Ny0xMC43MTEtMTYuODQ5Yy03LjEzOS00Ljk0Ny0xNS4yNy03LjQyMS0yNC40MDktNy40MjEKCQljLTkuOSwwLTE4LjA4MiwyLjI4NS0yNC41NTUsNi44NTVjLTYuMjgzLDQuNTY1LTE0LjQ2NSwxMy4zMjItMjQuNTU0LDI2LjI2M2MtMS43MTMsMi4yODYtNC4wOTMsMy40MzEtNy4xMzksMy40MzEKCQljLTIuMjg0LDAtNC4wOTMtMC41Ny01LjQyNC0xLjcwOUwxMjEuMzUsMTQ1Ljg5Yy00LjM3Ny0zLjQyNy01LjEzOC03LjQyMi0yLjI4Ni0xMS45OTEKCQljMjQuMzY2LTQwLjU0Miw1OS42NzItNjAuODEzLDEwNS45MjItNjAuODEzYzE2LjU2MywwLDMyLjc0NCwzLjkwMyw0OC41NDEsMTEuNzA4YzE1Ljc5Niw3LjgwMSwyOC45NzksMTguODQyLDM5LjU0NiwzMy4xMTkKCQljMTAuNTU0LDE0LjI3MiwxNS44NDUsMjkuNzg3LDE1Ljg0NSw0Ni41MzdDMzI4LjkwNCwxNzIuODI0LDMyNy43MSwxODAuNTI5LDMyNS4zMzgsMTg3LjU3NHoiLz4KPC9nPgo8L3N2Zz4=');
         background-size: 1em;
-        line-height: 20px;
+        vertical-align: middle;
+        opacity: 0.85;
     }
 
     /* Devices list */
@@ -147,13 +148,17 @@
         border-spacing: 0;
     }
     table td, table th {
-        border-bottom: 1px #DCDCDC solid;
+        border-bottom: 1px #D3D3D3 solid;
         text-align: left;
         padding: 3px;
     }
 
     table td:first-child {
         font-family: monospace;
+    }
+
+    table tr:nth-child(odd) {
+        background-color: #F5F5F5;
     }
 
     table tr:last-child td {
@@ -199,19 +204,50 @@
     .tooltip:hover span {
         visibility: visible;
     }
+
+    /** Config */
+    form {
+        padding: 0 5px;
+    }
+
+    label {
+        margin-left: 0.3em;
+        margin-right: 1em;
+    }
+
+    fieldset {
+        border: 1px #D3D3D3 solid;
+        margin: 0;
+    }
+
+    fieldset:not(:last-child) {
+        margin-bottom: 1em;
+    }
+
+    fieldset legend {
+        padding: 0 0.5em;
+    }
+
+    form button {
+        display: block;
+        margin-right: 0;
+        margin-lefT: auto;
+    }
+
     </style>
 </head>
 <body>
     <!-- Graph placeholder -->
     <div id="graph"></div>
 
-    <!-- Collect form -->
-    <div id="form">
+    <!-- Tabs Container -->
+    <div id="tabs-container">
         <tab-container>
             <div role="tablist">
                 <button type="button" id="status" role="tab" tabindex="0" aria-selected="true">Status</button>
                 <button type="button" id="zigbee-data" role="tab" tabindex="-1">Data</button>
                 <button type="button" id="zigbee-devices" role="tab" tabindex="-1">Devices</button>
+                <button type="button" id="config" role="tab" tabindex="-1">Config</button>
                 <button type="button" id="help" role="tab" tabindex="-1">Help</button>
             </div>
 
@@ -246,6 +282,22 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
                         <tr><td colspan="3">Please wait. This might take a bit...</td></tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Config -->
+            <div role="tabpanel" aria-labelledby="config" hidden>
+                <form onsubmit="event.preventDefault()">
+                    <fieldset>
+                        <legend>keep old links <span class="tooltip"><span>Keep connections that are no longer present in the received data (dotted lines)</span></span></legend>
+                        <input type="checkbox" id="conf-acc-children"><label for="conf-acc-children">children</label>
+                        <input type="checkbox" id="conf-acc-neighbors"><label for="conf-acc-neighbors">neighbors</label>
+                        <input type="checkbox" id="conf-acc-routes"><label for="conf-acc-routes">routes</label>
+                    </fieldset>
+                    <fieldset>
+                        <input type="checkbox" id="conf-loops"><label for="conf-loops">show self-route loops</label>
+                    </fieldset>
+                    <button onclick="config.applyConfiguration()">Apply configuration</button>
+                </form>
             </div>
 
             <!-- Help -->
@@ -288,6 +340,10 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
         }
 
         addLink(sourceName, sourceAddr, targetName, targetAddr, type, label) {
+
+            // Self loop?
+            if (sourceAddr === targetAddr && !config.loops) return;
+
             this.addNode(sourceName, sourceAddr);
             this.addNode(targetName, targetAddr);
 
@@ -319,15 +375,15 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
             this.nodes.push({ name, addr, tooltip: `Address: ${addr}`, new: this.empty === false });
         }
 
-        removeLink(link) {
+        removeLink(link, force = false) {
             const idx = this.links.findIndex(oldLink => oldLink.sourceAddr === link.sourceAddr && oldLink.targetAddr === link.targetAddr && oldLink.type === link.type);
             if (idx < 0) return false;
 
-            // Just mark 'route' links as not 'alive' - don't actually remove them
-            if (link.type === 'route') {
+            // Just mark old links as not 'alive' - don't actually remove them
+            if (!force && config.accumulate.includes(link.type)) {
                 if (!link.alive) return false;
                 link.alive = false;
-                link.label = `route last seen ${new Date().toLocaleString()}`;
+                link.label = `last seen ${new Date().toLocaleString()}`;
                 return false;
             }
 
@@ -409,10 +465,70 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
                 node.tooltip = `Address: ${addr}<br>Last log message:<br>  - time: ${message.time}<br>  - LQI: ${message.lastHopLqi}<br>  - RSSI: ${message.lastHopRssi}`
             }
         }
+
+        clearOldLinks(keepTypes = []) {
+            this.links.forEach(link => {
+                if (link.alive || keepTypes.includes(link.type)) return;
+                this.removeLink(link, true);
+            });
+        }
+
+        clearLoops() {
+            this.links.forEach(link => {
+                if (link.sourceAddr !== link.targetAddr) return;
+                this.removeLink(link, true);
+            });
+        }
+    }
+
+    class Configuration {
+        constructor() {
+            this.accumulate = ['route'];
+            this.loops = true;
+        }
+
+        applyConfiguration() {
+            var searchParams = new URLSearchParams();
+
+            const acc = [];
+            if (document.getElementById('conf-acc-children').checked) acc.push('child');
+            if (document.getElementById('conf-acc-neighbors').checked) acc.push('neighbor');
+            if (document.getElementById('conf-acc-routes').checked) acc.push('route');
+            searchParams.set('acc', acc.join(':'));
+
+            const loops = document.getElementById('conf-loops').checked;
+            searchParams.set('loops', loops);
+
+            var goto = window.location.pathname + '?' + searchParams.toString();
+            history.pushState(null, '', goto);
+
+            // Apply config
+            this.loadFromURL()
+        }
+
+        loadFromURL() {
+            const params = new URLSearchParams(window.location.search);
+
+            // Accumulate
+            const acc = params.get('acc');
+            if (acc != null) this.accumulate = acc.split(':').filter(val => ['child', 'neighbor', 'route'].includes(val));
+
+            document.getElementById('conf-acc-children').checked = this.accumulate.some(val => val === 'child');
+            document.getElementById('conf-acc-neighbors').checked = this.accumulate.some(val => val === 'neighbor');
+            document.getElementById('conf-acc-routes').checked = this.accumulate.some(val => val === 'route');
+            zigbeeData.clearOldLinks(this.accumulate);
+
+            // Self-links
+            const showLoops = params.get('loops');
+            if (acc != null) this.loops = showLoops != 'false';
+            document.getElementById('conf-loops').checked = this.loops;
+            if (!this.loops) zigbeeData.clearLoops();
+        }
     }
 
     let Graph = null;
     const zigbeeData = new ZigbeeData();
+    const config = new Configuration();
     let fetchTimeout = null;
 
     // Settings
@@ -423,6 +539,9 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
     if (window.location.href.includes('embed=true')) {
         document.body.classList.add('embedded');
     }
+
+    // Init config from URL
+    config.loadFromURL();
 
     // Auto-start fetch
     fetchData();
