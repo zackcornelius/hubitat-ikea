@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hubitat - Zigbee Graph - v1.4.0</title>
+    <title>Hubitat - Zigbee Graph - v2.0.0</title>
     <meta charset="utf-8">
     <meta name="description" content="Allows you to visually render getChildAndRouteInfo of your Hubitat system">
     <meta name="keywords" content="hubitat, zigbee, graph">
@@ -20,21 +20,74 @@
     <link rel="shortcut icon" href="/ui2/images/favicon.ico">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="msapplication-config" content="/ui2/images/browserconfig.xml">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#fdf6e3">
 
     <script src="//unpkg.com/@github/tab-container-element@latest/dist/index.js" type="module"></script>
     <script src="//unpkg.com/force-graph"></script>
     <link rel="stylesheet" type="text/css" href="//necolas.github.io/normalize.css/8.0.1/normalize.css">
     <style>
 
+    :root {
+        --Base03: #002b36; /* background tones (dark) */
+        --Base02: #073642; /* -- */
+        --Base01: #586e75; /* content tones */
+        --Base00: #657b83; /* -- */
+        --Base0: #839496;  /* -- */
+        --Base1: #93a1a1;  /* -- */
+        --Base2: #eee8d5;  /* background tones (white) */
+        --Base3: #fdf6e3;  /* -- */
+        --Yellow: #b58900; /* accent tones */
+        --Orange: #cb4b16;
+        --Red: #dc322f;
+        --Magenta: #d33682;
+        --Violet: #6c71c4;
+        --Blue: #268bd2;
+        --Cyan: #2aa198;
+        --Green: #859900;
+        --Black: #000;
+
+        --bg-color: var(--Base2);
+        --bg-color-darker: var(--Base3);
+        --text-color: var(--Base03);
+        --text-color-darker: var(--Base00);
+        --border-color: var(--Base1);
+        --shadow-color: var(--Base1);
+        --separator-color: var(--Base1);
+        --Gray: var(--Base0);
+
+        --tooltip-bg-color: var(--Base02);
+        --tooltip-text-color: var(--Base2);
+    }
+
+    [data-theme="dark"] {
+        --bg-color: var(--Base03);
+        --bg-color-darker: var(--Base02);
+        --text-color: var(--Base3);
+        --text-color-darker: var(--Base1);
+        --border-color: var(--Base01);
+        --shadow-color: var(--Black);
+        --separator-color: var(--Base01);
+        --Gray: var(--Base01);
+
+        --tooltip-bg-color: var(--Base2);
+        --tooltip-text-color: var(--Base02);
+    }
+
     body {
         margin: 0;
         padding: 0;
         font: 1rem sans-serif;
+        background: var(--bg-color);
+        color: var(--text-color);
     }
 
     html {
         -webkit-text-size-adjust: 100%;
+    }
+
+    a {
+        text-decoration: none;
+        color: var(--Blue);
     }
 
     /* Tabs */
@@ -47,30 +100,31 @@
         position: relative;
         margin: 0;
         padding: .3em .5em .4em;
-        border: 1px solid hsl(219, 1%, 72%);
-        border-radius: .2em .2em 0 0;
-        box-shadow: 0 0 .2em hsl(219, 1%, 72%);
+        border: 1px solid var(--border-color);
+        border-radius: .3em .3em 0 0;
+        box-shadow: 0 0 .3em var(--shadow-color);
         overflow: visible;
         font-family: inherit;
         font-size: inherit;
-        background: hsl(220, 20%, 94%);
+        background: var(--bg-color);
+        color: var(--text-color);
+        cursor: pointer;
     }
 
     [role="tab"]:hover::before,
-    [role="tab"]:focus::before,
     [role="tab"][aria-selected="true"]::before {
         position: absolute;
         bottom: 100%;
         right: -1px;
         left: -1px;
-        border-radius: 0.2em 0.2em 0 0;
-        border-top: 3px solid hsl(20, 96%, 48%);
+        border-radius: .3em .3em 0 0;
+        border-top: 3px solid var(--Orange);
         content: '';
     }
 
     [role="tab"][aria-selected="true"] {
         border-radius: 0;
-        background: hsl(220, 43%, 99%);
+        background: var(--bg-color-darker);
         outline: 0;
     }
 
@@ -80,8 +134,8 @@
         bottom: -1px;
         right: 0;
         left: 0;
-        height: .3em;
-        background: hsl(220, 43%, 99%);
+        height: .5em;
+        background: var(--bg-color-darker);
         box-shadow: none;
         content: '';
     }
@@ -94,20 +148,14 @@
         color: inherit;
     }
 
-    [role="tab"]:hover::before,
-    [role="tab"]:focus::before {
-        border-color: hsl(20, 96%, 48%);
-    }
-
     [role="tabpanel"] {
         position: relative;
         z-index: 2;
         padding: .5em .5em .7em;
-        border: 1px solid hsl(219, 1%, 72%);
-        border-radius: 0 .2em .2em .2em;
-        box-shadow: 0 0 .2em hsl(219, 1%, 72%);
-        background: hsl(220, 43%, 99%);
-
+        border: 1px solid var(--border-color);
+        border-radius: 0 .3em .3em .3em;
+        box-shadow: 0 0 .3em var(--shadow-color);
+        background: var(--bg-color-darker);
     }
 
     /* Tabs */
@@ -119,28 +167,15 @@
         position: absolute;
         top: 10px;
         left: 10px;
-        background-color: white;
-        opacity: 0.7;
+        opacity: .90;
+        margin-right: 10px;
+        min-width: 22em;
     }
 
-    #pasted {
-        display: block;
-        width: 120em;
-        height: 56em;
-        margin-bottom: 10px;
-        font: 0.75rem monospace;
-        background-color: #F8F8F8;
-    }
-
-    /* Help */
-    .tooltip {
-        position: relative;
-        display: inline-block;
-        width: 1em; height: 1em;
-        background-image: url('data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJDYXBhXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHdpZHRoPSI0MzguNTMzcHgiIGhlaWdodD0iNDM4LjUzM3B4IiB2aWV3Qm94PSIwIDAgNDM4LjUzMyA0MzguNTMzIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA0MzguNTMzIDQzOC41MzM7IgoJIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8Zz4KCTxwYXRoIGQ9Ik00MDkuMTMzLDEwOS4yMDNjLTE5LjYwOC0zMy41OTItNDYuMjA1LTYwLjE4OS03OS43OTgtNzkuNzk2QzI5NS43MzYsOS44MDEsMjU5LjA1OCwwLDIxOS4yNzMsMAoJCWMtMzkuNzgxLDAtNzYuNDcsOS44MDEtMTEwLjA2MywyOS40MDdjLTMzLjU5NSwxOS42MDQtNjAuMTkyLDQ2LjIwMS03OS44LDc5Ljc5NkM5LjgwMSwxNDIuOCwwLDE3OS40ODksMCwyMTkuMjY3CgkJYzAsMzkuNzgsOS44MDQsNzYuNDYzLDI5LjQwNywxMTAuMDYyYzE5LjYwNywzMy41OTIsNDYuMjA0LDYwLjE4OSw3OS43OTksNzkuNzk4YzMzLjU5NywxOS42MDUsNzAuMjgzLDI5LjQwNywxMTAuMDYzLDI5LjQwNwoJCXM3Ni40Ny05LjgwMiwxMTAuMDY1LTI5LjQwN2MzMy41OTMtMTkuNjAyLDYwLjE4OS00Ni4yMDYsNzkuNzk1LTc5Ljc5OGMxOS42MDMtMzMuNTk2LDI5LjQwMy03MC4yODQsMjkuNDAzLTExMC4wNjIKCQlDNDM4LjUzMywxNzkuNDg1LDQyOC43MzIsMTQyLjc5NSw0MDkuMTMzLDEwOS4yMDN6IE0yNTUuODIsMzU2LjMwOWMwLDIuNjYyLTAuODYyLDQuODUzLTIuNTczLDYuNTYzCgkJYy0xLjcwNCwxLjcxMS0zLjg5NSwyLjU2Ny02LjU1NywyLjU2N2gtNTQuODIzYy0yLjY2NCwwLTQuODU0LTAuODU2LTYuNTY3LTIuNTY3Yy0xLjcxNC0xLjcxMS0yLjU3LTMuOTAxLTIuNTctNi41NjN2LTU0LjgyMwoJCWMwLTIuNjYyLDAuODU1LTQuODUzLDIuNTctNi41NjNjMS43MTMtMS43MDgsMy45MDMtMi41NjMsNi41NjctMi41NjNoNTQuODIzYzIuNjYyLDAsNC44NTMsMC44NTUsNi41NTcsMi41NjMKCQljMS43MTEsMS43MTEsMi41NzMsMy45MDEsMi41NzMsNi41NjNWMzU2LjMwOXogTTMyNS4zMzgsMTg3LjU3NGMtMi4zODIsNy4wNDMtNS4wNDQsMTIuODA0LTcuOTk0LDE3LjI3NQoJCWMtMi45NDksNC40NzMtNy4xODcsOS4wNDItMTIuNzA5LDEzLjcwM2MtNS41MSw0LjY2My05Ljg5MSw3Ljk5Ni0xMy4xMzUsOS45OThjLTMuMjMsMS45OTUtNy44OTgsNC43MTMtMTMuOTgyLDguMTM1CgkJYy02LjI4MywzLjYxMy0xMS40NjUsOC4zMjYtMTUuNTU1LDE0LjEzNGMtNC4wOTMsNS44MDQtNi4xMzksMTAuNTEzLTYuMTM5LDE0LjEyNmMwLDIuNjctMC44NjIsNC44NTktMi41NzQsNi41NzEKCQljLTEuNzA3LDEuNzExLTMuODk3LDIuNTY2LTYuNTYsMi41NjZoLTU0LjgyYy0yLjY2NCwwLTQuODU0LTAuODU1LTYuNTY3LTIuNTY2Yy0xLjcxNS0xLjcxMi0yLjU2OC0zLjkwMS0yLjU2OC02LjU3MXYtMTAuMjc5CgkJYzAtMTIuNzUyLDQuOTkzLTI0LjcwMSwxNC45ODctMzUuODMyYzkuOTk0LTExLjEzNiwyMC45ODYtMTkuMzY4LDMyLjk3OS0yNC42OThjOS4xMy00LjE4NiwxNS42MDQtOC40NywxOS40MS0xMi44NDcKCQljMy44MTItNC4zNzcsNS43MTUtMTAuMTg4LDUuNzE1LTE3LjQxN2MwLTYuMjgzLTMuNTcyLTExLjg5Ny0xMC43MTEtMTYuODQ5Yy03LjEzOS00Ljk0Ny0xNS4yNy03LjQyMS0yNC40MDktNy40MjEKCQljLTkuOSwwLTE4LjA4MiwyLjI4NS0yNC41NTUsNi44NTVjLTYuMjgzLDQuNTY1LTE0LjQ2NSwxMy4zMjItMjQuNTU0LDI2LjI2M2MtMS43MTMsMi4yODYtNC4wOTMsMy40MzEtNy4xMzksMy40MzEKCQljLTIuMjg0LDAtNC4wOTMtMC41Ny01LjQyNC0xLjcwOUwxMjEuMzUsMTQ1Ljg5Yy00LjM3Ny0zLjQyNy01LjEzOC03LjQyMi0yLjI4Ni0xMS45OTEKCQljMjQuMzY2LTQwLjU0Miw1OS42NzItNjAuODEzLDEwNS45MjItNjAuODEzYzE2LjU2MywwLDMyLjc0NCwzLjkwMyw0OC41NDEsMTEuNzA4YzE1Ljc5Niw3LjgwMSwyOC45NzksMTguODQyLDM5LjU0NiwzMy4xMTkKCQljMTAuNTU0LDE0LjI3MiwxNS44NDUsMjkuNzg3LDE1Ljg0NSw0Ni41MzdDMzI4LjkwNCwxNzIuODI0LDMyNy43MSwxODAuNTI5LDMyNS4zMzgsMTg3LjU3NHoiLz4KPC9nPgo8L3N2Zz4=');
-        background-size: 1em;
-        vertical-align: middle;
-        opacity: 0.85;
+    @media only screen and (min-device-width : 320px) and (max-device-width : 480px) {
+        #tabs-container {
+            width: calc(100% - 20px);
+        }
     }
 
     /* Devices list */
@@ -148,43 +183,55 @@
         border-spacing: 0;
     }
     table td, table th {
-        border-bottom: 1px #D3D3D3 solid;
+        border-bottom: 1px solid var(--separator-color);
         text-align: left;
-        padding: 3px;
+        padding: .3em;
     }
 
     table td:first-child {
         font-family: monospace;
     }
 
-    table tr:nth-child(odd) {
-        background-color: #F5F5F5;
+    table tr:nth-child(even) {
+        background: var(--bg-color);
     }
 
     table tr:last-child td {
         border-bottom: 0;
     }
 
-    table a {
-        text-decoration: none;
-        color: #3d719d;
+    td.device-found .tooltip::before {
+        content: "⦿";
+        color: var(--Green);
     }
 
-    /* Tooltip text */
+    td.device-missing .tooltip::before {
+        content: "⊝";
+        color: var(--Red);
+    }
+
+    /* Help */
+    .tooltip {
+        position: relative;
+        display: inline-block;
+    }
+    .tooltip::before {
+        content: "ℹ️";
+        color: var(--Blue);
+        cursor: help;
+    }
+
     .tooltip span {
-        font-size: 0.8em;
         visibility: hidden;
-        width: 20em;
+        width: 18em;
         top: 100%;
         left: 50%;
-        margin-left: -11em; /* Use half of the width (120/2 = 60), to center the tooltip */
+        margin-left: -2em;
         margin-top: 5px;
-        background-color: black;
-        color: #fff;
-        padding: 0.5em 1em;
+        background: var(--tooltip-bg-color);
+        color: var(--tooltip-text-color);
+        padding: .3em .5em;
         border-radius: 6px;
-        
-        /* Position the tooltip text - see examples below! */
         position: absolute;
         z-index: 1;
     }
@@ -193,11 +240,11 @@
         content: " ";
         position: absolute;
         bottom: 100%;  /* At the top of the tooltip */
-        left: 50%;
+        left: 2em;
         margin-left: -5px;
         border-width: 5px;
         border-style: solid;
-        border-color: transparent transparent black transparent;
+        border-color: transparent transparent var(--tooltip-bg-color) transparent;
     }
 
     /* Show the tooltip text when you mouse over the tooltip container */
@@ -205,35 +252,162 @@
         visibility: visible;
     }
 
-    /** Config */
+    /* Graph tooltip */
+    .graph-tooltip ul {
+        margin: 0;
+        padding: 0;
+    }
+
+    .graph-tooltip li {
+        margin: .2em 1em 0 .8em;
+        padding: 0;
+    }
+
+    .graph-tooltip {
+        background: var(--tooltip-bg-color) !important;
+        color: var(--tooltip-text-color) !important;
+        opacity: .90;
+        padding: .3em .5em !important;
+        border-radius: 6px !important;
+    }
+
+    .graph-tooltip header {
+        display: block;
+        font-weight: bold;
+        width: 100%;
+        border-bottom: 1px solid var(--separator-color);
+        margin: 0;
+        padding-bottom: .3em;
+    }
+
+    /* Config */
     form {
         padding: 0 5px;
     }
 
-    label {
-        margin-left: 0.3em;
-        margin-right: 1em;
-    }
-
-    fieldset {
-        border: 1px #D3D3D3 solid;
+    form ul {
+        padding: 0;
         margin: 0;
     }
 
-    fieldset:not(:last-child) {
+    form ul li {
+        list-style: none;
+        padding: .5em 0;
+        border-bottom: 1px solid var(--separator-color);
+        line-height: 20px;
+    }
+
+    form ul li:last-child {
+        border: 0;
+    }
+
+    form input[type=checkbox]{
+        height: 0;
+        width: 0;
+        visibility: hidden;
+    }
+
+    form  label {
+        cursor: pointer;
+        text-indent: -9999px;
+        width: 40px;
+        height: 20px;
+        background: var(--Base0);
+        border-radius: 20px;
+        position: relative;
+        float: right;
+    }
+
+    form label:after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        background: var(--Base3);
+        border-radius: 16px;
+        transition: .3s;
+    }
+
+    form  input:checked + label {
+        background: var(--Green);
+    }
+
+    form  input:checked + label:after {
+        left: calc(100% - 2px);
+        transform: translateX(-100%);
+    }
+
+    form fieldset {
+        border: 1px solid var(--separator-color);
+        border-radius: 5px;
+        margin: 0;
+        padding: 0 1em;
+    }
+
+    form fieldset:not(:last-child) {
         margin-bottom: 1em;
     }
 
-    fieldset legend {
-        padding: 0 0.5em;
+    form fieldset legend {
+        padding: 0 .5em;
     }
 
-    form button {
-        display: block;
-        margin-right: 0;
-        margin-lefT: auto;
+    /** FAQ **/
+    details {
+        padding: .5em .2em;
+        border-bottom: 1px solid var(--separator-color);
+        line-height: 1.5em;
     }
 
+    details:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    details:first-child {
+        padding-top: 0;
+    }
+
+    details summary {
+        cursor: pointer;
+    }
+
+    details blockquote {
+        font-style: italic;
+        border-left: 6px solid var(--Gray);
+        margin-left: 0;
+        padding-left: 1em;
+        color: var(--text-color-darker);
+    }
+
+    details[open] summary {
+        font-weight: bold;
+        color: var(--Green);
+    }
+
+    details > p {
+        margin: 0 0 .5em 0;
+    }
+
+    details > p,
+    details  li {
+        text-align: justify;
+        text-justify: inter-word;
+    }
+
+    details  li {
+        margin-top: .5em;
+    }
+
+    details > *:nth-child(2) {
+        margin-top: 1em;
+    }
+
+    details > *:last-child {
+        margin-bottom: 1em;
+    }
     </style>
 </head>
 <body>
@@ -245,27 +419,45 @@
         <tab-container>
             <div role="tablist">
                 <button type="button" id="status" role="tab" tabindex="0" aria-selected="true">Status</button>
-                <button type="button" id="zigbee-data" role="tab" tabindex="-1">Data</button>
+                <button type="button" id="help" role="tab" tabindex="-1">Help</button>
                 <button type="button" id="zigbee-devices" role="tab" tabindex="-1">Devices</button>
                 <button type="button" id="config" role="tab" tabindex="-1">Config</button>
-                <button type="button" id="help" role="tab" tabindex="-1">Help</button>
+                <button type="button" id="faq" role="tab" tabindex="-1">FAQ</button>
             </div>
 
             <!-- Status -->
             <div role="tabpanel" aria-labelledby="status">
-                <div id="lastRefresh"></div>
+                <div id="lastRefresh">Loading, please wait...</div>
                 <div id="nodesCount"></div>
             </div>
 
-            <!-- Zigbee data -->
-            <div role="tabpanel" aria-labelledby="zigbee-data" hidden>
-                <textarea id="pasted" placeholder="Parent child parameters
-EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000, parentNodeId=65535]
-...
+            <!-- Help -->
+            <div role="tabpanel" aria-labelledby="help" hidden>
+                <b>Devices</b> (dots)
+                <ul>
+                    <li><b style="color:var(--Orange)">orange</b> &#10132; hub <span class="tooltip"><span>This is your beloved Hubitat hub, always a good boy...</span></span></li>
+                    <li><b style="color:var(--Blue)">blue</b> &#10132; repeater <span class="tooltip"><span>This is either a hub 'neighbor' or is used by at least one other device to route through it.</span></span></li>
+                    <li><b style="color:var(--Green)">green</b> &#10132; recluse <span class="tooltip"><span>No one routes through this device; it is either battery-powered or the other devices are just mean to it. Aawww...</span></span></li>
+                    <li><b style="color:var(--Gray)">gray</b> &#10132; bad neighbor <span class="tooltip"><span>Hub neighbor that is either powered off or something might be wrong with it (outCost:0).</span></span></li>
+                    <li><b style="color:var(--Magenta)">magenta</b> &#10132; new <span class="tooltip"><span>We just discovered this device and highlighted it to make it more visible; it will change to its true color after 5 seconds.</span></span></li>
+                </ul>
 
-# Paste here the output from http://{HUBITAT_IP}/hub/zigbee/getChildAndRouteInfo
-                "></textarea>
-                <button onclick="renderData()">Render data</button>
+                <b>Connections</b> (lines)
+                <ul>
+                    <li><b style="color:var(--Green)">green</b> &#10132; child <span class="tooltip"><span>Connection taken from Children Table.<br><br>Note: Children devices are usually battery-powered or cannot relay messages intended for other devices.</span></span></li>
+                    <li><b style="color:var(--Orange)">orange</b> &#10132; neighbor <span class="tooltip"><span>Connection taken from Neighbors Table.</span></span></li>
+                    <li><b style="color:var(--Blue)">blue</b> &#10132; route <span class="tooltip"><span>Connection taken from Routes Table.<br><br>Warning: There may be intermediary devices on this route that we are unaware of. All we know is that the Hubitat hub uses this node as first hop in order to reach the target device!</span></span></li>
+                    <li><b style="color:var(--Magenta)">magenta</b> &#10132; new <span class="tooltip"><span>We just discovered this connection and highlighted it to make it more visible; it will change to its true color after 5 seconds.</span></span></li>
+                    <li>dotted line &#10132; old <span class="tooltip"><span>This connection was present in the past in the incoming data.</span></span></li>
+                </ul>
+
+                <b>More info</b>
+                <ul>
+                    <li>data is refreshed every 5 seconds</li>
+                    <li>click any node to go to the device edit page</li>
+                    <li>drag any node to fix its position, right-click it again to reset</li>
+                    <li>double-click anywhere to center the graph and reset zooming</li>
+                </ul>
             </div>
 
             <!-- Zigbee devices -->
@@ -286,63 +478,191 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
 
             <!-- Config -->
             <div role="tabpanel" aria-labelledby="config" hidden>
-                <form onsubmit="event.preventDefault()">
+                <form id="configForm" onsubmit="event.preventDefault()">
                     <fieldset>
-                        <legend>keep old links <span class="tooltip"><span>Keep connections that are no longer present in the received data (dotted lines)</span></span></legend>
-                        <input type="checkbox" id="conf-acc-children"><label for="conf-acc-children">children</label>
-                        <input type="checkbox" id="conf-acc-neighbors"><label for="conf-acc-neighbors">neighbors</label>
-                        <input type="checkbox" id="conf-acc-routes"><label for="conf-acc-routes">routes</label>
+                        <ul>
+                            <li>
+                                <input type="checkbox" id="conf-acc-children"><label for="conf-acc-children">Accumulate child links</label>
+                                Accumulate child links
+                            </li>
+                            <li>
+                                <input type="checkbox" id="conf-acc-neighbors"><label for="conf-acc-neighbors">Accumulate neighbor links</label>
+                                Accumulate neighbor links
+                            </li>
+                            <li>
+                                <input type="checkbox" id="conf-acc-routes"><label for="conf-acc-routes"> Accumulate route links</label>
+                                Accumulate route links
+                            </li>
+                        </ul>
                     </fieldset>
                     <fieldset>
-                        <input type="checkbox" id="conf-loops"><label for="conf-loops">show self-route loops</label>
+                        <ul>
+                            <li>
+                                <input type="checkbox" id="conf-loops"><label for="conf-loops">Show self-route loops</label>
+                                Show self-route loops
+                            </li>
+                            <li>
+                                <input type="checkbox" id="conf-dots"><label for="conf-dots">Show link particles</label>
+                                Show link particles
+                            </li>
+                            <li>
+                                <input type="checkbox" id="conf-dark"><label for="conf-dark">Dark theme</label>
+                                Dark theme
+                            </li>
+                        </ul>
                     </fieldset>
-                    <button onclick="config.applyConfiguration()">Apply configuration</button>
                 </form>
             </div>
 
-            <!-- Help -->
+            <!-- FAQ -->
             <div role="tabpanel" aria-labelledby="help" hidden>
-                <b>Devices</b> (dots)
-                <ul>
-                    <li><b style="color:#f79647">orange</b> &#10132; hub <span class="tooltip"><span>This is your beloved Hubitat hub, always a good boy...</span></span></li>
-                    <li><b style="color:#4f81bc">blue</b> &#10132; repeater <span class="tooltip"><span>This is either a hub 'neighbor' or is used by at least one other device to route through it</span></span></li>
-                    <li><b style="color:#9ACD32">green</b> &#10132; lonely <span class="tooltip"><span>No one routes through this device; it is either battery-powered or the other devices are just mean to it (awww...)</span></span></li>
-                    <li><b style="color:#696969">grey</b> &#10132; bad neighbor <span class="tooltip"><span>Hub neighbor that is either powered off or something might be wrong with it (outCost:0)</span></span></li>
-                    <li><b style="color:#FF00FF">pink</b> &#10132; new <span class="tooltip"><span>We just discovered this device and highlighted it to make it more visible; it will change to its true color after 5 seconds</span></span></li>
-                </ul>
+                <details>
+                    <summary>Where are all my devices?</summary>
+                    <p>You are not seeing all your Zigbee devices in the graph because the Hubitat hub does not know the Zigbee network's complete routing table.</p>
+                    <p>There are 3 lists that the hub is actively maintaining:
+                        <ul>
+                            <li><b>Children Table</b> - Contains a list of Zigbee End Devices (ZED) that have the hub as their parent. These end devices communicate only
+                                through their parent device and, unlike repeating devices, cannot relay messages intended for other devices.</li>
+                            <li><b>Neighbors Table</b> - Contains a list of repeating devices that the hub thinks are in its proximity (based on signal strength). Since
+                                this list is limited to only 16 entries, the hub might constantly add and remove devices from this list if it discovers neighboring devices
+                                with stronger radio connections (better "inCost" and "outCost" metrics).</li>
+                            <li><b>Routing Table</b> - Contains the list of most recently discovered routes, limited to 16 entries. Each route entry contains the target device and
+                                the first hop (e.g.: a device in the Neighbors Table) that the hub will contact in order to send a message to that target device; information
+                                about any intermediary devices after the first hop is missing from this table. This means that when the graph is showing a blue line from, say,
+                                one of the hub's neighbors to a target device, there might be some other intermediary devices on that route that are not displayed.
+                            </li>
+                        </ul>
+                    </p>
+                    <p>How routing works: Routes are formed when one device sends a route request to discover the path to another device. After a route is discovered
+                        between the two devices, the source device sends its message to the first device in the route, as specified in the source device's Routing Table.
+                        Each intermediate device uses its own Routing Table to forward the message to the next device (that is "hop") along the route until the message
+                        reaches its destination. If a route fails, a route error is sent back to the originator of the message who can then rediscover the route.</p>
+                    <p>The graph retrieves the contents of these 3 tables every 5 seconds from the hub. In an attempt to paint a more complete picture of the Zigbee network, when
+                        an entry is removed by the hub from any of these lists, the graph does not also remove it, but displays it as a dotted line. This way, the graph is
+                        accumulating information about more and more devices over time; the downside is that, in non stable Zigbee networks where routes are constantly changing,
+                        the graph will show old information that might be no longer accurate.</p>
+                    <p>You can change the "accumulating" behaviour of the graph from the "Config" tab.</p>
+                    <address>-- Find more information in this <a href="https://www.silabs.com/documents/public/user-guides/ug103-02-fundamentals-zigbee.pdf" target="_blank" rel="noopener noreferrer">Zigbee Fundamentals</a>
+                        document from Silicon Labs.
+                    </address>
+                </details>
 
-                <b>Connections</b> (lines)
-                <ul>
-                    <li><b style="color:#4f81bc">blue</b> &#10132; child <span class="tooltip"><span>Connection taken from 'Child Data' table</span></span></li>
-                    <li><b style="color:#f79647">orange</b> &#10132; neighbor <span class="tooltip"><span>Connection taken from 'Neighbor Table Entry'</span></span></li>
-                    <li><b style="color:#9ACD32">green</b> &#10132; route <span class="tooltip"><span>Connection taken from 'Route Table Entry'</span></span></li>
-                    <li><b style="color:#FF00FF">pink</b> &#10132; new <span class="tooltip"><span>We just discovered this connection and highlighted it to make it more visible; it will change to its true color after 5 seconds</span></span></li>
-                    <li>dotted line &#10132; old <span class="tooltip"><span>This connection was present in the past in 'Route Table Entry'</span></span></li>
-                </ul>
+                <details>
+                    <summary>How do we interpret the loops?</summary>
+                    <p>Loops happens when there's a Routing Table entry in which the route to the destination includes (as a first and only hop) the destination itself 
+                        -- that is, the destination is also one of the hub's neighbors.</p>
+                    <p>Without the loop, not too much additional information would be lost since neighbor repeater and end devices of the hub already have unique colors
+                        (but it is mesmerizing eye candy lol). It does serve as an indication that the hub issued a route request for that device (in addition to it occupying a neighbor slot).</p>
+                    <p>You can hide the graph loops if you uncheck the "show self-route loops" option from the "Config" tab.</p>
+                    <address>-- Answered by <a href="https://community.hubitat.com/u/Tony" target="_blank" rel="noopener noreferrer">@Tony</a></address>
+                </details>
 
-                <b>More info</b>
-                <ul>
-                    <li>zigbee data is refreshed every 5 seconds</li>
-                    <li>click any node to go to the device edit page</li>
-                    <li>drag any node to fix its position, right-click it again to reset</li>
-                    <li>double-click anywhere to center the graph and reset zooming</li>
-                </ul>
+                <details>
+                    <summary>Why does outCost:0 means "bad neighbor"?</summary>
+                    <blockquote>SiLabs SDK docs: a value of outCost:0 means that a neighbor exchange message from the neighbor has not been received recently
+                        enough, or that our ID was not present in the recently received one.</blockquote>
+                    <p>I interpreted that as "a node that can be a repeater but is not currently repeating or has not for a while".</p>
+                    <p>Not all devices that appear in the hub's Neighbors Table have strong enough links to be useable as repeaters (though they may appear in the Neighbors
+                        Tables of other repeaters and be usable by them as such).</p>
+                    <p>They could also just be on the fringe, reception wise, with respect to the hub even though there's nothing wrong with them (to have good connectivity
+                        to the hub they'd need to be reachable by adequate links to other repeaters in the mesh; in those device's Neighbor Tables they would hopefully not be showing
+                        '0's or there probably would be something wrong with them).</p>
+                    <p>If there are enough Neighbors Table slots available (and no repeaters with better cost numbers to fill them) they'll probably stay in the hub's Neighbors Table
+                        though it won't use them for routing.</p>
+                    <address>-- Answered by <a href="https://community.hubitat.com/u/hubitrep" target="_blank" rel="noopener noreferrer">@hubitrep</a> and <a href="https://community.hubitat.com/u/Tony" target="_blank" rel="noopener noreferrer">@Tony</a></address>
+                </details>
+
+                <details>
+                    <summary>Why devices dissapear from the graph?</summary>
+                    <p>With the default settings, the graph does not remove old information (connections that the hub reported in the past but are no longer present in the incoming
+                        data) but tries to accumulate it instead (dotted links).</p>
+                    <p>You can change this behaviour from the "Config" tab. When you disable any accumulating setting from the list, old connections with that type are no longer kept but are
+                        immediately removed from the graph. If a device has no connections, it is also removed.</p>
+                </details>
+
+                <details>
+                    <summary>Is there a significance to the pulsing nodes?</summary>
+                    <p>The graph is listening to Zigbee messages that the hub receives (same information you can find in the <a href="/hub/zigbeeLogs" target="_blank" rel="noopener noreferrer">/hub/zigbeeLogs</a>
+                        page in the UI).
+                        <ul>
+                            <li>A node pulses when such a message is received from that particular device; if you hover it, you can see the last received message details.</li>
+                            <li>A node has a dot inside it if we received at least one such message; nodes without dots inside them are not very chatty within the Zigbee mesh.</li>
+                        </ul>
+                    </p>
+                    <address>-- Answered by <a href="https://community.hubitat.com/u/dandanache" target="_blank" rel="noopener noreferrer">@dandanache</a></address>
+                </details>
+
+                <details>
+                    <summary>Should I remove unused repeaters?</summary>
+                    <p>The data returned by <a href="/hub/zigbee/getChildAndRouteInfo" target="_blank" rel="noopener noreferrer">getChildandRouteInfo</a> cannot ever return all the information on your Zigbee mesh. This visualization will only ever show you
+                        part of your mesh; I've only had it show me 65 of 143 Zigbee devices on my mesh.</p>
+                    <p>Thus, don't conclude a repeater is unused because this graph never shows it with connections.</p>
+                    <address>-- Answered by <a href="https://community.hubitat.com/u/jlv" target="_blank" rel="noopener noreferrer">@jlv</a></address>
+                </details>
             </div>
         </tab-container>
     </div>
   
-    <script>
-    class ZigbeeData {
+    <script type="text/javascript">
+    class ZigbeeMesh {
         constructor() {
             this.nodes = [];
             this.links = [];
+            this.devices = [];
             this.empty = true;
+
+            this.config = {
+                accumulate: [],
+                loops: true
+            };
+        }
+
+        loadJson(json) {
+            this.devices = [...json.devices];
+
+            json.children.forEach(child => {
+                const tooltip = this._tooltip('Child link', {Type: (child.type === 'EMBER_SLEEPY_END_DEVICE' ? 'battery powered' : 'mains powered, cannot act as repeater')});
+                this.addLink(
+                    this._getDeviceName(child.id),        // source name
+                    child.id,                             // source addr
+                    this._getDeviceName('0000'),          // target name
+                    '0000',                               // target addr
+                    'child',                              // link type
+                    tooltip                               // link label (tooltip)
+                );
+            });
+
+            json.neighbors.forEach(neighbor => {
+                const tooltip = this._tooltip('Neighbor link', {Age: neighbor.age, LQI: neighbor.lqi, inCost: neighbor.inCost, outCost: neighbor.outCost});
+                this.addLink(
+                    this._getDeviceName('0000'),          // source name
+                    '0000',                               // source addr
+                    this._getDeviceName(neighbor.id),     // target name
+                    neighbor.id,                          // target addr
+                    'neighbor',                           // link type
+                    tooltip                               // link label (tooltip)
+                );
+            });
+
+            json.routes
+                .filter(route => route.used === true && route.status === 'Active')
+                .forEach(route => {
+                    const tooltip = this._tooltip('Route link', {Status: route.status, Age: route.age, 'Concentrator Type': route.concentratorType});
+                    this.addLink(
+                        this._getDeviceName(route.nextHopId),     // source name
+                        route.nextHopId,                          // source addr
+                        this._getDeviceName(route.id),            // target name
+                        route.id,                                 // target addr
+                        'route',                                  // link type
+                        tooltip                                   // link label (tooltip)
+                    );
+                });
         }
 
         addLink(sourceName, sourceAddr, targetName, targetAddr, type, label) {
 
             // Self loop?
-            if (sourceAddr === targetAddr && !config.loops) return;
+            if (sourceAddr === targetAddr && !this.config.loops) return false;
 
             this.addNode(sourceName, sourceAddr);
             this.addNode(targetName, targetAddr);
@@ -372,7 +692,11 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
             }
 
             // Add new node
-            this.nodes.push({ name, addr, tooltip: `Address: ${addr}`, new: this.empty === false });
+            let tooltip = this._tooltip(name, {Address: addr});
+            if (addr === '0000') {
+                tooltip = this._tooltip(name, {'Zigbee coordinator': null});
+            }
+            this.nodes.push({ name, addr, tooltip, new: this.empty === false });
         }
 
         removeLink(link, force = false) {
@@ -380,7 +704,7 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
             if (idx < 0) return false;
 
             // Just mark old links as not 'alive' - don't actually remove them
-            if (!force && config.accumulate.includes(link.type)) {
+            if (!force && this.config.accumulate.includes(link.type)) {
                 if (!link.alive) return false;
                 link.alive = false;
                 link.label = `last seen ${new Date().toLocaleString()}`;
@@ -409,22 +733,23 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
 
             // Update node types
             this.nodes.forEach(node => {
-                if (node.addr === 'XXXX') {
+                if (node.addr === '0000') {
                     node.type = 'hub';
                     return;
                 }
 
-                if (!this.links.some(link => link.targetAddr == node.addr)) {
-                    node.type = 'passive';
+                const neighborLink = this.links.find(link => link.targetAddr === node.addr && link.type === 'neighbor');
+                if (neighborLink) {
+                    node.type = neighborLink.label.includes('outCost: 0') ? 'badNeighbor' : 'repeater';
                     return;
                 }
 
-                if(this.links.some(link => link.targetAddr == node.addr && link.type === 'neighbor' && link.label.endsWith('outCost:0'))) {
-                    node.type = 'badNeighbor';
+                if (!this.links.some(link => link.type !== 'child' && link.sourceAddr === node.addr)) {
+                    node.type = 'recluse';
                     return;
                 }
 
-                node.type = 'active';
+                node.type = 'repeater';
             });
 
             // Return data
@@ -440,6 +765,9 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
             // Remove new flag
             this.nodes.forEach(node => node.new = undefined);
             this.links.forEach(link => link.new = undefined);
+
+            // Replace devices list
+            this.devices = [...newData.devices];
 
             // Add new links; if any
             newData.links.forEach(link => somethingChanged = this.addLink(
@@ -462,29 +790,328 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
                 clearTimeout(node.timeout);
                 node.timeout = setTimeout(() => node.talking = false, 3000);
                 node.talking = true;
-                node.tooltip = `Address: ${addr}<br>Last log message:<br>  - time: ${message.time}<br>  - LQI: ${message.lastHopLqi}<br>  - RSSI: ${message.lastHopRssi}`
+                node.tooltip = this._tooltip(node.name, {Address: addr, 'Last message': message.time, LQI: message.lastHopLqi, RSSI: message.lastHopRssi})
             }
         }
 
-        clearOldLinks(keepTypes = []) {
-            this.links.forEach(link => {
-                if (link.alive || keepTypes.includes(link.type)) return;
-                this.removeLink(link, true);
-            });
+        applyConfiguration(configuration) {
+            this._clearOldLinks(configuration.accumulate);
+            if (!configuration.loops) this._clearLoops();
+
+            this.config.accumulate = [...configuration.accumulate];
+            this.config.loops = configuration.loops;
         }
 
-        clearLoops() {
+        _tooltip(header, props) {
+            let text = `<header>${header}</header>`;
+            for (const key in props) {
+                text += `<li>${key}${props[key] !== null ? `: ${props[key]}` : ''}</li>`;
+            }
+            return text;
+        }
+
+        _clearOldLinks(keepTypes = []) {
+            const oldLinks = [];
+            this.links.forEach(link => {
+                if (link.alive || keepTypes.includes(link.type)) return;
+                oldLinks.push(link);
+            });
+            oldLinks.forEach(oldLink => this.removeLink(oldLink, true));
+        }
+
+        _clearLoops() {
+            const loops = [];
             this.links.forEach(link => {
                 if (link.sourceAddr !== link.targetAddr) return;
-                this.removeLink(link, true);
+                loops.push(link);
             });
+            loops.forEach(loop => this.removeLink(loop, true));
+        }
+
+        _getDeviceName(addr) {
+            if (addr === '0000') return 'Hubitat';
+            const device = this.devices.find(device => device.zigbeeId === addr);
+            return device ? device.name : 'Unknown';
+        }
+    }
+
+    class ZigbeeGraph {
+        constructor(element, zigbeeMesh) {
+            this.element = element;
+            this.zigbeeMesh = zigbeeMesh;
+
+            this.createdAt = null;
+            this.graph = ForceGraph()(this.element)
+                .graphData(zigbeeMesh.data)
+                .nodeId('addr')
+                .nodeLabel('tooltip')
+                .linkSource('sourceAddr')
+                .linkTarget('targetAddr')
+                .nodeCanvasObject((node, ctx) => this._nodePaint(node, null, ctx))
+                .linkLabel('label')
+                .linkColor(link => this._linkColor(link))
+                .linkCurvature(link => link.sourceAddr == link.targetAddr ? 1 : 0)
+                .linkDirectionalParticles(1)
+                .linkLineDash(link => link.alive === false && [2, 2])
+                .onNodeDragEnd(node => {
+                    node.fx = node.x;
+                    node.fy = node.y;
+                })
+                .onNodeRightClick(node => {
+                    node.fx = undefined;
+                    node.fy = undefined;
+                    this.graph.graphData(this.graph.graphData());
+                })
+                .onNodeClick(node => {
+                    const device = this.zigbeeMesh.devices.find(device => device.zigbeeId === node.addr);
+                    if (device) {
+                        window.open(`/device/edit/${device.id}`);
+                    }
+                });
+        }
+
+        render(zigbeeMesh) {
+            let needsRedraw = this.zigbeeMesh.merge(zigbeeMesh);
+
+            // Init graph and zoom to fit
+            if (this.createdAt === null) {
+                console.log('First paint', this.zigbeeMesh.data);
+                this._init(this.zigbeeMesh.data);
+                return;
+            }
+
+            // Redraw graph only if something changed
+            if (needsRedraw) {
+                console.log('Repainting graph', this.zigbeeMesh.data);
+                this.graph.graphData(this.zigbeeMesh.data);
+            }
+        }
+
+        zoomToFit() {
+            this.graph.zoomToFit(300, 30);
+        }
+
+        applyConfiguration(configuration) {
+            if (configuration.dots) {
+                this.graph.linkDirectionalParticles(1);
+                this.graph.linkDirectionalArrowLength(0);
+            } else {
+                this.graph.linkDirectionalParticles(0);
+                this.graph.linkDirectionalArrowLength(3);
+                this.graph.linkDirectionalArrowRelPos(1)
+            }
+        }
+
+        _init(data) {
+            this.createdAt = +new Date();
+            this.graph.graphData(data);
+
+            // Zoom to fit
+            setTimeout(() => this.graph.zoomToFit(300, 30), 1500);
+        }
+
+        _nodePaint(node, color, ctx) {
+            const animateTime = 1000;
+
+            // Pulse chatty devices
+            let t = 0;
+            if (node.talking) {
+                t = ((+new Date() - this.createdAt) % animateTime) / animateTime;
+                if (t < 0.10) {
+                    t = t * 10
+                } else {
+                    t = 1 - (t - 0.10) * 1.1111;
+                }
+            }
+
+            // Circle
+            const colors = UI.colors();
+            ctx.fillStyle = node.new ? colors.Magenta : { repeater: colors.Blue, badNeighbor: colors.Gray, recluse: colors.Green, hub: colors.Orange }[node.type];
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 3 + 2 * t, 0, 2 * Math.PI, false);
+            ctx.fill();
+
+            ctx.lineWidth = 0.2;
+            ctx.strokeStyle = this._adjustColor(ctx.fillStyle, -30);
+            ctx.stroke();
+
+            if (node.talking === true || node.talking === false) {
+                ctx.fillStyle = this._adjustColor(ctx.fillStyle, 40);
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 1 + 2 * t, 0, 2 * Math.PI, false);
+                ctx.fill();
+            }
+
+            // Text
+            ctx.fillStyle = colors.TextColor;
+            ctx.font = '3px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.name, node.x, node.y + 5);
+        }
+
+        _linkColor(link) {
+            const colors = UI.colors();
+            return link.new ? colors.Magenta : { child: colors.Green, neighbor: colors.Orange, route: colors.Blue }[link.type];
+        }
+
+        _adjustColor(color, amount) {
+            return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
         }
     }
 
     class Configuration {
         constructor() {
-            this.accumulate = ['route'];
+            this.accumulate = ['child', 'neighbor', 'route'];
             this.loops = true;
+            this.dots = true;
+            this.dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+
+        loadFromURL() {
+            const params = new URLSearchParams(window.location.search);
+
+            // Accumulate
+            const acc = params.get('acc');
+            if (acc != null) this.accumulate = acc.split(':').filter(val => ['child', 'neighbor', 'route'].includes(val));
+
+            // Self-links
+            const showLoops = params.get('loops');
+            if (showLoops != null) this.loops = showLoops != 'false';
+
+            // Link particles
+            const showDots = params.get('dots');
+            if (showDots != null) this.dots = showDots != 'false';
+
+            // Dark mode
+            const darkTheme = params.get('dark');
+            if (darkTheme != null) this.dark = darkTheme === 'true';
+
+            // Notify outside world of the changes
+            this.onChange(this);
+        }
+    }
+
+    class Revolver {
+        constructor() {
+            this.meshURL = '/hub/zigbee/getChildAndRouteInfoJson';
+            this.socketURL = `${window.location.href.startsWith('https://') ? 'wss' : 'ws'}://${new URL(window.location.href).host}/zigbeeLogsocket`;
+            //this.socketURL = 'ws://192.168.1.201/zigbeeLogsocket';
+            this.pollingIntervalMs = 5000;
+            this.fetchTimeout = null;
+            this.socket = null;
+
+            // Overwrite these to make them more useful
+            this.onWebsocketMessage = data => console.log('[Websocket] Data received', data);
+            this.onFetchData = data => console.log('[Zigbee] Data received', data);
+        }
+
+        fire() {
+            clearTimeout(this.fetchTimeout);
+
+            // Start Zigbee websocket if not already started
+            if (this.socket === null) {
+                console.info('Starting websocket', this.socketURL);
+                try {
+                    this.socket = new WebSocket(this.socketURL);
+                    this.socket.onmessage = event => this.onWebsocketMessage(JSON.parse(event.data));
+                    this.socket.onerror = function (ex) {
+                        console.error('[Websocket] Error encountered', ex);
+                    };
+                } catch (ex) {
+                    this.socket = undefined;
+                    console.error('[Websocket] Failed to open websocket', ex);
+                    alert('[Websocket] Failed to open websocket: ' + ex);
+                }
+            }
+
+            // Fetch Zigbee data
+            fetch(new Request(this.meshURL), {cache: 'no-store'})
+                .then((response) => {
+                    if (!response.ok) {
+                        console.error('[Zigbee] Bad response (not 200 OK)', response);
+                        throw new Error(`HTTP error, status = ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(text => JSON.parse(text))
+                .then(json => {
+                    if (json.status === true) {
+                        this.onFetchData(json);
+                    }
+                    this.fetchTimeout = setTimeout(() => this.fire(), this.pollingIntervalMs);
+                })
+                .catch((ex) => {
+                    console.error('[Zigbee] Failed to retrieve data', ex);
+                    alert('[Zigbee] Failed to retrieve data: ' + ex.message);
+                    this.fetchTimeout = setTimeout(() => this.fire(), this.pollingIntervalMs);
+                });
+        }
+    }
+
+    class UI {
+        static colors() {
+            const css = getComputedStyle(document.documentElement);
+            return {
+                BgColorDarker: css.getPropertyValue('--bg-color-darker'),
+                TextColor: css.getPropertyValue('--text-color'),
+                Yellow: css.getPropertyValue('--Yellow'),
+                Orange: css.getPropertyValue('--Orange'),
+                Red: css.getPropertyValue('--Red'),
+                Magenta: css.getPropertyValue('--Magenta'),
+                Magenta: css.getPropertyValue('--Magenta'),
+                Blue: css.getPropertyValue('--Blue'),
+                Cyan: css.getPropertyValue('--Cyan'),
+                Green: css.getPropertyValue('--Green'),
+                Gray: css.getPropertyValue('--Gray')
+            };
+        }
+
+        paint(zigbeeMesh) {
+
+            // Update status
+            document.getElementById('lastRefresh').innerText = `Last refresh: ${new Date().toLocaleString()}`;
+            document.getElementById('nodesCount').innerText = `Discovered devices: ${zigbeeMesh.nodes.length}/${zigbeeMesh.devices.length}`;
+
+            // Update devices list
+            const tbl = document.getElementById('zigbee-devices-list');
+            while (tbl.rows.length > 1) tbl.deleteRow(1);
+            zigbeeMesh.devices
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .forEach(device => {
+                    const tr = tbl.insertRow();
+                    const found = zigbeeMesh.nodes.some(node => node.addr === device.zigbeeId);
+                    tr.insertCell().appendChild(document.createTextNode(device.zigbeeId));
+
+                    const tooltip = document.createElement('span');
+                    const tooltipText = document.createElement('span');
+                    tooltipText.appendChild(document.createTextNode(found ? 'This device is present in the graph' : 'This device is not present in the graph'));
+                    tooltip.classList.add('tooltip');
+                    tooltip.appendChild(tooltipText);
+                    const cell = tr.insertCell();
+                    cell.appendChild(tooltip);
+                    cell.classList.add(found ? 'device-found' : 'device-missing')
+
+                    const link = document.createElement('a');
+                    link.setAttribute('href', `/device/edit/${device.id}`);
+                    link.setAttribute('target', '_blank');
+                    link.setAttribute('rel', 'noopener noreferrer');
+                    link.innerText = device.name;
+                    tr.insertCell().appendChild(link);
+                });
+        }
+
+        paintConfiguration(configuration) {
+            document.getElementById('conf-acc-children').checked = configuration.accumulate.some(val => val === 'child');
+            document.getElementById('conf-acc-neighbors').checked = configuration.accumulate.some(val => val === 'neighbor');
+            document.getElementById('conf-acc-routes').checked = configuration.accumulate.some(val => val === 'route');
+
+            document.getElementById('conf-loops').checked = configuration.loops;
+            document.getElementById('conf-dots').checked = configuration.dots;
+            document.getElementById('conf-dark').checked = configuration.dark;
+
+            document.documentElement.setAttribute('data-theme', configuration.dark ? 'dark' : 'light');
+            document.querySelector('meta[name="theme-color"]').setAttribute('content',  UI.colors().BgColorDarker);
         }
 
         applyConfiguration() {
@@ -499,323 +1126,62 @@ EzspGetParentChildParametersResponse [childCount=6, parentEui64=0000000000000000
             const loops = document.getElementById('conf-loops').checked;
             searchParams.set('loops', loops);
 
+            const dots = document.getElementById('conf-dots').checked;
+            searchParams.set('dots', dots);
+
+            const dark = document.getElementById('conf-dark').checked;
+            searchParams.set('dark', dark);
+
             var goto = window.location.pathname + '?' + searchParams.toString();
             history.pushState(null, '', goto);
-
-            // Apply config
-            this.loadFromURL()
-        }
-
-        loadFromURL() {
-            const params = new URLSearchParams(window.location.search);
-
-            // Accumulate
-            const acc = params.get('acc');
-            if (acc != null) this.accumulate = acc.split(':').filter(val => ['child', 'neighbor', 'route'].includes(val));
-
-            document.getElementById('conf-acc-children').checked = this.accumulate.some(val => val === 'child');
-            document.getElementById('conf-acc-neighbors').checked = this.accumulate.some(val => val === 'neighbor');
-            document.getElementById('conf-acc-routes').checked = this.accumulate.some(val => val === 'route');
-            zigbeeData.clearOldLinks(this.accumulate);
-
-            // Self-links
-            const showLoops = params.get('loops');
-            if (acc != null) this.loops = showLoops != 'false';
-            document.getElementById('conf-loops').checked = this.loops;
-            if (!this.loops) zigbeeData.clearLoops();
         }
     }
 
-    let Graph = null;
-    const zigbeeData = new ZigbeeData();
-    const config = new Configuration();
-    let fetchTimeout = null;
+    /////////////////////////////////////////////////////////////////
+    // Entry point
+    /////////////////////////////////////////////////////////////////
 
-    // Settings
-    const url = '/hub/zigbee/getChildAndRouteInfo';
-    const pollingIntervalMs = 5000;
+    // Init instances
+    const zigbeeMesh = new ZigbeeMesh();
+    const zigbeeGraph = new ZigbeeGraph(document.getElementById('graph'), zigbeeMesh);
+    const ui = new UI();
 
-    // Embed mode
-    if (window.location.href.includes('embed=true')) {
-        document.body.classList.add('embedded');
+    // Config
+    const configuration = new Configuration();
+    configuration.onChange = config => {
+        ui.paintConfiguration(config);
+        zigbeeMesh.applyConfiguration(config);
+        zigbeeGraph.applyConfiguration(config);
     }
 
-    // Init config from URL
-    config.loadFromURL();
-
-    // Auto-start fetch
-    fetchData();
-    window.ondblclick = () => Graph && Graph.zoomToFit(300, 30);
-
-    // Auto-start websocket
-    const socketURL = `${window.location.href.startsWith('https://') ? 'wss' : 'ws'}://${new URL(window.location.href).host}/zigbeeLogsocket`;
-    //const socketURL = 'ws://192.168.1.201/zigbeeLogsocket';
-    console.log('Using websocket URL', socketURL);
-    const socket = new WebSocket(socketURL);
-    socket.onmessage = function(event) {
-        console.log('[message] Data received from websocket', event.data);
-        zigbeeData.onMessage(JSON.parse(event.data));
-    };
-
-    // Auto-retrieve all zigbee devices list
-    const allZigbeeDevices = [];
-    retrieveAllZigbeeDevices();
-    function retrieveAllZigbeeDevices() {
-        fetch(new Request('/hub/zigbeeInfo'), {cache: 'no-store'})
-            .then(response => response.text())
-            .then(text => {
-                allZigbeeDevices.splice(0, allZigbeeDevices.length);
-                Array.from(new DOMParser()
-                    .parseFromString(text, 'text/html')
-                    .getElementsByClassName('mdl-js-data-table')[0]
-                    .getElementsByTagName('tbody')[0]
-                    .getElementsByTagName('tr')
-                ).forEach(tr => {
-                    allZigbeeDevices.push({
-                        addr: tr.cells[0].innerText,
-                        id: tr.cells[2].innerText,
-                        name: tr.cells[3].innerText,
-                    });
-                });
-                console.log('Retrieved all zigbee devices list', allZigbeeDevices);
-                setTimeout(updateDevicesTable, 1000);
-
-                // Refresh zigbee devices list every 2 minutes
-                setTimeout(retrieveAllZigbeeDevices, 120000);
-            })
-            .catch((error) => {
-                console.log('Failed to retrieve all zigbee devices list', error);
-            });
+    // Revolver
+    const revolver = new Revolver();
+    revolver.onWebsocketMessage = json => {
+        console.warn('websocket', json);
+        zigbeeMesh.onMessage(json);
+    }
+    revolver.onFetchData = json => {
+        console.info('fetch', json);
+        const newData = new ZigbeeMesh();
+        newData.loadJson(json);
+        ui.paint(newData);
+        zigbeeGraph.render(newData);
     }
 
-    function updateDevicesTable() {
-        const tbl = document.getElementById('zigbee-devices-list');
-        while (tbl.rows.length > 1) tbl.deleteRow(1);
-        allZigbeeDevices
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .forEach(device => {
-                const tr = tbl.insertRow();
-                tr.insertCell().appendChild(document.createTextNode(device.addr));
-                tr.insertCell().appendChild(document.createTextNode(zigbeeData.nodes.some(node => node.addr === device.addr) ? '✅' : '⛔'));
+    // On page load
+    window.onload = () => {
+        configuration.loadFromURL();
+        revolver.fire();
 
-                const link = document.createElement('a');
-                link.setAttribute('href', `/device/edit/${device.id}`);
-                link.innerText = device.name;
-                tr.insertCell().appendChild(link);
-            });
-    }
-
-    function fetchData() {
-        clearTimeout(fetchTimeout);
-        console.log(`Retrieving data from ${url}...`);
-        return fetch(new Request(url), {cache: 'no-store'})
-            .then((response) => {
-                if (response.status === 404) {
-                    document.getElementById('zigbee-data').click();
-                    document.getElementById('pasted').focus();
-                    throw new Error('Please paste the zigbee data from http://hubitat.local/hub/zigbee/getChildAndRouteInfo');
-                }
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error, status = ${response.status}`);
-                }
-                return response.text();
-            })
-            .then((text) => {
-                document.getElementById('pasted').value = text;
-                renderGraph(text);
-                fetchTimeout = setTimeout(fetchData, pollingIntervalMs);
-                document.getElementById('lastRefresh').innerText = `Last refresh: ${new Date().toLocaleString()}`;
-                document.getElementById('nodesCount').innerText = `Discovered devices: ${zigbeeData.nodes.length}${allZigbeeDevices.length > 0 ? '/' + allZigbeeDevices.length : ''}`;
-            })
-            .catch((error) => {
-                console.log(error);
-                alert(error.message);
-            });
-    }
-
-    function renderData() {
-        const text = document.getElementById('pasted').value;
-        if (text == '') {
-            document.getElementById('pasted').focus();
-            return;
+        window.ondblclick = () => zigbeeGraph.zoomToFit(300, 30);
+        if (window.location.href.includes('embed=true')) {
+            document.body.classList.add('embedded');
         }
-        document.getElementById('status').click();
-        renderGraph(text);
-        document.getElementById('lastRefresh').innerText = `Last refresh: ${new Date().toLocaleString()}`;
-        document.getElementById('nodesCount').innerText = `Discovered devices: ${zigbeeData.nodes.length}`;
-    }
 
-    function parseData(text) {
-        const data = new ZigbeeData();
-
-        let state = null;
-        let counter = 0;
-        text.split(/\r?\n/).forEach(line => {
-            if (line == '') return;
-
-            // Parse markers
-            if (line == 'Child Data') {
-                state = 'children';
-                return;
-            }
-
-            if (line == 'Neighbor Table Entry') {
-                state = 'neighbors';
-                return;
-            }
-
-            if (line == 'Route Table Entry') {
-                state = 'routes';
-                return;
-            }
-
-            if (state === 'children') {
-                if (!line.startsWith('child:') && !line.startsWith('[')) return;
-
-                // child:[Dorm - Wall Button, 7C42, type:EMBER_SLEEPY_END_DEVICE]
-                const childRx = /\[([^,]*), ([^,]*), .*\]/g;
-                const childResults = childRx.exec(line);
-                data.addLink(
-                    childResults[1], childResults[2],          // source
-                    'Hubitat', 'XXXX',                         // target
-                    'child',                                   // link type
-                    'child'                                    // link label
-                );
-                return;
-            }
-
-            if (state === 'neighbors') {
-                if (!line.startsWith('[')) return;
-
-                // [Bathroom - Fan, 1764], LQI:221, age:4, inCost:5, outCost:5
-                const neighborRx = /\[([^,]*), ([^\]]*)\], (.*)/g;
-                const neighborResults = neighborRx.exec(line);
-                data.addLink(
-                    'Hubitat', 'XXXX',                           // source
-                    neighborResults[1], neighborResults[2],      // target
-                    'neighbor',                                  // link type
-                    neighborResults[3].replaceAll(', ', ' ')     // link label
-                );
-                return;
-            }
-
-            if (state === 'routes') {
-                if (!line.startsWith('status:Active')) return;
-
-                // status:Active, age:64, routeRecordState:0, concentratorType:None, [Livingroom - Wall Buttons #02, A198] via [Livingroom - Window Downlight Bulb #05, 6DA0]
-                const routeRx = /\[([^,]*), ([^\]]*)\] via \[([^,]*), ([^\]]*)\]/g;
-                const routeResult = routeRx.exec(line);
-                data.addLink(
-                    routeResult[1], routeResult[2],              // source
-                    routeResult[3], routeResult[4],              // target
-                    'route',                                     // link type
-                    'route'                                      // link label
-                );
-                return;
-            }
+        document.getElementById('configForm').addEventListener('change', () => {
+            ui.applyConfiguration();
+            configuration.loadFromURL();
         });
-        
-        return data;
-    }
-
-    function renderGraph(text) {
-        const data = parseData(text);
-        console.log('New data', data);
-
-        // This is not our first rodeo, cowboy!
-        if (Graph !== null) {
-            updateGraph(data);
-            return;
-        }
-
-        // Load graph for the first time
-        zigbeeData.merge(data);
-        console.log('zigbeeData.data', zigbeeData.data);
-        const dashLen = 2;
-        const gapLen = 2;
-        Graph = ForceGraph()(document.getElementById('graph'))
-            .graphData(zigbeeData.data)
-            .nodeId('addr')
-            .nodeLabel('tooltip')
-            .linkSource('sourceAddr')
-            .linkTarget('targetAddr')
-            .nodeCanvasObject((node, ctx) => nodePaint(node, null, ctx))
-            .linkLabel('label')
-            .linkColor(link => link.new ? '#FF00FF' : { child: '#4f81bc', neighbor: '#f79647', route: '#779e27' }[link.type])
-            .linkCurvature(link => link.sourceAddr == link.targetAddr ? 1 : 0)
-            .linkDirectionalParticles(1)
-            .linkLineDash(link => link.alive === false && [dashLen, gapLen])
-            .onNodeDragEnd(node => {
-                node.fx = node.x;
-                node.fy = node.y;
-            })
-            .onNodeRightClick(node => {
-                node.fx = undefined;
-                node.fy = undefined;
-                Graph.graphData(Graph.graphData());
-            })
-            .onNodeClick(node => {
-                const device = allZigbeeDevices.find(device => device.addr === node.addr);
-                if (device) {
-                    window.open(`/device/edit/${device.id}`);
-                }
-            });
-
-        // Zoom to fit
-        setTimeout(() => Graph.zoomToFit(300, 30), 1500);
-    }
-
-    function updateGraph(data) {
-        let needsRedraw = zigbeeData.merge(data);
-        if (needsRedraw) {
-            Graph.graphData(zigbeeData.data);
-        }
-    }
-
-    // Render Node
-    const st = +new Date();
-    const animateTime = 1000;
-    function nodePaint(node, color, ctx) {
-
-        // Pulse chatty devices
-        let t = 0;
-        if (node.talking) {
-            t = ((+new Date() - st) % animateTime) / animateTime;
-            if (t < 0.10) {
-                t = t * 10
-            } else {
-                t = 1 - (t - 0.10) * 1.1111;
-            }
-        }
-
-        // Circle
-        ctx.fillStyle = node.new ? '#FF00FF' : { active: '#4f81bc', badNeighbor: '#696969', passive: '#9ACD32', hub: '#f79647' }[node.type];
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, 3 + 2 * t, 0, 2 * Math.PI, false);
-        ctx.fill();
-
-        ctx.lineWidth = 0.2;
-        ctx.strokeStyle = adjustColor(ctx.fillStyle, -30);
-        ctx.stroke();
-
-        if (node.talking === true || node.talking === false) {
-            ctx.fillStyle = adjustColor(ctx.fillStyle, 40);
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, 1 + 2 * t, 0, 2 * Math.PI, false);
-            ctx.fill();
-        }
-
-        // Text
-        ctx.fillStyle = '#33558b';
-        ctx.font = '3px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(node.name, node.x, node.y + 5);
-    }
-
-    function adjustColor(color, amount) {
-        return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
     }
     </script>
 </body>

@@ -20,14 +20,13 @@ definition(
 )
 
 /**********************************************************************************************************************************************/
-private releaseVer() { return "1.4.0" }
-private appVerDate() { return "2023-05-25" }
-private htmlFileSrc() { return "https://raw.githubusercontent.com/dan-danache/hubitat/master/zigbee-graph-app/zigbee-graph.html" }
+private releaseVer() { return "2.0.0" }
+private appVerDate() { return "2023-06-20" }
 private htmlFileDst() { return "zigbee-graph.html" }
 /**********************************************************************************************************************************************/
 preferences {
     page name: "mainPage"
-    page name: "downloadPage"
+    page name: "changelogPage"
 }
 
 def mainPage() {
@@ -35,121 +34,77 @@ def mainPage() {
     dynamicPage (name: "mainPage", title: "Zigbee Graph - v${releaseVer() + ' - ' + appVerDate()}", install: showInstall, uninstall: !showInstall) {
         if (app.getInstallationState() == "COMPLETE") {
             section {
-			    paragraph "What would you like to do?"
-			    href name: "show", title: "Show zigbee graph", required: false, url: "/local/${htmlFileDst()}", description: "Tap Here to go to the zigbee graph."
-			    href name: "download", title: "Get latest version", required: false, page: "downloadPage", description: "Tap here to download the 'zigbee-graph.html' file from Github and store it in the File Manager."
+		        paragraph "What would you like to do?"
+		        href name: "show", title: "Show zigbee graph", required: false, url: "/local/${htmlFileDst()}", description: "Tap Here to go to the zigbee graph."
+                href name: "changelog", title: "View change log", required: false, page: "changelogPage", description: "Tap Here to go to see the latest application changes."
             }
         } else {
             section {
-                paragraph "Tap the [Done] button to create the application instance, download the 'zigbee-graph.html' file from Github and store it in the File Manager."
+                paragraph "Tap the [Done] button to create the application instance."
             }
         }
     }
 }
 
-def downloadPage() {
-    downloadGraphHTML();
-    return dynamicPage (name: "downloadPage", title: "Zigbee Graph - Update successful!", install: false, uninstall: false) {
+def changelogPage() {
+    dynamicPage (name: "changelogPage", title: "Zigbee Graph - v${releaseVer() + ' - ' + appVerDate()}", install: false, uninstall: false) {
         section {
-            href name: "show", title: "Show zigbee graph", required: false, url: "/local/${htmlFileDst()}", description: "Tap Here to go to the zigbee graph."
+		    paragraph "<h1>Change Log</h1>"
+        }
+        
+        section () {
+		    paragraph "<h2>v2.0.0 - 2023-05-20</h2>"
+            paragraph "<ul><li>Migrate to the new endpoint getChildAndRouteInfoJson to remove text parsing and HTML scraping</li>" +
+                "<li>Use <a href=\"https://ethanschoonover.com/solarized/\" target=\"_blank\">Solarized theme</a> colors</li>" +
+                "<li>Add support for Dark theme</li>" +
+                "<li>Add config option to hide link particles and how directional arrows instead (helps when sharing a graph image)</li>" +
+                "<li>Add FAQ section to try to add some meaning to the graph (content is taken mostly from the Hubitat community, thanks!)</li>" +
+                "<li>Other small UI improvements</li></ul>"
+        }
+        
+        section () {
+		    paragraph "<h2>v1.4.0 - 2023-05-25</h2>"
+            paragraph "<ul><li>Add the \"Config\" tab with basic settings</li></ul>"
+        }
+        
+        section () {
+		    paragraph "<h2>v1.3.1 - 2023-05-24</h2>"
+            paragraph "<ul><li>Bugfix: Devices table keeps accumulating records instead of clearing its contents</li></ul>"
+        }
+        
+        section () {
+		    paragraph "<h2>v1.3.0 - 2023-05-23</h2>"
+            paragraph "<ul><li>Add a new tab containing a list with all zigbee devices</li></ul>"
+        }
+        
+        section () {
+		    paragraph "<h2>v1.2.0 - 2023-05-23</h2>"
+            paragraph "<ul><li>Click a node to go to the device edit page</li>" +
+                "<li>Add embed=true URL parameter to hide controls</li>" +
+                "<li>Make application interface friendlier</li></ul>"
+        }
+        
+        section () {
+		    paragraph "<h2>v1.1.0 - 2023-05-23</h2>"
+            paragraph "<ul><li>Integrate zigbee logs into the graph</li></ul>"
+        }
+        
+        section () {
+		    paragraph "<h2>v1.0.0 - 2023-05-22</h2>"
+            paragraph "<ul><li>Initial release</li></ul>"
         }
     }
 }
 
 // Standard device methods
 def installed() {
-    log.debug "Installing ${app?.getLabel()}..."
-    downloadGraphHTML();
     log.debug "${app?.getLabel()} has been installed"
 }
 
 def updated() {
-    log.debug "Updating ${app?.getLabel()}..."
-    downloadGraphHTML();
     log.debug "${app?.getLabel()} has been updated"
 }
 
 def refresh() {
-    log.debug "Refreshing ${app?.getLabel()}..."
-    downloadGraphHTML();
     log.debug "${app?.getLabel()} has been refreshed"
-}
-
-void downloadGraphHTML() {
-    xferFile(htmlFileSrc(), htmlFileDst());
-}
-
-Boolean xferFile(fileIn, fileOut) {
-    fileBuffer = (String) readExtFile(fileIn)
-    retStat = writeFile(fileOut, fileBuffer)
-    return retStat
-}
-
-String readExtFile(fName){
-    log.debug "Downloading file from ${fName}..."
-    def params = [
-        uri: fName,
-        contentType: "text/html",
-        textParser: true
-    ]
-
-    try {
-        httpGet(params) { resp ->
-            if (resp!= null) {
-                int i = 0
-                String delim = ""
-                i = resp.data.read() 
-                while (i != -1){
-                    char c = (char) i
-                    delim+=c
-                    i = resp.data.read() 
-                }
-                log.trace "File ${fName} was successfully downloaded"
-                return delim
-            }
-            else {
-                log.error "Null Response"
-            }
-        }
-    } catch (exception) {
-        log.error "Read Ext Error: ${exception.message}"
-        return null;
-    }
-}
-
-Boolean writeFile(String fName, String fData) {
-    log.debug "Saving data to File Manager entry ${fName}..."
-
-    now = new Date()
-    String encodedString = "thebearmay$now".bytes.encodeBase64().toString();    
-    try {
-        def params = [
-            uri: 'http://127.0.0.1:8080',
-            path: '/hub/fileManager/upload',
-            query: [ 'folder': '/' ],
-            headers: [ 'Content-Type': "multipart/form-data; boundary=$encodedString" ],
-            body: """--${encodedString}
-Content-Disposition: form-data; name="uploadFile"; filename="${fName}"
-Content-Type: text/plain
-
-${fData}
-
---${encodedString}
-Content-Disposition: form-data; name="folder"
-
-
---${encodedString}--""",
-            timeout: 500,
-            ignoreSSLIssues: true
-        ]
-
-        httpPost(params) { resp ->
-        }
-        log.trace "File Manager entry ${fName} successfully saved"
-        return true
-    }
-    catch (e) {
-        log.error "Error writing file $fName: ${e}"
-    }
-    return false
 }
