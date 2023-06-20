@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hubitat - Zigbee Graph - v2.0.0</title>
+    <title>Hubitat - Zigbee Graph - v2.1.0</title>
     <meta charset="utf-8">
     <meta name="description" content="Allows you to visually render getChildAndRouteInfo of your Hubitat system">
     <meta name="keywords" content="hubitat, zigbee, graph">
@@ -301,13 +301,18 @@
         border: 0;
     }
 
+    form ul li div {
+        margin-bottom: 0.3em;
+    }
+
     form input[type=checkbox]{
         height: 0;
         width: 0;
         visibility: hidden;
+        float: right;
     }
 
-    form  label {
+    form label {
         cursor: pointer;
         text-indent: -9999px;
         width: 40px;
@@ -352,6 +357,39 @@
 
     form fieldset legend {
         padding: 0 .5em;
+    }
+
+    form input[type=range] {
+        appearance: none;
+        width: calc(100% - 4px);
+        height: 20px;
+        cursor: pointer;
+        background: var(--Green);
+        border-radius: 20px;
+        padding: 0 2px;
+    }
+
+    form input[type=range]:focus {
+        outline: none;
+    }
+
+    form  input[type=range]::-webkit-slider-thumb {
+        width: 16px;
+        height: 16px;
+        background: var(--Base3);
+        border-radius: 16px;
+        border: transparent;
+        cursor: pointer;
+        -webkit-appearance: none;
+    }
+
+    form input[type=range]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        background: var(--Base3);
+        border-radius: 16px;
+        border: transparent;
+        cursor: pointer;
     }
 
     /** FAQ **/
@@ -507,7 +545,11 @@
                             </li>
                             <li>
                                 <input type="checkbox" id="conf-dark"><label for="conf-dark">Dark theme</label>
-                                Dark theme
+                                <span>Dark theme</span>
+                            </li>
+                            <li>
+                                <div>Node repulsion force</div>
+                                <input type="range" id="conf-charge" min="0" max="9" step="1">
                             </li>
                         </ul>
                     </fieldset>
@@ -868,6 +910,8 @@
                         window.open(`/device/edit/${device.id}`);
                     }
                 });
+
+                this.graph.d3Force('charge').strength(() => -100);
         }
 
         render(zigbeeMesh) {
@@ -899,6 +943,14 @@
                 this.graph.linkDirectionalParticles(0);
                 this.graph.linkDirectionalArrowLength(3);
                 this.graph.linkDirectionalArrowRelPos(1)
+            }
+
+            const currentCharge = this.graph.d3Force('charge').strength()();
+            const newCharge = -1 * (configuration.charge + 1) * (configuration.charge + 1) * 50;
+            if (currentCharge != newCharge) {
+                this.graph.d3Force('charge').strength(() => newCharge);
+                this.graph.graphData(this.zigbeeMesh.data);
+                //this.graph.zoomToFit(300, 30);
             }
         }
 
@@ -966,6 +1018,7 @@
             this.loops = true;
             this.dots = true;
             this.dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            this.charge = 0;
         }
 
         loadFromURL() {
@@ -986,6 +1039,10 @@
             // Dark mode
             const darkTheme = params.get('dark');
             if (darkTheme != null) this.dark = darkTheme === 'true';
+
+            // Nodes charge
+            const charge = parseInt(params.get('charge'));
+            this.charge = (isNaN(charge) || charge < 0 || charge > 9) ? 0 : charge;
 
             // Notify outside world of the changes
             this.onChange(this);
@@ -1109,6 +1166,7 @@
             document.getElementById('conf-loops').checked = configuration.loops;
             document.getElementById('conf-dots').checked = configuration.dots;
             document.getElementById('conf-dark').checked = configuration.dark;
+            document.getElementById('conf-charge').value = configuration.charge % 11;
 
             document.documentElement.setAttribute('data-theme', configuration.dark ? 'dark' : 'light');
             document.querySelector('meta[name="theme-color"]').setAttribute('content',  UI.colors().BgColorDarker);
@@ -1131,6 +1189,9 @@
 
             const dark = document.getElementById('conf-dark').checked;
             searchParams.set('dark', dark);
+
+            const charge = document.getElementById('conf-charge').value;
+            searchParams.set('charge', charge);
 
             var goto = window.location.pathname + '?' + searchParams.toString();
             history.pushState(null, '', goto);

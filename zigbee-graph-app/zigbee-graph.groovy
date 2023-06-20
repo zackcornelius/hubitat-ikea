@@ -20,8 +20,8 @@ definition(
 )
 
 /**********************************************************************************************************************************************/
-private releaseVer() { return "2.0.0" }
-private appVerDate() { return "2023-06-20" }
+private releaseVer() { return "2.1.0" }
+private appVerDate() { return "2023-06-21" }
 private htmlFileDst() { return "zigbee-graph.html" }
 /**********************************************************************************************************************************************/
 preferences {
@@ -51,9 +51,14 @@ def changelogPage() {
         section {
 		    paragraph "<h1>Change Log</h1>"
         }
-        
+
         section () {
-		    paragraph "<h2>v2.0.0 - 2023-05-20</h2>"
+            paragraph "<h2>v2.1.0 - 2023-06-21</h2>"
+            paragraph "<ul><li>Add \"Node repulsion force\" config option to better visualize graphs with many devices</li></ul>"
+        }
+
+        section () {
+            paragraph "<h2>v2.0.0 - 2023-06-20</h2>"
             paragraph "<ul><li>Migrate to the new endpoint getChildAndRouteInfoJson to remove text parsing and HTML scraping</li>" +
                 "<li>Use <a href=\"https://ethanschoonover.com/solarized/\" target=\"_blank\">Solarized theme</a> colors</li>" +
                 "<li>Add support for Dark theme</li>" +
