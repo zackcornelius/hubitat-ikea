@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hubitat - Zigbee Graph - v2.1.0</title>
+    <title>Hubitat - Zigbee Graph - v2.2.0</title>
     <meta charset="utf-8">
     <meta name="description" content="Allows you to visually render getChildAndRouteInfo of your Hubitat system">
     <meta name="keywords" content="hubitat, zigbee, graph">
@@ -169,13 +169,35 @@
         left: 10px;
         opacity: .90;
         margin-right: 10px;
-        min-width: 22em;
+        min-width: 21em;
     }
 
     @media only screen and (min-device-width : 320px) and (max-device-width : 480px) {
         #tabs-container {
             width: calc(100% - 20px);
         }
+    }
+
+    /* Status */
+    #status-container details {
+        margin-top: .3em;
+    }
+
+    #status-container details summary {
+        cursor: pointer;
+        color: var(--Blue);
+    }
+
+    #status-container details section {
+        margin-top: .5em;
+    }
+
+    #status-container ul {
+        margin: .3em 0 1em 0;
+    }
+
+    #status-container ul:last-child {
+        margin-bottom: 0;
     }
 
     /* Devices list */
@@ -393,26 +415,26 @@
     }
 
     /** FAQ **/
-    details {
+    #faq-container details {
         padding: .5em .2em;
         border-bottom: 1px solid var(--separator-color);
         line-height: 1.5em;
     }
 
-    details:last-child {
+    #faq-container details:last-child {
         border-bottom: 0;
         padding-bottom: 0;
     }
 
-    details:first-child {
+    #faq-container details:first-child {
         padding-top: 0;
     }
 
-    details summary {
+    #faq-container details summary {
         cursor: pointer;
     }
 
-    details blockquote {
+    #faq-container details blockquote {
         font-style: italic;
         border-left: 6px solid var(--Gray);
         margin-left: 0;
@@ -420,30 +442,30 @@
         color: var(--text-color-darker);
     }
 
-    details[open] summary {
+    #faq-container details[open] summary {
         font-weight: bold;
         color: var(--Green);
     }
 
-    details > p {
+    #faq-container details > p {
         margin: 0 0 .5em 0;
     }
 
-    details > p,
-    details  li {
+    #faq-container details > p,
+    #faq-container details  li {
         text-align: justify;
         text-justify: inter-word;
     }
 
-    details  li {
+    #faq-container details  li {
         margin-top: .5em;
     }
 
-    details > *:nth-child(2) {
+    #faq-container details > *:nth-child(2) {
         margin-top: 1em;
     }
 
-    details > *:last-child {
+    #faq-container details > *:last-child {
         margin-bottom: 1em;
     }
     </style>
@@ -457,49 +479,49 @@
         <tab-container>
             <div role="tablist">
                 <button type="button" id="status" role="tab" tabindex="0" aria-selected="true">Status</button>
-                <button type="button" id="help" role="tab" tabindex="-1">Help</button>
-                <button type="button" id="zigbee-devices" role="tab" tabindex="-1">Devices</button>
+                <button type="button" id="devices" role="tab" tabindex="-1">Devices</button>
                 <button type="button" id="config" role="tab" tabindex="-1">Config</button>
                 <button type="button" id="faq" role="tab" tabindex="-1">FAQ</button>
             </div>
 
             <!-- Status -->
-            <div role="tabpanel" aria-labelledby="status">
-                <div id="lastRefresh">Loading, please wait...</div>
-                <div id="nodesCount"></div>
-            </div>
+            <div role="tabpanel" aria-labelledby="status" id="status-container">
+                <div id="nodesCount">Loading, please wait...</div>
 
-            <!-- Help -->
-            <div role="tabpanel" aria-labelledby="help" hidden>
-                <b>Devices</b> (dots)
-                <ul>
-                    <li><b style="color:var(--Orange)">orange</b> &#10132; hub <span class="tooltip"><span>This is your beloved Hubitat hub, always a good boy...</span></span></li>
-                    <li><b style="color:var(--Blue)">blue</b> &#10132; repeater <span class="tooltip"><span>This is either a hub 'neighbor' or is used by at least one other device to route through it.</span></span></li>
-                    <li><b style="color:var(--Green)">green</b> &#10132; recluse <span class="tooltip"><span>No one routes through this device; it is either battery-powered or the other devices are just mean to it. Aawww...</span></span></li>
-                    <li><b style="color:var(--Gray)">gray</b> &#10132; bad neighbor <span class="tooltip"><span>Hub neighbor that is either powered off or something might be wrong with it (outCost:0).</span></span></li>
-                    <li><b style="color:var(--Magenta)">magenta</b> &#10132; new <span class="tooltip"><span>We just discovered this device and highlighted it to make it more visible; it will change to its true color after 5 seconds.</span></span></li>
-                </ul>
-
-                <b>Connections</b> (lines)
-                <ul>
-                    <li><b style="color:var(--Green)">green</b> &#10132; child <span class="tooltip"><span>Connection taken from Children Table.<br><br>Note: Children devices are usually battery-powered or cannot relay messages intended for other devices.</span></span></li>
-                    <li><b style="color:var(--Orange)">orange</b> &#10132; neighbor <span class="tooltip"><span>Connection taken from Neighbors Table.</span></span></li>
-                    <li><b style="color:var(--Blue)">blue</b> &#10132; route <span class="tooltip"><span>Connection taken from Routes Table.<br><br>Warning: There may be intermediary devices on this route that we are unaware of. All we know is that the Hubitat hub uses this node as first hop in order to reach the target device!</span></span></li>
-                    <li><b style="color:var(--Magenta)">magenta</b> &#10132; new <span class="tooltip"><span>We just discovered this connection and highlighted it to make it more visible; it will change to its true color after 5 seconds.</span></span></li>
-                    <li>dotted line &#10132; old <span class="tooltip"><span>This connection was present in the past in the incoming data.</span></span></li>
-                </ul>
-
-                <b>More info</b>
-                <ul>
-                    <li>data is refreshed every 5 seconds</li>
-                    <li>click any node to go to the device edit page</li>
-                    <li>drag any node to fix its position, right-click it again to reset</li>
-                    <li>double-click anywhere to center the graph and reset zooming</li>
-                </ul>
+                <details>
+                    <summary>Chart legend</summary>
+                    <section>
+                        <b>Devices</b> (dots)
+                        <ul>
+                            <li><b style="color:var(--Orange)">orange</b> &#10132; hub <span class="tooltip"><span>This is your beloved Hubitat hub, always a good boy...</span></span></li>
+                            <li><b style="color:var(--Blue)">blue</b> &#10132; repeater <span class="tooltip"><span>This is either a hub 'neighbor' or is used by at least one other device to route through it.</span></span></li>
+                            <li><b style="color:var(--Green)">green</b> &#10132; recluse <span class="tooltip"><span>No one routes through this device; it is either battery-powered or the other devices are just mean to it. Aawww...</span></span></li>
+                            <li><b style="color:var(--Gray)">gray</b> &#10132; bad neighbor <span class="tooltip"><span>Hub neighbor that is either powered off or something might be wrong with it (outCost:0).</span></span></li>
+                            <li><b style="color:var(--Magenta)">magenta</b> &#10132; new <span class="tooltip"><span>We just discovered this device and highlighted it to make it more visible; it will change to its true color after 5 seconds.</span></span></li>
+                        </ul>
+        
+                        <b>Connections</b> (lines)
+                        <ul>
+                            <li><b style="color:var(--Green)">green</b> &#10132; child <span class="tooltip"><span>Connection taken from Children Table.<br><br>Note: Children devices are usually battery-powered or cannot relay messages intended for other devices.</span></span></li>
+                            <li><b style="color:var(--Orange)">orange</b> &#10132; neighbor <span class="tooltip"><span>Connection taken from Neighbors Table.</span></span></li>
+                            <li><b style="color:var(--Blue)">blue</b> &#10132; route <span class="tooltip"><span>Connection taken from Routes Table.<br><br>Warning: There may be intermediary devices on this route that we are unaware of. All we know is that the Hubitat hub uses this node as first hop in order to reach the target device!</span></span></li>
+                            <li><b style="color:var(--Magenta)">magenta</b> &#10132; new <span class="tooltip"><span>We just discovered this connection and highlighted it to make it more visible; it will change to its true color after 5 seconds.</span></span></li>
+                            <li>dotted line &#10132; old <span class="tooltip"><span>This connection was present in the past in the incoming data.</span></span></li>
+                        </ul>
+        
+                        <b>More info</b>
+                        <ul>
+                            <li>data is refreshed every 5 seconds</li>
+                            <li>click any node to go to the device edit page</li>
+                            <li>drag any node to fix its position, right-click it again to reset</li>
+                            <li>double-click anywhere to center the graph and reset zooming</li>
+                        </ul>
+                    </section>
+                </details>
             </div>
 
             <!-- Zigbee devices -->
-            <div role="tabpanel" aria-labelledby="zigbee-devices" hidden>
+            <div role="tabpanel" aria-labelledby="devices" id="devices-container" hidden>
                 <table id="zigbee-devices-list">
                     <thead>
                         <tr>
@@ -515,7 +537,7 @@
             </div>
 
             <!-- Config -->
-            <div role="tabpanel" aria-labelledby="config" hidden>
+            <div role="tabpanel" aria-labelledby="config" id="config-container" hidden>
                 <form id="configForm" onsubmit="event.preventDefault()">
                     <fieldset>
                         <ul>
@@ -557,7 +579,7 @@
             </div>
 
             <!-- FAQ -->
-            <div role="tabpanel" aria-labelledby="help" hidden>
+            <div role="tabpanel" aria-labelledby="faq" id="faq-container" hidden>
                 <details>
                     <summary>Where are all my devices?</summary>
                     <p>You are not seeing all your Zigbee devices in the graph because the Hubitat hub does not know the Zigbee network's complete routing table.</p>
@@ -591,7 +613,7 @@
 
                 <details>
                     <summary>How do we interpret the loops?</summary>
-                    <p>Loops happens when there's a Routing Table entry in which the route to the destination includes (as a first and only hop) the destination itself 
+                    <p>Loops happen when there's a Routing Table entry in which the route to the destination includes (as a first and only hop) the destination itself 
                         -- that is, the destination is also one of the hub's neighbors.</p>
                     <p>Without the loop, not too much additional information would be lost since neighbor repeater and end devices of the hub already have unique colors
                         (but it is mesmerizing eye candy lol). It does serve as an indication that the hub issued a route request for that device (in addition to it occupying a neighbor slot).</p>
@@ -749,7 +771,7 @@
             if (!force && this.config.accumulate.includes(link.type)) {
                 if (!link.alive) return false;
                 link.alive = false;
-                link.label = `last seen ${new Date().toLocaleString()}`;
+                link.label = 'Last seen: ${' + new Date().valueOf() + '}';
                 return false;
             }
 
@@ -832,7 +854,7 @@
                 clearTimeout(node.timeout);
                 node.timeout = setTimeout(() => node.talking = false, 3000);
                 node.talking = true;
-                node.tooltip = this._tooltip(node.name, {Address: addr, 'Last message': message.time, LQI: message.lastHopLqi, RSSI: message.lastHopRssi})
+                node.tooltip = this._tooltip(node.name, {Address: addr, 'Last message': '${' + new Date().valueOf() + '}', LQI: message.lastHopLqi, RSSI: message.lastHopRssi})
             }
         }
 
@@ -886,15 +908,16 @@
             this.graph = ForceGraph()(this.element)
                 .graphData(zigbeeMesh.data)
                 .nodeId('addr')
-                .nodeLabel('tooltip')
+                .nodeLabel(node => this._translateDates(node.tooltip))
                 .linkSource('sourceAddr')
                 .linkTarget('targetAddr')
-                .nodeCanvasObject((node, ctx) => this._nodePaint(node, null, ctx))
-                .linkLabel('label')
+                .nodeCanvasObject((node, ctx) => this._nodePaint(node, ctx))
+                .linkLabel(link => this._translateDates(link.label))
                 .linkColor(link => this._linkColor(link))
                 .linkCurvature(link => link.sourceAddr == link.targetAddr ? 1 : 0)
                 .linkDirectionalParticles(1)
                 .linkLineDash(link => link.alive === false && [2, 2])
+                .cooldownTime(5000)
                 .onNodeDragEnd(node => {
                     node.fx = node.x;
                     node.fy = node.y;
@@ -955,14 +978,37 @@
         }
 
         _init(data) {
-            this.createdAt = +new Date();
+            this.createdAt = new Date().valueOf();
             this.graph.graphData(data);
 
             // Zoom to fit
             setTimeout(() => this.graph.zoomToFit(300, 30), 1500);
         }
 
-        _nodePaint(node, color, ctx) {
+        _translateDates(html) {
+            return html.replace(/\$\{\d+\}/, matched => {
+                const date = new Date(parseInt(matched.substring(2, matched.length - 1)));
+                const formatter = new Intl.RelativeTimeFormat('en');
+                const ranges = {
+                    years: 3600 * 24 * 365,
+                    months: 3600 * 24 * 30,
+                    weeks: 3600 * 24 * 7,
+                    days: 3600 * 24,
+                    hours: 3600,
+                    minutes: 60,
+                    seconds: 1
+                };
+                const secondsElapsed = (date.getTime() - Date.now()) / 1000;
+                for (let key in ranges) {
+                    if (ranges[key] < Math.abs(secondsElapsed)) {
+                    const delta = secondsElapsed / ranges[key];
+                    return formatter.format(Math.round(delta), key);
+                    }
+                }
+            });
+        }
+
+        _nodePaint(node, ctx) {
             const animateTime = 1000;
 
             // Pulse chatty devices
@@ -1014,6 +1060,7 @@
 
     class Configuration {
         constructor() {
+            this.makerApiUrl = null;
             this.accumulate = ['child', 'neighbor', 'route'];
             this.loops = true;
             this.dots = true;
@@ -1023,6 +1070,10 @@
 
         loadFromURL() {
             const params = new URLSearchParams(window.location.search);
+
+            // Maker API URL
+            const mapi = params.get('mapi');
+            if (mapi != null) this.makerApiUrl = mapi;
 
             // Accumulate
             const acc = params.get('acc');
@@ -1064,7 +1115,10 @@
         }
 
         fire() {
-            clearTimeout(this.fetchTimeout);
+            if (this.fetchTimeout === null) {
+                console.log('starting interval');
+                this.fetchTimeout = setInterval(() => this.fire(), this.pollingIntervalMs);
+            }
 
             // Start Zigbee websocket if not already started
             if (this.socket === null) {
@@ -1096,12 +1150,10 @@
                     if (json.status === true) {
                         this.onFetchData(json);
                     }
-                    this.fetchTimeout = setTimeout(() => this.fire(), this.pollingIntervalMs);
                 })
                 .catch((ex) => {
                     console.error('[Zigbee] Failed to retrieve data', ex);
                     alert('[Zigbee] Failed to retrieve data: ' + ex.message);
-                    this.fetchTimeout = setTimeout(() => this.fire(), this.pollingIntervalMs);
                 });
         }
     }
@@ -1127,8 +1179,7 @@
         paint(zigbeeMesh) {
 
             // Update status
-            document.getElementById('lastRefresh').innerText = `Last refresh: ${new Date().toLocaleString()}`;
-            document.getElementById('nodesCount').innerText = `Discovered devices: ${zigbeeMesh.nodes.length}/${zigbeeMesh.devices.length}`;
+            document.getElementById('nodesCount').innerText = `Discovered devices: ${zigbeeMesh.nodes.length - 1}/${zigbeeMesh.devices.length}`;
 
             // Update devices list
             const tbl = document.getElementById('zigbee-devices-list');
@@ -1175,6 +1226,10 @@
         applyConfiguration() {
             var searchParams = new URLSearchParams();
 
+            const params = new URLSearchParams(window.location.search);
+            const mapi = params.get('mapi');
+            if (mapi) searchParams.set('mapi', mapi);
+
             const acc = [];
             if (document.getElementById('conf-acc-children').checked) acc.push('child');
             if (document.getElementById('conf-acc-neighbors').checked) acc.push('neighbor');
@@ -1198,6 +1253,75 @@
         }
     }
 
+    class MakerAPI {
+        constructor() {
+            this.url = null;
+            this.data = null;
+            this.errorsCount = 0;
+        }
+
+        decorate(json) {
+
+            // Maker API not enabled
+            if (this.url === null) return new Promise((resolve, reject) => resolve(json));
+
+            // Add room information
+            return this._fetchData()
+                .then(allDevices => {
+                    json.devices.forEach(zigbeeDevice => {
+                        const found = allDevices.find(device => device.id == zigbeeDevice.id);
+                        zigbeeDevice.name = `[${found ? found.room : 'Unknown'}] ${zigbeeDevice.name}`;
+                    })
+                    return json;
+                })
+                .catch(ex => json);
+        }
+
+        applyConfiguration(configuration) {
+            if (configuration.makerApiUrl === null) {
+                this.url = null;
+                return;
+            }
+
+            try {
+                const url = new URL(configuration.makerApiUrl);
+                this.url = `${url.pathname}${url.search}`;
+                this.data = null;
+                this.errorsCount = 0;
+            } catch(ex) {
+                this.url = null;
+            }
+        }
+
+        _fetchData() {
+
+            // Use cache
+            if (this.data != null) return new Promise((resolve, reject) => resolve(this.data));
+
+            // Bail out
+            if (this.errorsCount > 5) return new Promise((resolve, reject) => reject('Giving up to talk to Maker API after 5 failed attempts'));
+
+            // Grab data from Maker API
+            return fetch(new Request(this.url), {cache: 'no-store'})
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error, status = ${response.status}`);
+                    }
+                    this.errorsCount = 0;
+                    return response.text();
+                })
+                .then(text => {
+                    this.data = JSON.parse(text);
+                    return this.data;
+                })
+                .catch(ex => {
+                    console.error('[MakeAPI] Failed to retrieve data', ex);
+                    this.errorsCount += 1;
+                    throw ex;
+                });
+        }
+    }
+
     /////////////////////////////////////////////////////////////////
     // Entry point
     /////////////////////////////////////////////////////////////////
@@ -1206,6 +1330,7 @@
     const zigbeeMesh = new ZigbeeMesh();
     const zigbeeGraph = new ZigbeeGraph(document.getElementById('graph'), zigbeeMesh);
     const ui = new UI();
+    const makerAPI = new MakerAPI();
 
     // Config
     const configuration = new Configuration();
@@ -1213,6 +1338,7 @@
         ui.paintConfiguration(config);
         zigbeeMesh.applyConfiguration(config);
         zigbeeGraph.applyConfiguration(config);
+        makerAPI.applyConfiguration(config);
     }
 
     // Revolver
@@ -1222,11 +1348,14 @@
         zigbeeMesh.onMessage(json);
     }
     revolver.onFetchData = json => {
-        console.info('fetch', json);
-        const newData = new ZigbeeMesh();
-        newData.loadJson(json);
-        ui.paint(newData);
-        zigbeeGraph.render(newData);
+        makerAPI.decorate(json)
+            .then(decoratedJson => {
+                console.info('fetch', json);
+                const newData = new ZigbeeMesh();
+                newData.loadJson(json);
+                ui.paint(newData);
+                zigbeeGraph.render(newData);
+            });
     }
 
     // On page load

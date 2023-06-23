@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2023-06-23
+### Added
+- Add option to display room name in the device name (using Maker API built-in app)
+
+### Changed
+- Show dates using the "time ago" format
+- Move contents of the "Help" tab inside the "Status" tab
+
 ## [2.1.0] - 2023-06-21
 ### Added
 - Add "Node repulsion force" config option to better visualize graphs with many devices
