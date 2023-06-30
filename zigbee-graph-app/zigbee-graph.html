@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hubitat - Zigbee Graph - v2.2.0</title>
+    <title>Hubitat - Zigbee Graph - v2.3.0</title>
     <meta charset="utf-8">
     <meta name="description" content="Allows you to visually render getChildAndRouteInfo of your Hubitat system">
     <meta name="keywords" content="hubitat, zigbee, graph">
@@ -203,6 +203,7 @@
     /* Devices list */
     table {
         border-spacing: 0;
+        width: 100%;
     }
     table td, table th {
         border-bottom: 1px solid var(--separator-color);
@@ -222,14 +223,24 @@
         border-bottom: 0;
     }
 
-    td.device-found .tooltip::before {
-        content: "⦿";
-        color: var(--Green);
+    td.device-missing {
+        color: var(--Red);
     }
 
-    td.device-missing .tooltip::before {
-        content: "⊝";
-        color: var(--Red);
+    table input {
+        width: 100%;
+        background-color: var(--bg-color);
+        color: var(--text-color-darker);
+        border: 1px solid var(--bg-color);
+        border-radius: 5px;
+        padding: 0;
+    }
+    table input:focus {
+        outline: 0;
+    }
+
+    table td.device-missing {
+        cursor: default;
     }
 
     /* Help */
@@ -487,7 +498,6 @@
             <!-- Status -->
             <div role="tabpanel" aria-labelledby="status" id="status-container">
                 <div id="nodesCount">Loading, please wait...</div>
-
                 <details>
                     <summary>Chart legend</summary>
                     <section>
@@ -522,16 +532,21 @@
 
             <!-- Zigbee devices -->
             <div role="tabpanel" aria-labelledby="devices" id="devices-container" hidden>
-                <table id="zigbee-devices-list">
+                <table>
                     <thead>
                         <tr>
                             <th>Addr</th>
                             <th>&nbsp;</th>
                             <th>Name</th>
                         </tr>
+                        <tr>
+                            <th colspan="3">
+                                <input type="search" id="device-search">
+                            </th>
+                        </tr>
                     </thead>
-                    <tbody>
-                        <tr><td colspan="3">Please wait. This might take a bit...</td></tr>
+                    <tbody id="zigbee-devices-list">
+                        <tr><td colspan="3">Loading, please wait...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -955,7 +970,18 @@
         }
 
         zoomToFit() {
-            this.graph.zoomToFit(300, 30);
+            this.graph.zoomToFit(500, 100);
+        }
+
+        zoomOn(addr) {
+            const node = this.zigbeeMesh.nodes.find(node => node.addr === addr);
+            if (!node) return;
+
+            this.graph.zoomToFit(350, 100);
+            setTimeout(() => {
+                this.graph.centerAt(node.x, node.y, 1500);
+                this.graph.zoom(8, 2000);
+            }, 350);
         }
 
         applyConfiguration(configuration) {
@@ -973,7 +999,6 @@
             if (currentCharge != newCharge) {
                 this.graph.d3Force('charge').strength(() => newCharge);
                 this.graph.graphData(this.zigbeeMesh.data);
-                //this.graph.zoomToFit(300, 30);
             }
         }
 
@@ -982,7 +1007,7 @@
             this.graph.graphData(data);
 
             // Zoom to fit
-            setTimeout(() => this.graph.zoomToFit(300, 30), 1500);
+            setTimeout(() => this.zoomToFit(), 1500);
         }
 
         _translateDates(html) {
@@ -1116,7 +1141,6 @@
 
         fire() {
             if (this.fetchTimeout === null) {
-                console.log('starting interval');
                 this.fetchTimeout = setInterval(() => this.fire(), this.pollingIntervalMs);
             }
 
@@ -1176,6 +1200,36 @@
             };
         }
 
+        constructor() {
+            this.deviceFilter = '';
+
+            const searchField = document.getElementById('device-search');
+            window.addEventListener('load', () => {
+                searchField.value = '';
+                searchField.setAttribute('placeholder', '-- click here to search device --')
+                searchField.addEventListener('keyup', event => {
+                    if (event.keyCode === 27) {
+                        searchField.value = '';
+                    }
+
+                    this.search(searchField.value.toLowerCase());
+                });
+
+                searchField.addEventListener('focus', event => searchField.setAttribute('placeholder', ''));
+                searchField.addEventListener('blur', event => searchField.setAttribute('placeholder', '-- click here to search device --'));
+            });
+        }
+
+        search(deviceFilter) {
+            this.deviceFilter = deviceFilter;
+            const rows = document.getElementById('zigbee-devices-list').rows;
+            
+            for(let idx = 0; idx < rows.length; idx++) {
+                const row = rows.item(idx);
+                row.style.display = this.deviceFilter === '' || row.innerText.toLowerCase().includes(this.deviceFilter) ? 'table-row' : 'none';
+            }
+        }
+
         paint(zigbeeMesh) {
 
             // Update status
@@ -1183,29 +1237,36 @@
 
             // Update devices list
             const tbl = document.getElementById('zigbee-devices-list');
-            while (tbl.rows.length > 1) tbl.deleteRow(1);
+            while (tbl.rows.length > 0) tbl.deleteRow(0);
             zigbeeMesh.devices
                 .sort((a, b) => a.name.localeCompare(b.name))
                 .forEach(device => {
-                    const tr = tbl.insertRow();
-                    const found = zigbeeMesh.nodes.some(node => node.addr === device.zigbeeId);
-                    tr.insertCell().appendChild(document.createTextNode(device.zigbeeId));
+                    const row = tbl.insertRow();
+                    row.insertCell().appendChild(document.createTextNode(device.zigbeeId));
 
-                    const tooltip = document.createElement('span');
-                    const tooltipText = document.createElement('span');
-                    tooltipText.appendChild(document.createTextNode(found ? 'This device is present in the graph' : 'This device is not present in the graph'));
-                    tooltip.classList.add('tooltip');
-                    tooltip.appendChild(tooltipText);
-                    const cell = tr.insertCell();
-                    cell.appendChild(tooltip);
-                    cell.classList.add(found ? 'device-found' : 'device-missing')
+                    const found = zigbeeMesh.nodes.some(node => node.addr === device.zigbeeId);
+                    if (!found) {
+                        const cell = row.insertCell();
+                        cell.appendChild(document.createTextNode('⛔'));
+                        cell.classList.add('device-missing')
+                    } else {
+                        const link = document.createElement('a');
+                        link.setAttribute('href', `javascript:zigbeeGraph.zoomOn('${device.zigbeeId}')`);
+                        link.innerText = '👁️';
+                        row.insertCell().appendChild(link);
+                    }
 
                     const link = document.createElement('a');
                     link.setAttribute('href', `/device/edit/${device.id}`);
                     link.setAttribute('target', '_blank');
                     link.setAttribute('rel', 'noopener noreferrer');
                     link.innerText = device.name;
-                    tr.insertCell().appendChild(link);
+                    row.insertCell().appendChild(link);
+
+                    // Apply filtering
+                    if (this.deviceFilter !== '') {
+                        row.style.display = row.innerText.toLowerCase().includes(this.deviceFilter) ? 'table-row' : 'none';
+                    }
                 });
         }
 
@@ -1359,11 +1420,11 @@
     }
 
     // On page load
-    window.onload = () => {
+    window.addEventListener('load', () =>{
         configuration.loadFromURL();
         revolver.fire();
 
-        window.ondblclick = () => zigbeeGraph.zoomToFit(300, 30);
+        window.ondblclick = () => zigbeeGraph.zoomToFit();
         if (window.location.href.includes('embed=true')) {
             document.body.classList.add('embedded');
         }
@@ -1372,7 +1433,7 @@
             ui.applyConfiguration();
             configuration.loadFromURL();
         });
-    }
+    });
     </script>
 </body>
 </html>
