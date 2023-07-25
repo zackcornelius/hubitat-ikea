@@ -1,0 +1,459 @@
+<!--
+    URL parameters that control the widget behavior
+    -----------------------------------------------
+    * device_id      = Hubitat device ID; required
+    * speed_attr     = attribute name that contains the wind speed; default: windSpeed
+    * direction_attr = attribute name that contains the wind direction; default: windDirection
+    * speed_unit     = unit for the wind speed (if cannot be determined from the device); possible values: km/h, m/s, mph, ft/s; default: km/s
+    * theme          = color scheme; possible values: light, dark; default: light
+
+    Example URL: http://hubitat.local/local/wind.html?device_id=45&speed_unit=mph&speed_attr=wSpeed&direction_attr=wDirection&theme=light
+-->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="Wind widget">
+    <meta name="keywords" content="hubitat, wind">
+    <meta name="author" content="Agamemnon Dandanache">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <style>
+
+    :root {
+        --wind-direction-start: 180deg;
+        --wind-direction-end: 180deg;
+        --jiggle-start: 179deg;
+        --jiggle-end: 181deg;
+
+        --fill-color: #000;
+        --stroke-color: #000;
+        --text-color: #000;
+        --opacity: .75;
+    }
+
+    [data-theme="dark"] {
+        --fill-color: #fff;
+        --stroke-color: #fff;
+        --text-color: #fff;
+        --opacity: .8;
+    }
+
+    @keyframes rotate {
+        0% { transform: rotate(var(--wind-direction-start)) }
+        100% { transform: rotate(var(--wind-direction-end)) }
+    }
+
+    @keyframes jiggle {
+        0% { transform: rotate(var(--jiggle-start)) }
+        100% { transform: rotate(var(--jiggle-end)) }
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: none transparent;
+    }
+
+    #compass {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--text-color);
+    }
+
+    #compass-primary-points,
+    #compass-secondary-points,
+    #compass-lines,
+    #compass-arrow {
+        fill: var(--fill-color);
+        stroke: var(--stroke-color);
+    }
+
+    #compass-primary-points,
+    #compass-secondary-points,
+    #compass-lines {
+        opacity: var(--opacity);
+    }
+
+    #compass > * {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    #compass-arrow {
+        animation-name: jiggle;
+        animation-duration: 1s;
+        animation-iteration-count: infinite;  /* infinite */
+
+        animation-direction: alternate;   /* alternate */
+        animation-timing-function: ease-in-out;
+        animation-fill-mode: forwards;
+    }
+
+    .compass-content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        font-family: 'Arial', sans-serif;
+        font-size: min(20vw, 20vh);
+        font-weight: bold;
+    }
+
+    #speed {
+        margin-bottom: max(-4vw, -4vh);
+    }
+
+    #unit {
+        font-size: min(8vw, 8vh);
+        font-weight: 100;
+        opacity: .85;
+    }
+    </style>
+</head>
+<body>
+    <div id="compass">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+            <g id="compass-primary-points" font-family="Arial-BoldMT, Arial" font-size="40" font-weight="bold">
+                <text><tspan x="236" y="37">N</tspan></text>
+                <text><tspan x="463" y="263">E</tspan></text>
+                <text><tspan x="239" y="492">S</tspan></text>
+                <text><tspan x="4" y="263">W</tspan></text>
+            </g>
+            <g id="compass-secondary-points" font-family="Arial-BoldMT, Arial" font-size="23">
+                <text transform="rotate(45 250 250)"><tspan x="237" y="37">NE</tspan></text>
+                <text transform="rotate(-44 240 250)"><tspan x="239" y="488">SE</tspan></text>
+                <text transform="rotate(46 260 250)"><tspan x="239" y="488">SW</tspan></text>
+                <text transform="rotate(-46 250 250)"><tspan x="237" y="37">NW</tspan></text>
+            </g>
+            <g id="compass-lines" stroke-linecap="square" stroke-linejoin="bevel">
+                <path d="M250 50 l0 40 M250 410 l0 40" stroke-width="4"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(5.625 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(11.25 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(16.875 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(22.5 250 250)" stroke-width="3"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(28.125 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(33.75 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(39.375 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(45 250 250)" stroke-width="3"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(50.625 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(56.25 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(61.875 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(67.5 250 250)" stroke-width="3"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(73.125 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(78.75 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(84.375 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(90 250 250)" stroke-width="4"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(95.625 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(101.25 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(106.875 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(112.5 250 250)" stroke-width="3"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(118.125 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(123.75 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(129.375 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(135 250 250)" stroke-width="3"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(140.625 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(146.25 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(151.875 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(157.5 250 250)" stroke-width="3"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(163.125 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(168.75 250 250)"/>
+                <path d="M250 50 l0 40 M250 410 l0 40" transform="rotate(174.375 250 250)"/>
+            </g>
+            <path id="compass-north-triangle" stroke="#e65800" stroke-width="2" fill="#ff6200" d="M249.5 45.5 l26 50h-50z"/>
+        </svg>
+
+        <svg id="compass-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 331 331">
+            <path d="M163 103V57.785c-6.817-1.185-12-7.13-12-14.285 0-8.008 6.492-14.5 14.5-14.5S180 35.492 180 43.5c0 7.155-5.183 13.1-12 14.285V103h-5zm2.5-50a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19zm0 245L151 269h12v-47h5l-.001 47H180l-14.5 29z"/>
+        </svg>
+        <div class="compass-content">
+            <span id="speed">...</span>
+            <span id="unit">&nbsp;</span>
+        </div>
+    </div>
+<script>
+
+    class EventsWebSocket {
+        constructor() {
+            this.socketURL = `${window.location.href.startsWith('https://') ? 'wss' : 'ws'}://${new URL(window.location.href).host}/eventsocket`;
+            //this.socketURL = 'ws://192.168.1.201/eventsocket';
+            this.socket = null;
+
+            // Overwrite this to make it more useful
+            this.onWebsocketMessage = data => console.log('[Websocket] Data received', data);
+        }
+
+        init() {
+            console.info('Starting websocket', this.socketURL);
+            try {
+                this.socket = new WebSocket(this.socketURL);
+                this.socket.onmessage = event => this.onWebsocketMessage(JSON.parse(event.data));
+                this.socket.onerror = function (ex) {
+                    console.error('[Websocket] Error encountered', ex);
+                };
+            } catch (ex) {
+                console.error('[Websocket] Failed to open websocket', ex);
+                alert('[Websocket] Failed to open websocket: ' + ex);
+            }
+        }
+    }
+
+    class Wind {
+        constructor() {
+            this.arrowElm = null;
+            this.windSpeedElm = null;
+            this.windUnitElm = null;
+            this.theme = null;
+            this.speedUnit = null;
+            this.deviceId = null;
+            this.directionAttr = null;
+
+            this.currentAngle = 180;
+            this.currentSpeed = 0;
+        }
+
+        init() {
+            this.arrowElm = document.getElementById('compass-arrow');
+            this.windSpeedElm = document.getElementById('speed');
+            this.windUnitElm = document.getElementById('unit');
+
+            //URL: wind.html?theme=dark&speed_unit=mph&device_id=45&speed_attr=windSpeed&direction_attr=windDirection
+
+            // Configure from URL params
+            const params = new URLSearchParams(window.location.search);
+
+            this.theme = this._parseTheme(params.get('theme'));
+            document.documentElement.setAttribute('data-theme', this.theme);
+
+            this.speedUnit = this._parseSpeedUnit(params.get('speed_unit'), 'km/h');
+
+            // Configure device properties from URL params
+            const deviceId = parseInt(params.get('device_id'));
+            this.deviceId = isNaN(deviceId) ? null : deviceId;
+            if (this.deviceId == null) {
+                alert('Cannot find device_id in URL parameters');
+                return;
+            }
+
+            const speedAttr = params.get('speed_attr');
+            this.speedAttr = speedAttr === null ? 'windSpeed' : speedAttr;
+
+            const directionAttr = params.get('direction_attr');
+            this.directionAttr = directionAttr === null ? 'windDirection' : directionAttr;
+        }
+
+        onWebsocketMessage(data) {
+            if (data.deviceId !== this.deviceId) return;
+            console.log('Received device attribute update', data);
+
+            if (data.name === this.speedAttr) {
+                this.updateSpeed(data.value, data.unit);
+                return;
+            }
+
+            if (data.name === this.directionAttr) {
+                this.updateDirection(data.value, data.unit);
+                return;
+            }
+        }
+
+        updateSpeed(value, unit) {
+            const speed = this._parseSpeed(value, unit);
+            if (speed === undefined) return;
+            console.log('wind speed changed', value, unit, speed);
+
+            this.windSpeedElm.innerText = speed.value;
+            this.windUnitElm.innerText = speed.unit;
+            this.paintArrow(undefined, speed.kmh);
+        }
+
+        updateDirection(value, unit) {
+            const angle = this._parseDirection(value, unit);
+            if (angle === undefined) return;
+            console.log('wind direction changed', value, unit, angle);
+
+            this.paintArrow(angle, undefined);
+        }
+
+        paintArrow(angle, kmh) {
+            if (kmh !== undefined) {
+                this.currentSpeed = kmh;
+            }
+            const rootStyle = document.querySelector(':root').style;
+
+            // Update arrow angle
+            if (angle !== undefined) {
+                console.log('moving from', this.currentAngle, 'to', angle);
+                rootStyle.setProperty('--wind-direction-start', `${this.currentAngle}deg`);
+                rootStyle.setProperty('--wind-direction-end', `${angle}deg`);
+
+                this.arrowElm.style.animationName = 'rotate';
+                this.arrowElm.style.animationDuration = '1s';
+                this.arrowElm.style.animationDirection = 'normal';
+                this.arrowElm.style.animationIterationCount = 1;
+            }
+
+            // Update arrow jiggle
+            setTimeout(() => {
+                if (angle !== undefined) {
+                    this.currentAngle = angle;
+                }
+
+                const jiggleStart = this.currentAngle - 1;
+                const jiggleEnd = this.currentAngle + 1;
+                const jiggleSpeed = [2000, 1500, 1000, 800, 650, 500, 300, 200, 100, 50][Math.min(9, Math.floor(this.currentSpeed/10))];
+                rootStyle.setProperty('--jiggle-start', `${jiggleStart}deg`);
+                rootStyle.setProperty('--jiggle-end', `${jiggleEnd}deg`);
+
+                console.log('jiggling at', this.currentSpeed, 'km/h -->', jiggleSpeed);
+
+                this.arrowElm.style.animationName = 'jiggle';
+                this.arrowElm.style.animationDirection = 'alternate';
+                this.arrowElm.style.animationDuration = `${jiggleSpeed}ms`;
+                this.arrowElm.style.animationIterationCount = 'infinite';
+            }, 1000);
+        }
+
+        _parseSpeed(value, unit) {
+            if (value === undefined) {
+                console.error('ERROR: Wind speed is undefined');
+                return;
+            }
+
+            const speedValue = parseFloat(value);
+            if (isNaN(speedValue)) {
+                console.error('ERROR: Cannot understand wind speed', value);
+                return;
+            }
+
+            const speedUnit = this._parseSpeedUnit(unit, this.speedUnit);
+
+            var speedInKmH = speedValue;
+            switch (speedUnit) {
+                case 'm/s': {
+                    speedInKmH = speedValue * 3.6;
+                    break;
+                }
+                case 'mph': {
+                    speedInKmH = speedValue * 1.60934;
+                    break;
+                }
+                case 'ft/s': {
+                    speedInKmH = speedValue * 1.09728;
+                    break;
+                }
+            }
+
+            return {
+                value: speedValue,
+                unit: speedUnit,
+                kmh: speedInKmH
+            };
+        }
+
+        _parseDirection(value, unit) {
+            if (value === undefined) {
+                console.error('ERROR: Wind direction is undefined');
+                return;
+            }
+
+            var degrees = parseFloat(value);
+            if (!isNaN(degrees)) return degrees;
+
+            const str = value + '';
+            switch(str.toUpperCase()) {
+                case 'N': return 0;
+                case 'NNE': return 22.5;
+                case 'NE': return 45;
+                case 'ENE': return 67.5;
+                case 'E': return 90;
+                case 'ESE': return 112.5;
+                case 'SE': return 135;
+                case 'SSE': return 157.5;
+                case 'S': return 180;
+                case 'SSW': return 202.5;
+                case 'SW': return 225;
+                case 'WSW': return 247.5
+                case 'W': return 270;
+                case 'WNW': return 292.5;
+                case 'NW': return 315;
+                case 'NNW': return 337.5;
+            }
+        }
+
+        _parseSpeedUnit(unit, defaultValue) {
+            if (unit === undefined || unit === null) return defaultValue;
+
+            const str = unit + '';
+            switch(str.toLowerCase()) {
+                case 'km/h':
+                case 'kph':
+                    return 'km/h';
+                case 'm/s':
+                case 'mps':
+                    return 'm/s';
+                case 'mph':
+                case 'mp/h':
+                    return 'mph';
+                case 'ft/s':
+                case 'fts':
+                    return 'ft/s';
+            }
+            return defaultValue;
+        }
+
+        _parseTheme(theme) {
+            return theme === 'dark' ? 'dark' : 'light';
+        }
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // Entry point
+    /////////////////////////////////////////////////////////////////
+
+    const socket = new EventsWebSocket();
+    const wind = new Wind();
+
+    window.addEventListener('load', event => {
+        socket.onWebsocketMessage = json => wind.onWebsocketMessage(json);
+        wind.init();
+        socket.init();
+
+        // setInterval(() => {
+        //     const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+        //     wind.onWebsocketMessage({
+        //         deviceId: wind.deviceId,
+        //         name: wind.directionAttr,
+        //         value: directions[Math.floor(Math.random() * directions.length)],
+        //         unit: 'null'
+        //     }); 
+
+        //     setTimeout(() => {
+        //         wind.onWebsocketMessage({
+        //             deviceId: wind.deviceId,
+        //             name: wind.speedAttr,
+        //             value: Math.floor(Math.random() * 80),
+        //             unit: 'km/h'
+        //         });
+        //     }, 2500);
+        // }, 5000);
+    });
+</script>
+</body>
+</html>
