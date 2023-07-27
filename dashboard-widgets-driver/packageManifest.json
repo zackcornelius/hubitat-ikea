@@ -17,7 +17,7 @@
         "location": "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.0.0/dashboard-widgets-driver/widgets/wind.html",
         "required": true,
         "oauth": false,
-        "description": "Wind dashboard widget"
+        "description": "Wind dashboard widget."
     }],
     "drivers" : [{
         "id" : "b009d1a1-581e-422b-80d1-baedf4a5af71",
