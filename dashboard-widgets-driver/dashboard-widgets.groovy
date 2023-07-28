@@ -3,7 +3,7 @@ def getNamesList() {
 }
 
 def getWidgetTypes() {
-    return ["Wind"]
+    return ["Clock", "Wind"]
 }
 
 def getAvailableThemes() {
@@ -11,14 +11,14 @@ def getAvailableThemes() {
 }
 
 metadata {
-    definition (name: "Dashboard Widgets", namespace: "dandanache", author: "Dan Danache", importUrl: "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.0.0/dashboard-widgets-driver/dashboard-widgets.groovy") {
+    definition (name: "Dashboard Widgets", namespace: "dandanache", author: "Dan Danache", importUrl: "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.1.0/dashboard-widgets-driver/dashboard-widgets.groovy") {
         capability "Actuator"
         
         command "configureWidget", [
             [name: "Linked Device ID*", description: "Enter the ID of the device that will be linked to this widget", type: "NUMBER"],
             [name: "Widget Name", type: "ENUM", description: "Select from the predefined names list", constraints: getNamesList()],
             [name: "Widget Type", description: "Select widget type", type: "ENUM", constraints: getWidgetTypes()],
-            [name: "Widget Arguments", description: "Enter widget arguments as documented by each widget type", type: "STRING"],
+            [name: "Widget Parameters", description: "Enter widget parameters as documented by each widget type", type: "STRING"],
             [name: "Widget Theme", type: "ENUM", description: "Select widget theme", constraints: getAvailableThemes()]
         ]
         command "resetWidget", [
@@ -46,22 +46,22 @@ def updated() {
     def mapi = getMakerAPI_Params();
     getNamesList().each{name ->
         def html = device.currentValue(name)
-        if (html == "--") return
+        if (html == null || html == "--") return
         def newHtml = html.replaceAll(/&mapi=[^"]*/, "${mapi}")
         if (newHtml == html) return;
         sendEvent(name: name, value: newHtml)
     }
 }
 
-def configureWidget(device, name, type, arguments, theme) {
+def configureWidget(device, name, type, parameters, theme) {
     if (device == null) {
         log.error "Cannot add Dashboard Widget without entering a Device ID"
         return
     }
 
-    def args = arguments == null ? "" : "&${arguments}"
-    def src = "/local/${type.toLowerCase()}.html?theme=${theme.toLowerCase()}&device=${device}${args}${getMakerAPI_Params()}"
-    def html = "<div style=\"height:100%; width:100%\"><iframe src=\"${src}\" allowtransparency=\"true\" style=\"height:100%; width:100%; border:none\"></iframe></div>"
+    def params = parameters == null ? "" : "&${parameters}"
+    def src = "/local/${type.toLowerCase()}.html?theme=${theme.toLowerCase()}&device=${device}${params}${getMakerAPI_Params()}"
+    def html = "<div style=\"height:100%;width:100%;border-radius:10px;overflow:hidden\"><iframe src=\"${src}\" allowtransparency=\"true\" style=\"height:100%;width:100%;border:none\"></iframe></div>"
     sendEvent(name: name, value: html)
 }
 

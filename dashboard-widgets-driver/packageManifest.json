@@ -1,10 +1,10 @@
 {
     "packageName": "Dashboard Widgets",
-    "version": "1.0.0",
-    "releaseNotes": "v1.0.0 - Initial release",
+    "version": "1.1.0",
+    "releaseNotes": "v1.1.0 - Add clock widget",
     "minimumHEVersion": "2.1.9",
     "author": "Dan Danache (@agamemnon.dandanache)",
-    "dateReleased": "2023-07-27",
+    "dateReleased": "2023-07-28",
     "documentationLink": "https://community.hubitat.com/t/zigbee-visual-render-for-getchildandrouteinfo/119074",
     "communityLink": "https://community.hubitat.com/t/zigbee-visual-render-for-getchildandrouteinfo/119074",
     "licenseFile": "https://raw.githubusercontent.com/dan-danache/hubitat/main/LICENSE",
@@ -12,18 +12,27 @@
     "tags": [ "Dashboards" ],
     "files": [{
         "id": "e00fe515-60d6-4579-8bb8-2611ccd5b7c3",
-        "name": "zigbee-graph.html",
+        "name": "wind.html",
         "namespace": "dandanache",
-        "location": "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.0.0/dashboard-widgets-driver/widgets/wind.html",
+        "location": "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.1.0/dashboard-widgets-driver/widgets/wind.html",
         "required": true,
         "oauth": false,
         "description": "Wind dashboard widget."
+    }],
+    "files": [{
+        "id": "4ba3e1ef-d2ec-4665-a71e-909cb59efa2d",
+        "name": "clock.html",
+        "namespace": "dandanache",
+        "location": "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.1.0/dashboard-widgets-driver/widgets/clock.html",
+        "required": true,
+        "oauth": false,
+        "description": "Clock dashboard widget."
     }],
     "drivers" : [{
         "id" : "b009d1a1-581e-422b-80d1-baedf4a5af71",
         "name": "Dashboard Widgets",
         "namespace": "dandanache",
-        "location": "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.0.0/dashboard-widgets-driver/dashboard-widgets.groovy",
+        "location": "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.1.0/dashboard-widgets-driver/dashboard-widgets.groovy",
         "required": true,
         "oauth": false,
         "description": "Allows you to add custom widgets to Hubitat dashboards."
