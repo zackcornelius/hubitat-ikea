@@ -11,7 +11,7 @@ def getAvailableThemes() {
 }
 
 metadata {
-    definition (name: "Dashboard Widgets", namespace: "dandanache", author: "Dan Danache", importUrl: "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.1.0/dashboard-widgets-driver/dashboard-widgets.groovy") {
+    definition (name: "Dashboard Widgets", namespace: "dandanache", author: "Dan Danache", importUrl: "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.2.0/dashboard-widgets-driver/dashboard-widgets.groovy") {
         capability "Actuator"
         
         command "configureWidget", [
