@@ -22,7 +22,7 @@ Available widgets:
    * Make sure that the "Maker API link" field is corectly configured; the driver will try to guess this value but, if it fails, follow the provided instructions to retreive the correct value
    * Click again "Save Preferences"
 5. **Assign widgets to the device attributes**\
-   The newly added device exports a fixed list of HTML attributes "Alfa", "Bravo", "Charlie", etc. For each of these attributes, you can configure and assign a widget.
+   The newly added device exports a fixed list of HTML attributes "Alfa", "Bravo", "Charlie", etc. For each of these attributes, you can configure and assign widgets (one per attribute).
    > TODO: Add more info here!
 6. **Authorize dashboard to access the newly added device**
    * Go to "Apps"
