@@ -1,16 +1,16 @@
 <!--
     URL parameters that control the widget behavior
     -----------------------------------------------
-    * speed_attr = attribute name that contains the wind speed; default: windSpeed
-    * dir_attr   = attribute name that contains the wind direction; default: windDirection
-    * speed_unit = unit for the wind speed (if cannot be determined from the device); possible values: km/h, m/s, mph, ft/s; default: km/s
+    * speed_attr   = attribute name that contains the wind speed; default: windSpeed
+    * dir_attr     = attribute name that contains the wind direction; default: windDirection
+    * speed_unit   = unit for the wind speed (if cannot be determined from the device); possible values: km/h, m/s, mph, ft/s; default: km/s
 
     Example URL: http://hubitat.local/local/wind.html?device=45&theme=light&speed_unit=mph&speed_attr=wSpeed&dir_attr=wDirection
 -->
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Wind - v1.3.0</title>
+    <title>Wind - v1.4.0</title>
     <meta charset="utf-8">
     <meta name="description" content="Wind widget">
     <meta name="keywords" content="hubitat, wind">
@@ -69,6 +69,11 @@
         height: 100%;
     }
 
+    svg {
+        fill: var(--fg-color);
+        stroke: var(--fg-color);
+    }
+
     @keyframes rotate {
         0% { transform: rotate(var(--wind-direction-start)) }
         100% { transform: rotate(var(--wind-direction-end)) }
@@ -79,26 +84,11 @@
         100% { transform: rotate(var(--jiggle-end)) }
     }
 
-    #compass-primary-points,
-    #compass-secondary-points,
-    #compass-lines,
-    #compass-arrow {
-        fill: var(--fg-color);
-        stroke: var(--fg-color);
-    }
-
-    #compass-primary-points,
-    #compass-secondary-points,
-    #compass-lines {
-        opacity: var(--opacity);
-    }
-
-    #compass-arrow {
+    #hand {
         animation-name: jiggle;
         animation-duration: 1s;
-        animation-iteration-count: infinite;  /* infinite */
-
-        animation-direction: alternate;   /* alternate */
+        animation-iteration-count: infinite;
+        animation-direction: alternate;
         animation-timing-function: ease-in-out;
         animation-fill-mode: forwards;
     }
@@ -132,62 +122,45 @@
 </head>
 <body>
     <div id="container">
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 500 500">
+        <svg fill="#ff0000" stroke="#ff0000" viewBox="-512 -512 1024 1024" width="1024" height="1024" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <path id="mark" d="M250 50 l0 40 M250 410 l0 40" stroke-width="2"/>
-                <path id="important-mark" d="M250 53 l0 34 M250 413 l0 34" stroke-width="8"/>
+                <path id="mark" d="M 0 -430 v 88 m 0 684 v 88" stroke-width="16" />
+                <path id="dot" d="M 0 -305 v 16 m 0 578 v 16" stroke-width="8" />
+                <g id="marks-90deg">
+                    <use xlink:href="#mark" transform="rotate(22.5)"/>
+                    <use xlink:href="#mark" transform="rotate(45)"/>
+                    <use xlink:href="#mark" transform="rotate(67.5)"/>
+                </g>
+                <g id="dots-22deg">
+                    <use xlink:href="#dot"/>
+                    <use xlink:href="#dot" transform="rotate(5.625)"/>
+                    <use xlink:href="#dot" transform="rotate(11.25)"/>
+                    <use xlink:href="#dot" transform="rotate(16.875)"/>
+                    <use xlink:href="#dot" transform="rotate(22.5)"/>
+                </g>
+                <g id="dots-90deg">
+                    <use xlink:href="#dots-22deg"/>
+                    <use xlink:href="#dots-22deg" transform="rotate(28.125)"/>
+                    <use xlink:href="#dots-22deg" transform="rotate(45)"/>
+                    <use xlink:href="#dots-22deg" transform="rotate(61.875)"/>
+                </g>
             </defs>
-            <g id="compass-primary-points" font-family="Arial-BoldMT, Arial" font-size="40" font-weight="bold">
-                <text><tspan x="236" y="37">N</tspan></text>
-                <text><tspan x="463" y="263">E</tspan></text>
-                <text><tspan x="239" y="492">S</tspan></text>
-                <text><tspan x="4" y="263">W</tspan></text>
+            <circle id="outline" r="492" fill="none" stroke-width="40" />
+            <g id="marks" stroke-linecap="butt" opacity=".5">
+                <use xlink:href="#marks-90deg"/>
+                <use xlink:href="#marks-90deg" transform="rotate(90)"/>
             </g>
-            <g id="compass-secondary-points" font-family="Arial-BoldMT, Arial" font-size="23">
-                <text transform="rotate(45 250 250)"><tspan x="237" y="37">NE</tspan></text>
-                <text transform="rotate(-44 240 250)"><tspan x="239" y="488">SE</tspan></text>
-                <text transform="rotate(46 260 250)"><tspan x="239" y="488">SW</tspan></text>
-                <text transform="rotate(-46 250 250)"><tspan x="237" y="37">NW</tspan></text>
+            <g id="dots" stroke-linecap="butt">
+                <use xlink:href="#dots-90deg"/>
+                <use xlink:href="#dots-90deg" transform="rotate(90)"/>
             </g>
-            <g id="compass-lines" stroke-linecap="square" stroke-linejoin="bevel">
-                <path d="M250 410 l0 40" stroke-width="4"/>
-                <use xlink:href="#mark" transform="rotate(5.625 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(11.25 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(16.875 250 250)"/>
-                <use xlink:href="#important-mark" transform="rotate(22.5 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(28.125 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(33.75 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(39.375 250 250)"/>
-                <use xlink:href="#important-mark" transform="rotate(45 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(50.625 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(56.25 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(61.875 250 250)"/>
-                <use xlink:href="#important-mark" transform="rotate(67.5 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(73.125 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(78.75 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(84.375 250 250)"/>
-                <use xlink:href="#important-mark" transform="rotate(90 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(95.625 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(101.25 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(106.875 250 250)"/>
-                <use xlink:href="#important-mark" transform="rotate(112.5 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(118.125 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(123.75 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(129.375 250 250)"/>
-                <use xlink:href="#important-mark" transform="rotate(135 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(140.625 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(146.25 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(151.875 250 250)"/>
-                <use xlink:href="#important-mark" transform="rotate(157.5 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(163.125 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(168.75 250 250)"/>
-                <use xlink:href="#mark" transform="rotate(174.375 250 250)"/>
+            <g id="points" stroke="none">
+                <text x="0" y="-374" dominant-baseline="middle" text-anchor="middle" font-family="Arial-BoldMT, Arial" font-size="108" font-weight="bold">N</text>
+                <text x="0" y="398" dominant-baseline="middle" text-anchor="middle" font-family="Arial-BoldMT, Arial" font-size="108" font-weight="bold">S</text>
+                <text x="387" y="10" dominant-baseline="middle" text-anchor="middle" font-family="Arial-BoldMT, Arial" font-size="108" font-weight="bold">E</text>
+                <text x="-385" y="10" dominant-baseline="middle" text-anchor="middle" font-family="Arial-BoldMT, Arial" font-size="108" font-weight="bold">W</text>
             </g>
-            <path id="compass-north-triangle" fill="#bd2420" d="M249.5 45.5 l26 50h-50z"/>
-        </svg>
-
-        <svg id="compass-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 331 331">
-            <path d="M163 103V57.785c-6.817-1.185-12-7.13-12-14.285 0-8.008 6.492-14.5 14.5-14.5S180 35.492 180 43.5c0 7.155-5.183 13.1-12 14.285V103h-5zm2.5-50a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19zm0 245L151 269h12v-47h5l-.001 47H180l-14.5 29z"/>
+            <path id="hand" fill="#bd2420" stroke="#bd2420" stroke-width="5" d="M -6.2068967,-149.78811 V -261.73305 C -23.131862,-264.66691 -36,-279.38576 -36,-297.10038 -36,-316.92687 -19.881932,-333 7.0210184e-8,-333 19.881932,-333 36,-316.92687 36,-297.10038 c 0,17.71462 -12.868138,32.43347 -29.7931032,35.36733 v 111.94494 z M 7.0210184e-8,-273.57993 a 23.586207,23.520446 0 1 0 0,-47.04088 23.586207,23.520446 0 0 0 0,47.04088 z m 0,606.57993 L -36,261.20074 H -6.2068967 V 144.83643 H 6.2068968 l -0.00247,116.36431 H 35.999996 Z"/>
         </svg>
         <div class="compass-content">
             <span id="speed">...</span>
@@ -206,14 +179,14 @@
 
             const mapi = parseInt(params.get('mapi'));
             if (isNaN(mapi)) {
-                console.error('Cannot find "mapi" argument in URL parameters (or it has an invalid value)', params.get('mapi'));
+                console.error('Wind', 'Cannot find "mapi" argument in URL parameters (or it has an invalid value)', params.get('mapi'));
                 return;
             }
             this.mapi = mapi;
 
             const at = params.get('at');
             if (at == null) {
-                console.error('Cannot find "at" argument in URL parameters');
+                console.error('Wind', 'Cannot find "at" argument in URL parameters');
                 return;
             }
             this.at = at;
@@ -227,16 +200,15 @@
             return fetch(new Request(`/apps/api/${this.mapi}/devices/${deviceId}?access_token=${this.at}`), {cache: 'no-store'})
                 .then((response) => {
                     if (!response.ok) {
-                        console.error('[MakerAPI] Bad response (not 200 OK)', response);
-                        throw new Error(`HTTP error, status = ${response.status}`);
+                        console.error('Wind', '[MakerAPI] Bad response (not 200 OK)', response);
+                        throw new Error('Wind', `HTTP error, status = ${response.status}`);
                     }
                     return response.text();
                 })
                 .then(text => JSON.parse(text))
                 .then(json => json.attributes)
                 .catch((ex) => {
-                    console.error('[MakerAPI] Failed to retrieve data', ex);
-                    alert('[MakerAPI] Failed to retrieve data: ' + ex.message);
+                    console.error('Wind', '[MakerAPI] Failed to retrieve data', ex);
                 });
         }
     }
@@ -257,11 +229,10 @@
                 this.socket = new WebSocket(this.socketURL);
                 this.socket.onmessage = event => this.onWebsocketMessage(JSON.parse(event.data));
                 this.socket.onerror = function (ex) {
-                    console.error('[Websocket] Error encountered', ex);
+                    console.error('Wind', '[Websocket] Error encountered', ex);
                 };
             } catch (ex) {
-                console.error('[Websocket] Failed to open websocket', ex);
-                alert('[Websocket] Failed to open websocket: ' + ex);
+                console.error('Wind', '[Websocket] Failed to open websocket', ex);
             }
         }
     }
@@ -282,7 +253,7 @@
         }
 
         init() {
-            this.arrowElm = document.getElementById('compass-arrow');
+            this.arrowElm = document.getElementById('hand');
             this.windSpeedElm = document.getElementById('speed');
             this.windUnitElm = document.getElementById('unit');
 
@@ -300,7 +271,7 @@
             const deviceId = parseInt(params.get('device'));
             this.deviceId = isNaN(deviceId) ? null : deviceId;
             if (this.deviceId == null) {
-                alert('Cannot find "device" argument in URL parameters');
+                console.error('Wind', 'Cannot find "device" argument in URL parameters');
                 return;
             }
 
@@ -311,7 +282,7 @@
             this.directionAttr = directionAttr === null ? 'windDirection' : directionAttr;
 
             // Load data from MakerAPI
-            this.makerAPI.getDeviceAttributes(wind.deviceId).then(attributes => {
+            this.makerAPI.getDeviceAttributes(this.deviceId).then(attributes => {
                 attributes.forEach(attribute => {
                     if (attribute.name === this.speedAttr) {
                         this.updateSpeed(attribute.currentValue);

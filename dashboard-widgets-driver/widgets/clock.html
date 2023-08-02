@@ -8,7 +8,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Clock - v1.3.0</title>
+    <title>Clock - v1.4.0</title>
     <meta charset="utf-8">
     <meta name="description" content="Clock widget">
     <meta name="keywords" content="hubitat, wind">
@@ -60,90 +60,75 @@
         height: 100%;
     }
 
-    #face-outline {
-        fill: transparent;
-        stroke: var(--fg-color);
-        stroke-width: 64;
-        opacity: .5;
-    }
-
-    #face-use,
-    #hand-h-use,
-    #hand-m-use {
+    svg {
         fill: var(--fg-color);
-        stroke: none;
-    }
-
-    #hand-s-use {
-        fill: #bd2420;
-        stroke: none;
-    }
-
-    #center-dot {
-        fill: #fff;
-        stroke: none;
-    }
-
-    @keyframes rotation {
-        from {
-            transform: rotate(0deg);
-        }
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    #hand-h-use {
-        animation: rotation 43200s linear infinite;
-    }
-
-    #hand-m-use {
-        animation: rotation 3600s linear infinite;
-    }
-
-    #hand-s-use {
-        animation: rotation 60s linear infinite;
+        stroke: var(--fg-color);
     }
     </style>
 </head>
 <body>
     <div id="container">
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-1136 -1136 2272 2272" width="600" height="600">
-            <!-- MIT license by Tom CHEN https://github.com/tomchen/animated-svg-clock -->
+        <svg viewBox="-512 -512 1024 1024" width="1024" height="1024" fill="#000" stroke="#000" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <path id="mark-5min" d="M -40,-1000 l 80,0 0,245 -80,0 z"/>
-                <path id="mark-min" d="M -15,-1000 l 30,0 0,80 -30,0 z"/>
-                <path id="hand-h" d="M -50,-650 l 100,0 10,890 -120,0 z" transform="rotate(252.41666666666666)"/>
-                <path id="hand-m" d="M -40,-950 l 80,0 10,1200 -100,0 z" transform="rotate(149)"/>
-                <g id="hand-s" transform="rotate(300)">
-                    <path d="M -20,-550 l 30,0 7,890 -30,0 z"/>
-                    <path d="M 0,-750 a 105,105 0 0 1 0,210 a 105,105 0 0 1 0,-210 z"/>
-                </g>
-                <g id="face-30d">
+                <path id="mark-5min" d="M 0 -440 v 108 m 0 664 v 108" stroke-width="32"/>
+                <path id="mark-1min" d="M 39.3966 -437.923 L 52.5135 -436.545 L 48.8371 -401.566 L 35.7202 -402.945 Z"/>
+                <g id="face-5min">
                     <use xlink:href="#mark-5min"/>
-                    <use xlink:href="#mark-min" transform="rotate(06)"/>
-                    <use xlink:href="#mark-min" transform="rotate(12)"/>
-                    <use xlink:href="#mark-min" transform="rotate(18)"/>
-                    <use xlink:href="#mark-min" transform="rotate(24)"/>
+                    <use xlink:href="#mark-1min"/>
+                    <use xlink:href="#mark-1min" transform="rotate(06)"/>
+                    <use xlink:href="#mark-1min" transform="rotate(12)"/>
+                    <use xlink:href="#mark-1min" transform="rotate(18)"/>
                 </g>
-                <g id="face-90d">
-                    <use xlink:href="#face-30d"/>
-                    <use xlink:href="#face-30d" transform="rotate(30)"/>
-                    <use xlink:href="#face-30d" transform="rotate(60)"/>
-                </g>
-                <g id="face">
-                    <use xlink:href="#face-90d"/>
-                    <use xlink:href="#face-90d" transform="rotate(90)"/>
-                    <use xlink:href="#face-90d" transform="rotate(180)"/>
-                    <use xlink:href="#face-90d" transform="rotate(270)"/>
+                <g id="face-15min">
+                    <use xlink:href="#face-5min"/>
+                    <use xlink:href="#face-5min" transform="rotate(30)"/>
+                    <use xlink:href="#face-5min" transform="rotate(60)"/>
                 </g>
             </defs>
-            <circle id="face-outline" r="1104"/>
-            <use xlink:href="#face" id="face-use"/>
-            <use xlink:href="#hand-h" id="hand-h-use"/>
-            <use xlink:href="#hand-m" id="hand-m-use"/>
-            <use xlink:href="#hand-s" id="hand-s-use"/>
-            <circle id="center-dot" r="5"/>
+            <circle r="492" fill="none" stroke-width="40"/>
+            <g stroke-linecap="butt">
+                <use xlink:href="#face-15min"/>
+                <use xlink:href="#face-15min" transform="rotate(90)"/>
+                <use xlink:href="#face-15min" transform="rotate(180)"/>
+                <use xlink:href="#face-15min" transform="rotate(270)"/>
+            </g>
+            <path id="hand-hour" opacity=".5" d="m -22.535206,-292.95775 h 45.070441 l 4.507033,401.12677 H -27.04224 Z"/>
+            <path id="hand-min" opacity=".5" d="m -18.028155,-428.16902 h 36.056339 l 4.507051,540.84508 h -45.070441 z"/>
+            <g id="hand-sec" fill="#bd2420" stroke="none">
+                <path d="M -9.01407 -247.887 L 4.50705 -247.887 L 7.66198 153.239 L -5.85914 153.239 Z"/>
+                <path d="M 1.43051e-05 -338.028 C 16.9072 -338.028 32.5301 -329.008 40.9837 -314.366 C 49.4373 -299.724 49.4373 -281.684 40.9837 -267.042 C 32.5301 -252.4 16.9072 -243.38 1.43051e-05 -243.38 C -16.9072 -243.38 -32.5301 -252.4 -40.9837 -267.042 C -49.4373 -281.684 -49.4373 -299.724 -40.9837 -314.366 C -32.5301 -329.008 -16.9072 -338.028 1.43051e-05 -338.028 Z"/>
+             </g>
+            <circle fill="#fff" r="2.2" stroke="none"/>
+            <animateTransform
+                 xlink:href="#hand-hour"
+                 attributeType="xml"
+                 attributeName="transform"
+                 type="rotate"
+                 from="0"
+                 to="360"
+                 dur="43200s"
+                 additive="sum"
+                 repeatCount="indefinite"/>
+            <animateTransform
+                 xlink:href="#hand-min"
+                 attributeType="xml"
+                 attributeName="transform"
+                 type="rotate"
+                 from="0"
+                 to="360"
+                 dur="3600s"
+                 additive="sum"
+                 repeatCount="indefinite"/>
+            <animateTransform
+                 xlink:href="#hand-sec"
+                 attributeType="xml"
+                 attributeName="transform"
+                 type="rotate"
+                 from="0"
+                 to="360"
+                 dur="60s"
+                 additive="sum"
+                 repeatCount="indefinite"/>
         </svg>
     </div>
 <script>
@@ -167,9 +152,9 @@
         }
 
         _setTime(h, m, s) {
-            document.getElementById('hand-h').setAttribute('transform', `rotate(${(h >= 12 ? h - 12 : h) * 30 + m / 2 + s / 120})`);
-            document.getElementById('hand-m').setAttribute('transform', `rotate(${m * 6 + s / 10})`);
-            document.getElementById('hand-s').setAttribute('transform', `rotate(${s * 6})`);
+            document.getElementById('hand-hour').setAttribute('transform', `rotate(${(h >= 12 ? h - 12 : h) * 30 + m / 2 + s / 120})`);
+            document.getElementById('hand-min').setAttribute('transform', `rotate(${m * 6 + s / 10})`);
+            document.getElementById('hand-sec').setAttribute('transform', `rotate(${s * 6})`);
         }
 
         _parseTheme(theme) {

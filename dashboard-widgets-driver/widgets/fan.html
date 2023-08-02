@@ -1,0 +1,267 @@
+<!--
+    URL parameters that control the widget behavior
+    -----------------------------------------------
+    * speed_attr = attribute name that contains the fan speed; default: speed
+
+    Example URL: http://hubitat.local/local/fan.html?device=45&theme=light&speed_attr=switch
+-->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fan - v1.4.0</title>
+    <meta charset="utf-8">
+    <meta name="description" content="Fan widget">
+    <meta name="keywords" content="hubitat, fan">
+    <meta name="author" content="Agamemnon Dandanache">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <style>
+
+    :root {
+        --fg-color: #000;
+        --bg-color: #fff;
+    }
+
+    [data-theme="dark"] {
+        --fg-color: #fff;
+        --bg-color: #000;
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: none transparent;
+        cursor: default;
+        user-select: none;
+    }
+
+    body:hover {
+        background: var(--bg-color);
+    }
+
+    #container {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--text-color);
+    }
+
+    #container > * {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    svg {
+        fill: var(--fg-color);
+        stroke: var(--fg-color);
+    }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <?xml version="1.0" encoding="UTF-8"?>
+        <svg viewBox="-512 -512 1024 1024" width="1024" height="1024" fill="#000" stroke="#000" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <defs>
+                <path id="blade" d="m 128,-320 c 0,84.032 -19.456,160.512 -51.2,217.6 -27.1483,-20.449 -61.3408,-29.204 -94.976,-24.32 -17.92,-62.848 -58.24,-130.56 -117.632,-190.016 -10.083,-10.1 -20.566,-19.793 -31.424,-29.056 C -115.1,-371.026 -57.9179,-384.091 0,-384 c 44.224,0 86.72,7.488 126.272,21.248 1.152,14.016 1.728,28.288 1.728,42.752 z"/>
+            </defs>
+            <circle id="outline" r="480" fill="none" stroke-width="64" />
+            <g id="blades" stroke="none" opacity=".5">
+                <use xlink:href="#blade"/>
+                <use xlink:href="#blade" transform="rotate(60)"/>
+                <use xlink:href="#blade" transform="rotate(120)"/>
+                <use xlink:href="#blade" transform="rotate(180)"/>
+                <use xlink:href="#blade" transform="rotate(240)"/>
+                <use xlink:href="#blade" transform="rotate(300)"/>
+            </g>
+            <circle r="70" fill="#bd2420" stroke="none"/>
+            <animateTransform id="blades-rotation"
+                xlink:href="#blades"
+                attributeType="xml"
+                attributeName="transform"
+                type="rotate"
+                from="0" to="360"
+                dur="60s"
+                additive="sum"
+                repeatCount="indefinite"
+            />
+        </svg>
+    </div>
+<script>
+    class MakerAPI {
+        constructor() {
+            this.mapi = null;
+            this.at = null;
+
+            // Configure from URL parameters
+            const params = new URLSearchParams(window.location.search);
+
+            const mapi = parseInt(params.get('mapi'));
+            if (isNaN(mapi)) {
+                console.error('Fan', 'Cannot find "mapi" argument in URL parameters (or it has an invalid value)', params.get('mapi'));
+                return;
+            }
+            this.mapi = mapi;
+
+            const at = params.get('at');
+            if (at == null) {
+                console.error('Fan', 'Cannot find "at" argument in URL parameters');
+                return;
+            }
+            this.at = at;
+        }
+
+        getDeviceAttributes(deviceId) {
+            if (this.mapi === null || this.at === null) {
+                return Promise.resolve([]);
+            }
+
+            return fetch(new Request(`/apps/api/${this.mapi}/devices/${deviceId}?access_token=${this.at}`), {cache: 'no-store'})
+                .then((response) => {
+                    if (!response.ok) {
+                        console.error('Fan', '[MakerAPI] Bad response (not 200 OK)', response);
+                        throw new Error(`HTTP error, status = ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(text => JSON.parse(text))
+                .then(json => json.attributes)
+                .catch((ex) => {
+                    console.error('Fan', '[MakerAPI] Failed to retrieve data', ex);
+                });
+        }
+    }
+
+    class EventsWebSocket {
+        constructor() {
+            this.socketURL = `${window.location.href.startsWith('https://') ? 'wss' : 'ws'}://${new URL(window.location.href).host}/eventsocket`;
+            //this.socketURL = 'ws://192.168.1.201/eventsocket';
+            this.socket = null;
+
+            // Overwrite this to make it more useful
+            this.onWebsocketMessage = data => console.log('[Websocket] Data received', data);
+        }
+
+        init() {
+            console.info('Fan', 'Starting websocket', this.socketURL);
+            try {
+                this.socket = new WebSocket(this.socketURL);
+                this.socket.onmessage = event => this.onWebsocketMessage(JSON.parse(event.data));
+                this.socket.onerror = function (ex) {
+                    console.error('Fan', '[Websocket] Error encountered', ex);
+                };
+            } catch (ex) {
+                console.error('Fan', '[Websocket] Failed to open websocket', ex);
+            }
+        }
+    }
+
+    class Fan {
+        static ROTATION_MAPPING = {
+            'off': 60,
+            'on': 2,
+            'auto': 2,
+            'low': 5,
+            'medium-low': 4,
+            'medium': 3,
+            'medium-high': 1,
+            'high': 0
+        };
+
+        constructor(makerAPI) {
+            this.makerAPI = makerAPI;
+            this.theme = null;
+            this.deviceId = null;
+            this.speedAttr = null;
+            this.animationElm = null;
+        }
+
+        init() {
+            this.animationElm = document.getElementById('blades-rotation');
+            //URL: fan.html?theme=dark&speed_attr=switch
+
+            // Configure from URL params
+            const params = new URLSearchParams(window.location.search);
+
+            this.theme = this._parseTheme(params.get('theme'));
+            document.documentElement.setAttribute('data-theme', this.theme);
+
+            // Configure device properties from URL params
+            const deviceId = parseInt(params.get('device'));
+            this.deviceId = isNaN(deviceId) ? null : deviceId;
+            if (this.deviceId == null) {
+                console.error('Fan', 'Cannot find "device" argument in URL parameters');
+                return;
+            }
+
+            const speedAttr = params.get('speed_attr');
+            this.speedAttr = speedAttr === null ? 'speed' : speedAttr;
+
+            // Load data from MakerAPI
+            this.makerAPI.getDeviceAttributes(this.deviceId).then(attributes => {
+                attributes.forEach(attribute => {
+                    if (attribute.name === this.speedAttr) {
+                        this.updateSpeed(attribute.currentValue);
+                    }
+                });
+            });
+        }
+
+        onWebsocketMessage(data) {
+            if (data.deviceId !== this.deviceId) return;
+            console.log('Received device attribute update', data);
+
+            if (data.name === this.speedAttr) {
+                this.updateSpeed(data.value, data.unit);
+                return;
+            }
+        }
+
+        updateSpeed(value, unit) {
+            const dur = Fan.ROTATION_MAPPING[value];
+            if (dur === undefined) {
+                console.log('Fan', 'Invalid attribute value', value);
+                return;
+            }
+            this.animationElm.setAttribute('dur', dur);
+        }
+
+        _parseTheme(theme) {
+            return theme === 'dark' ? 'dark' : 'light';
+        }
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // Entry point
+    /////////////////////////////////////////////////////////////////
+
+    const makerAPI = new MakerAPI();
+    const socket = new EventsWebSocket();
+    const fan = new Fan(makerAPI);
+
+    window.addEventListener('load', event => {
+        socket.onWebsocketMessage = json => fan.onWebsocketMessage(json);
+        fan.init();
+        socket.init();
+
+        // setInterval(() => {
+        //     const speeds = ['low', 'medium-low', 'medium', 'medium-high', 'high', 'on', 'off', 'auto'];
+        //     fan.onWebsocketMessage({
+        //         deviceId: fan.deviceId,
+        //         name: fan.speedAttr,
+        //         value: speeds[Math.floor(Math.random() * speeds.length)],
+        //         unit: 'null'
+        //     });
+        // }, 5000);
+    });
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@ def getNamesList() {
 }
 
 def getWidgetTypes() {
-    return ["Clock", "Wind"]
+    return ["Clock", "Fan", "Wind"]
 }
 
 def getAvailableThemes() {
