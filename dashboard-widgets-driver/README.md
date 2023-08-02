@@ -29,7 +29,7 @@ Available widgets:
    * Select one of the existing dashboards
    * In the "Choose Devices" section, check the newly added device name
    * Click "Done" in the bottom right
-7. **Add widget to dashboard**
+7. **Add widget tile to dashboard**
    * Go to "Dashboards"
    * Select the dashboard you authorized in Step 5
    * Click "+" in the top right to add a new dashboard tile
