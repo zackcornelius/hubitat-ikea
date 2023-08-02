@@ -1,9 +1,12 @@
 # Dashboard Widgets
 
-Available widgets:
-* [Clock](https://dan-danache.github.io/hubitat/dashboard-widgets-driver/widgets/clock.html)
-* [Fan](https://dan-danache.github.io/hubitat/dashboard-widgets-driver/widgets/fan.html)
-* [Wind](https://dan-danache.github.io/hubitat/dashboard-widgets-driver/widgets/wind.html)
+## Available widgets
+
+| Widget | Preview | Parameters |
+|--------|---------|------------|
+| Clock | [preview](https://dan-danache.github.io/hubitat/dashboard-widgets-driver/widgets/clock.html) | [parameters](https://github.com/dan-danache/hubitat/blob/main/dashboard-widgets-driver/widgets/clock.html) |
+| Fan | [preview](https://dan-danache.github.io/hubitat/dashboard-widgets-driver/widgets/fan.html) | [parameters](https://github.com/dan-danache/hubitat/blob/main/dashboard-widgets-driver/widgets/fan.html) |
+| Wind | [preview](https://dan-danache.github.io/hubitat/dashboard-widgets-driver/widgets/wind.html) | [parameters](https://github.com/dan-danache/hubitat/blob/main/dashboard-widgets-driver/widgets/wind.html) |
 
 ## Install and usage
 1. **Install "Dashboard Widgets" package from HPM**\
