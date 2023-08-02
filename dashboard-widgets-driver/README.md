@@ -9,16 +9,18 @@
 | Wind | [preview](https://dan-danache.github.io/hubitat/dashboard-widgets-driver/widgets/wind.html) | [parameters](https://github.com/dan-danache/hubitat/blob/main/dashboard-widgets-driver/widgets/wind.html) |
 
 ## Install and usage
-1. **Install "Dashboard Widgets" package from HPM**\
-   This action will install the "Dashboard Widgets" device driver and the HTML files for each widget into Hubitat File Manager
-2. **Create a new Virtual Device**
+1. **Install "Dashboard Widgets" package using [HPM](https://hubitatpackagemanager.hubitatcommunity.com/)**\
+   This action will:
+   * install the "Dashboard Widgets" device driver
+   * add HTML files for each widget into the Hubitat File Manager
+3. **Create a new Virtual Device**
    * Go to "Devices"
    * Click "Add Device" in the top right
    * Select "Virtual"
    * Give the device a name (e.g.: "Dashboard Widgets")
    * From the "Type" dropdown, select "Dashboard Widgets"
    * Click "Save Device"
-3. **Enable Maker API integration**
+4. **Enable Maker API integration**
    * Go to the newly added device page
    * In the "Preferences" section, enable the "Use Maker API" option
    * Click "Save Preferences"
