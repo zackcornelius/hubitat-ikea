@@ -8,5 +8,8 @@ Allows you to visually render getChildAndRouteInfo of your Hubitat system.
 1. Click "Done" button to create the app instance
 1. Go to "Apps", select "Zigbee Graph" from the list, then click "Show zigbee graph"
 
+## Screenshot example
+![Zigbee Graph](zigbee-graph-screenshot.png "Zigbee Graph")
+
 ---
 [<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 162px !important">](https://www.buymeacoffee.com/dandanache)
