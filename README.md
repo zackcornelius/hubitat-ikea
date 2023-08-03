@@ -2,7 +2,7 @@ Here I keep all my Hubitat awesome stuff. Feel free to look around!
 
 | Awesome thing | Details |
 |---------------|---------|
-| Zigbee Graph | [Community Page](https://community.hubitat.com/t/zigbee-visual-render-for-getchildandrouteinfo/119074) |
+| Zigbee Graph | [Project Homepage](https://dan-danache.github.io/hubitat/zigbee-graph-app/)｜[Community Page](https://community.hubitat.com/t/zigbee-visual-render-for-getchildandrouteinfo/119074) |
 | Dashboard Widgets | [Project Homepage](https://dan-danache.github.io/hubitat/dashboard-widgets-driver/) |
 
 ---
