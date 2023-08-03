@@ -4,9 +4,9 @@
 
 | Widget | Preview | Parameters |
 |--------|---------|------------|
-| Clock | [preview](https://dan-danache.github.io/hubitat/dashboard-widgets-driver/widgets/clock.html) | [parameters](https://github.com/dan-danache/hubitat/blob/main/dashboard-widgets-driver/widgets/clock.html) |
-| Fan | [preview](https://dan-danache.github.io/hubitat/dashboard-widgets-driver/widgets/fan.html) | [parameters](https://github.com/dan-danache/hubitat/blob/main/dashboard-widgets-driver/widgets/fan.html) |
-| Wind | [preview](https://dan-danache.github.io/hubitat/dashboard-widgets-driver/widgets/wind.html) | [parameters](https://github.com/dan-danache/hubitat/blob/main/dashboard-widgets-driver/widgets/wind.html) |
+| Clock | [preview](https://dan-danache.github.io/hubitat/dashboard-widgets-driver/widgets/clock.html?mock=true) | [parameters](https://github.com/dan-danache/hubitat/blob/main/dashboard-widgets-driver/widgets/clock.html) |
+| Fan | [preview](https://dan-danache.github.io/hubitat/dashboard-widgets-driver/widgets/fan.html?mock=true) | [parameters](https://github.com/dan-danache/hubitat/blob/main/dashboard-widgets-driver/widgets/fan.html) |
+| Wind | [preview](https://dan-danache.github.io/hubitat/dashboard-widgets-driver/widgets/wind.html?mock=true) | [parameters](https://github.com/dan-danache/hubitat/blob/main/dashboard-widgets-driver/widgets/wind.html) |
 
 ## Install and usage
 1. **Install "Dashboard Widgets" package using [HPM](https://hubitatpackagemanager.hubitatcommunity.com/)**\

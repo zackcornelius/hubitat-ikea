@@ -10,7 +10,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Wind - v1.4.0</title>
+    <title>Wind - v1.5.0</title>
     <meta charset="utf-8">
     <meta name="description" content="Wind widget">
     <meta name="keywords" content="hubitat, wind">
@@ -470,24 +470,27 @@
         wind.init();
         socket.init();
 
-        // setInterval(() => {
-        //     const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-        //     wind.onWebsocketMessage({
-        //         deviceId: wind.deviceId,
-        //         name: wind.directionAttr,
-        //         value: directions[Math.floor(Math.random() * directions.length)],
-        //         unit: 'null'
-        //     }); 
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('mock') === 'true') {
+            setInterval(() => {
+                const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+                wind.onWebsocketMessage({
+                    deviceId: wind.deviceId,
+                    name: wind.directionAttr,
+                    value: directions[Math.floor(Math.random() * directions.length)],
+                    unit: 'null'
+                }); 
 
-        //     setTimeout(() => {
-        //         wind.onWebsocketMessage({
-        //             deviceId: wind.deviceId,
-        //             name: wind.speedAttr,
-        //             value: Math.floor(Math.random() * 80),
-        //             unit: 'km/h'
-        //         });
-        //     }, 2500);
-        // }, 5000);
+                setTimeout(() => {
+                    wind.onWebsocketMessage({
+                        deviceId: wind.deviceId,
+                        name: wind.speedAttr,
+                        value: Math.floor(Math.random() * 80),
+                        unit: 'km/h'
+                    });
+                }, 5000);
+            }, 10000);
+        }
     });
 </script>
 </body>

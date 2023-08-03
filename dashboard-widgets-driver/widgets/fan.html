@@ -8,7 +8,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Fan - v1.4.0</title>
+    <title>Fan - v1.5.0</title>
     <meta charset="utf-8">
     <meta name="description" content="Fan widget">
     <meta name="keywords" content="hubitat, fan">
@@ -93,6 +93,19 @@
                 additive="sum"
                 repeatCount="indefinite"
             />
+            <animateTransform id="blades-idle"
+                xlink:href="#blades"
+                attributeType="xml"
+                attributeName="transform"
+                type="rotate"
+                values="0; 45; 0"
+                keyTimes="0; 0.5; 1"
+                keySplines="0.5 0 0.5 1; 0.5 0 0.5 1"
+                calcMode="spline"
+                dur="15s"
+                additive="sum"
+                repeatCount="indefinite"
+            />
         </svg>
     </div>
 <script>
@@ -173,7 +186,7 @@
             'medium-low': 4,
             'medium': 3,
             'medium-high': 1,
-            'high': 0
+            'high': 0.5
         };
 
         constructor(makerAPI) {
@@ -181,11 +194,14 @@
             this.theme = null;
             this.deviceId = null;
             this.speedAttr = null;
-            this.animationElm = null;
+            this.rotateAnimationElm = null;
+            this.idleAnimationElm = null;
         }
 
         init() {
-            this.animationElm = document.getElementById('blades-rotation');
+            this.rotateAnimationElm = document.getElementById('blades-rotation');
+            this.idleAnimationElm = document.getElementById('blades-idle');
+
             //URL: fan.html?theme=dark&speed_attr=switch
 
             // Configure from URL params
@@ -231,7 +247,8 @@
                 console.log('Fan', 'Invalid attribute value', value);
                 return;
             }
-            this.animationElm.setAttribute('dur', dur);
+            this.rotateAnimationElm.setAttribute('dur', `${dur}s`);
+            this.idleAnimationElm.setAttribute('dur', value === 'off' ? '15s' : 'indefinite');
         }
 
         _parseTheme(theme) {
@@ -252,15 +269,18 @@
         fan.init();
         socket.init();
 
-        // setInterval(() => {
-        //     const speeds = ['low', 'medium-low', 'medium', 'medium-high', 'high', 'on', 'off', 'auto'];
-        //     fan.onWebsocketMessage({
-        //         deviceId: fan.deviceId,
-        //         name: fan.speedAttr,
-        //         value: speeds[Math.floor(Math.random() * speeds.length)],
-        //         unit: 'null'
-        //     });
-        // }, 5000);
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('mock') === 'true') {
+            setInterval(() => {
+                const speeds = ['low', 'medium-low', 'medium', 'medium-high', 'high', 'on', 'off', 'auto'];
+                fan.onWebsocketMessage({
+                    deviceId: fan.deviceId,
+                    name: fan.speedAttr,
+                    value: speeds[Math.floor(Math.random() * speeds.length)],
+                    unit: 'null'
+                });
+            }, 10000);
+        }
     });
 </script>
 </body>

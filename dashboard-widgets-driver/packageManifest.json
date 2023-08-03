@@ -1,7 +1,7 @@
 {
     "packageName": "Dashboard Widgets",
-    "version": "1.4.0",
-    "releaseNotes": "v1.4.0\n - Add fan widget\n - Rework svg artwork",
+    "version": "1.5.0",
+    "releaseNotes": "v1.5.0\n - Improve Fan idle animation\n - Add 'mock' URL parameter",
     "minimumHEVersion": "2.1.9",
     "author": "Dan Danache (@agamemnon.dandanache)",
     "dateReleased": "2023-08-02",
@@ -14,7 +14,7 @@
         "id" : "b009d1a1-581e-422b-80d1-baedf4a5af71",
         "name": "Dashboard Widgets",
         "namespace": "dandanache",
-        "location": "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.4.0/dashboard-widgets-driver/dashboard-widgets.groovy",
+        "location": "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.5.0/dashboard-widgets-driver/dashboard-widgets.groovy",
         "required": true,
         "oauth": false,
         "description": "Allows you to add custom widgets to Hubitat dashboards."
@@ -23,7 +23,7 @@
         "id": "4ba3e1ef-d2ec-4665-a71e-909cb59efa2d",
         "name": "clock.html",
         "namespace": "dandanache",
-        "location": "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.4.0/dashboard-widgets-driver/widgets/clock.html",
+        "location": "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.5.0/dashboard-widgets-driver/widgets/clock.html",
         "required": true,
         "oauth": false,
         "description": "Clock dashboard widget."
@@ -31,7 +31,7 @@
         "id": "0c59f3f0-f1ee-47b9-adc0-64b08c59a615",
         "name": "fan.html",
         "namespace": "dandanache",
-        "location": "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.4.0/dashboard-widgets-driver/widgets/fan.html",
+        "location": "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.5.0/dashboard-widgets-driver/widgets/fan.html",
         "required": true,
         "oauth": false,
         "description": "Fan dashboard widget."
@@ -39,7 +39,7 @@
         "id": "e00fe515-60d6-4579-8bb8-2611ccd5b7c3",
         "name": "wind.html",
         "namespace": "dandanache",
-        "location": "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.4.0/dashboard-widgets-driver/widgets/wind.html",
+        "location": "https://raw.githubusercontent.com/dan-danache/hubitat/dashboard-widgets-driver_1.5.0/dashboard-widgets-driver/widgets/wind.html",
         "required": true,
         "oauth": false,
         "description": "Wind dashboard widget."
