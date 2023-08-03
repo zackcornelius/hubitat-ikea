@@ -43,13 +43,13 @@
    * In the "Pick an Attribute" section, select one of the attributes you configured in Step 4 (e.g.: "Alfa")
   
 ## Responsive tiles
-Widgets are responsive, they will automatically scale if you modify the dashboard tile size. There is however a small bug that prevents this from happening; to fix it, follow these stepes:
+Widgets are responsive, they will automatically scale if you modify the dashboard tile size. There is however a small bug that prevents this from happening; to fix it, follow these steps:
 * Go to "Dashboards"
 * Select the dashboard you authorized in Step 5
-* Click the cogwheel incon in the top right to open dashboard settings
+* Click the cogwheel icon in the top right to open dashboard settings
 * Click "Advanced"
 * Click "CSS"
-* Enter the following code in the text area:
+* Enter the following code in the text area below:
   ```css
   .tile-primary { height: 100% }
   ```
