@@ -41,5 +41,17 @@
    * In the "Pick a Device" section, select the newly added device
    * In the "Pick a Template" section, select "Attribute"
    * In the "Pick an Attribute" section, select one of the attributes you configured in Step 4 (e.g.: "Alfa")
-   * Note: Widgets are responsive, they will automatically scale if you modify the dashbaord tile size
-   
+  
+## Responsive tiles
+Widgets are responsive, they will automatically scale if you modify the dashboard tile size. There is however a small bug that prevents this from happening; to fix it, follow these stepes:
+* Go to "Dashboards"
+* Select the dashboard you authorized in Step 5
+* Click the cogwheel incon in the top right to open dashboard settings
+* Click "Advanced"
+* Click "CSS"
+* Enter the following code in the text area:
+  ```css
+  .tile-primary { height: 100% }
+  ```
+* Finally, click "Save CSS"
+
