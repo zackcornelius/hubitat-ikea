@@ -1,5 +1,3 @@
-# Hubitat
-
 Here I keep all my Hubitat awesome stuff. Feel free to look around!
 
 | Awesome thing | Details |
