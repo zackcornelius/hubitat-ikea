@@ -1,0 +1,22 @@
+{
+    "packageName": "IKEA Zigbee drivers",
+    "version": "1.0.0",
+    "releaseNotes": "v1.0.0\n - Initial release",
+    "minimumHEVersion": "2.1.9",
+    "author": "Dan Danache (@agamemnon.dandanache)",
+    "dateReleased": "2023-09-01",
+    "documentationLink": "https://dan-danache.github.io/hubitat/ikea-zigbee-drivers/",
+    "communityLink": "https://community.hubitat.com/t/zigbee-visual-render-for-getchildandrouteinfo/119074",
+    "licenseFile": "https://raw.githubusercontent.com/dan-danache/hubitat/main/LICENSE",
+    "category": "Control",
+    "tags": [ "Zigbee", "Buttons", "Lights & Switches" ],
+    "drivers" : [{
+        "id" : "c0dcc1b3-a01f-46b0-9a0f-e823f1107431",
+        "name": "IKEA Symfonisk Sound Remote E2123",
+        "description": "Zigbee driver for IKEA Symfonisk Sound Remote (E2123)",
+        "namespace": "dandanache",
+        "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_1.0.0/ikea-zigbee-drivers/E2123.groovy",
+        "required": false,
+        "oauth": false
+    }]
+}
