@@ -5,18 +5,26 @@
         {
             "id": "4e186d70-b8b5-4069-8ae4-f6a5c25ca734",
             "name": "zigbee-graph",
-            "category": "Utility",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/main/zigbee-graph-app/packageManifest.json",
             "description": "Allows you to visually render getChildAndRouteInfo of your Hubitat system.",
-            "tags": [ "Zigbee", "Tools & Utilities" ]
+            "category": "Utility",
+            "tags": [ "Zigbee", "Tools & Utilities" ],
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/main/zigbee-graph-app/packageManifest.json"
         },
         {
             "id": "4e07f242-914a-41c3-914d-3aba4fcc4540",
             "name": "Dashboard Widgets",
-            "category": "Utility",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/main/dashboard-widgets-driver/packageManifest.json",
             "description": "Allows you to add custom widgets to Hubitat dashboards.",
-            "tags": [ "Dashboards", "Tools & Utilities" ]
+            "category": "Utility",
+            "tags": [ "Dashboards", "Tools & Utilities" ],
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/main/dashboard-widgets-driver/packageManifest.json"
+        },
+        {
+            "id": "a3f40cb1-ae2d-4a93-9e0c-f831634651c3",
+            "name": "IKEA Zigbee drivers",
+            "description": "Allows you to add custom widgets to Hubitat dashboards.",
+            "category": "Control",
+            "tags": [ "Zigbee", "Buttons", "Lights & Switches" ],
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/main/ikea-zigbee-drivers/packageManifest.json"
         }
     ]
 }
