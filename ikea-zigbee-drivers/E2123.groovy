@@ -20,7 +20,7 @@ import groovy.transform.Field
 ]
 
 metadata {
-    definition(name: "IKEA Symfonisk Sound Remote E2123", namespace: "dandanache", author: "Dan Danache", importUrl: "TODO") {
+    definition(name: "IKEA Symfonisk Sound Remote E2123", namespace: "dandanache", author: "Dan Danache", importUrl: "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_1.0.0/ikea-zigbee-drivers/E2123.groovy") {
         capability "Configuration"
         capability "Battery"
         capability "PushableButton"
