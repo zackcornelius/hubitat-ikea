@@ -21,7 +21,7 @@
         {
             "id": "a3f40cb1-ae2d-4a93-9e0c-f831634651c3",
             "name": "IKEA Zigbee drivers",
-            "description": "Drivers for: IKEA Symfonisk Sound Remote E2123.",
+            "description": "Drivers for: IKEA Symfonisk Sound Remote Gen2 (E2123).",
             "category": "Control",
             "tags": [ "Zigbee", "Buttons", "Lights & Switches" ],
             "location": "https://raw.githubusercontent.com/dan-danache/hubitat/main/ikea-zigbee-drivers/packageManifest.json"
