@@ -1,9 +1,8 @@
 /**
- * IKEA Symfonisk Sound Remote Gen2 (E2123) Driver
+ * IKEA Tradfri Remote Control (E1810) Driver
  * Ver: 1.1.0
  *
- * @see https://www.ikea.com/us/en/p/symfonisk-sound-remote-gen-2-30527312/
- * @see https://zigbee.blakadder.com/Ikea_E2123.html
+ * @see https://zigbee.blakadder.com/Ikea_E1810.html
  * @see https://ww8.ikea.com/ikeahomesmart/releasenotes/releasenotes.html
  * @see https://dan-danache.github.io/hubitat/ikea-zigbee-drivers/
  */
@@ -15,27 +14,21 @@ import groovy.transform.Field
     "PLUS":  ["2", "Plus"],
     "MINUS": ["3", "Minus"],
     "NEXT":  ["4", "Next"],
-    "PREV":  ["5", "Prev"],
-    "DOT_1": ["6", "One Dot"],
-    "DOT_2": ["7", "Two Dots"]
+    "PREV":  ["5", "Prev"]
 ]
 
 metadata {
-    definition(name: "IKEA Symfonisk Sound Remote Gen2 (E2123)", namespace: "dandanache", author: "Dan Danache", importUrl: "https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E2123.groovy") {
+    definition(name: "IKEA Tradfri Remote Control (E1810)", namespace: "dandanache", author: "Dan Danache", importUrl: "https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1810.groovy") {
         capability "Configuration"
         capability "Battery"
         capability "PushableButton"
-        capability "DoubleTapableButton"
         capability "HoldableButton"
         capability "ReleasableButton"
         capability "Switch"
         capability "SwitchLevel"
 
-        // For firmware 1.0.012 (20211214)
-        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC57", outClusters:"0003,0004,0006,0008,0019,1000,FC7F", model:"SYMFONISK sound remote gen2", manufacturer:"IKEA of Sweden"
-        
-        // For firmware 1.0.35 (20230411)
-        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC7C", outClusters:"0003,0004,0006,0008,0019,1000", model:"SYMFONISK sound remote gen2", manufacturer:"IKEA of Sweden"
+        // For firmware 24.4.5 (24040005)
+        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC57,FC7C", outClusters:"0003,0004,0005,0006,0008,0019,1000", model:"TRADFRI remote control", manufacturer:"IKEA of Sweden" 
     }
 
     preferences {
@@ -70,7 +63,7 @@ metadata {
 // Called when the device is first added
 def installed() {
     info("Installing Zigbee device....")
-    warn("IMPORTANT: Make sure that you keep the IKEA SYMFONISK remote as close as you can to your Hubitat hub! Otherwise it will successfully pair but the buttons won't work.")
+    warn("IMPORTANT: Make sure that you keep the IKEA TRADFRI remote as close as you can to your Hubitat hub! Otherwise it will successfully pair but the buttons won't work.")
 }
 
 // Called when the "save Preferences" button is clicked
@@ -109,7 +102,6 @@ def configure() {
 
     // Set initial values for all attributes
     push(0)
-    doubleTap(0)
     hold(0)
     release(0)
     on()
@@ -123,11 +115,9 @@ def configure() {
     cmds.addAll(zigbee.configureReporting(0x0001, 0x0021, DataType.UINT8, 86400, 172800, 0x00)) // Report battery percentage every 24-48 hours
 
     // Add binds
-    cmds.add("zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {${device.zigbeeId}} {}") // Generic - On/Off
-    cmds.add("zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0008 {${device.zigbeeId}} {}") // Generic - Level Control
-    cmds.add("zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0xFC7F {${device.zigbeeId}} {}") // 64639 --> For firmware 1.0.012 (20211214)
-    cmds.add("zdo bind 0x${device.deviceNetworkId} 0x02 0x01 0xFC80 {${device.zigbeeId}} {}") // Heiman - Specific Scenes --> For firmware 1.0.35 (20230411)
-    cmds.add("zdo bind 0x${device.deviceNetworkId} 0x03 0x01 0xFC80 {${device.zigbeeId}} {}") // Heiman - Specific Scenes --> For firmware 1.0.35 (20230411)
+    cmds.add("zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0005 {${device.zigbeeId}} {}") // Generic - Scenes cluster
+    cmds.add("zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {${device.zigbeeId}} {}") // Generic - On/Off cluster
+    cmds.add("zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0008 {${device.zigbeeId}} {}") // Generic - Level Control cluster
 
     // Query device attributes
     cmds.addAll(zigbee.readAttribute(0x0000, 0x0001))  // ApplicationVersion
@@ -145,11 +135,6 @@ def configure() {
 // capability.pushableButton
 def push(buttonNumber) {
     triggerUserEvent(name: "pushed", value: buttonNumber, descriptionText: "Button #${buttonNumber} was pressed")
-}
-
-// capability.doubleTapableButton
-def doubleTap(buttonNumber) {
-    triggerUserEvent(name: "doubleTapped", value: buttonNumber, descriptionText: "Button #${buttonNumber} was double tapped")
 }
 
 // capability.holdableButton
@@ -213,8 +198,8 @@ def parse(String description) {
         if (msg.attrInt == 0x0005) {
             zigbeeDebug("ModelIdentifier: ${msg.value}")
             updateDataValue("model", "${msg.value}")
-            if (msg.value == "SYMFONISK sound remote gen2") {
-                updateDataValue("type", "E2123")
+            if (msg.value == "TRADFRI remote control") {
+                updateDataValue("type", "E1810")
             }
             return
         }
@@ -257,6 +242,30 @@ def parse(String description) {
             return zigbeeDebug("Identify Query Command: ${msg}")
         }
     }
+
+    // General::Scenes cluster
+    // ---------------------------------------------------------------------------------------------------------------
+    if (clusterId == 0x0005) {
+
+        // Next / Prev button was pushed
+        if (msg.command == "07") {
+            def button = msg.data[0] == "00" ? BUTTONS.NEXT : BUTTONS.PREV
+            return triggerZigbeeEvent(name: "pushed", value: button[0], descriptionText: "Button #${button[0]} (${button[1]}) was pressed")
+        }
+        
+        // Next / Prev button was held
+        if (msg.command == "08") {
+            def button = msg.data[0] == "00" ? BUTTONS.NEXT : BUTTONS.PREV
+            return triggerZigbeeEvent(name: "held", value: button[0], descriptionText: "Button #${button[0]} (${button[1]}) was held")
+        }
+        
+        // Next / Prev button was released
+        if (msg.command == "09") {
+            //def button = I'm not smart enough to figure it out how to determine button number from msd.data!
+            //return triggerZigbeeEvent(name: "released", value: button[0], descriptionText: "Button #${button[0]} (${button[1]}) was released")
+            return
+        }
+    }
     
     // General::On/Off cluster
     // ---------------------------------------------------------------------------------------------------------------
@@ -284,21 +293,27 @@ def parse(String description) {
     if (clusterId == 0x0008) {
 
         // Plus / Minus button was pushed
-        if (msg.command == "01" || msg.command == "05") {
-            def button = msg.data[0] == "00" ? BUTTONS.PLUS : BUTTONS.MINUS
+        if (msg.command == "02" || msg.command == "06") {
+            def button = msg.command == "02" ? BUTTONS.MINUS : BUTTONS.PLUS
             triggerZigbeeEvent(name: "pushed", value: button[0], descriptionText: "Button #${button[0]} (${button[1]}) was pressed")
             
-            def curLevel = device.currentState("level") != null ? Integer.parseInt(device.currentState("level").value) : 25;
+            def curLevel = device.currentState("level") != null ? Integer.parseInt(device.currentState("level").value) : 25
             def newLevel = curLevel + (button == BUTTONS.PLUS ? Integer.parseInt(levelChange) : 0 - Integer.parseInt(levelChange))
             newLevel = newLevel < 0 ? 0 : (newLevel > 100 ? 100 : newLevel)
             if (curLevel != newLevel) triggerZigbeeEvent(name: "level", value: newLevel, descriptionText: "Level changed to: ${newLevel}")
             return
         }
         
-        // Next / Prev button was pushed
-        if (msg.command == "02" || msg.command == "05") {
-            def button = msg.data[0] == "00" ? BUTTONS.NEXT : BUTTONS.PREV
-            return triggerZigbeeEvent(name: "pushed", value: button[0], descriptionText: "Button #${button[0]} (${button[1]}) was pressed")
+        // Plus / Minus button was held
+        if (msg.command == "01" || msg.command == "05") {
+            def button = msg.command == "01" ? BUTTONS.MINUS : BUTTONS.PLUS
+            return triggerZigbeeEvent(name: "held", value: button[0], descriptionText: "Button #${button[0]} (${button[1]}) was held")
+        }
+
+        // Plus / Minus button was released
+        if (msg.command == "03" || msg.command == "07") {
+            def button = msg.command == "03" ? BUTTONS.MINUS : BUTTONS.PLUS
+            return triggerZigbeeEvent(name: "held", value: button[0], descriptionText: "Button #${button[0]} (${button[1]}) was released")
         }
     }
 
@@ -306,6 +321,14 @@ def parse(String description) {
     // ---------------------------------------------------------------------------------------------------------------
     if (clusterId == 0x0013) {
         return zigbeeDebug("Device Announce Broadcast: ${msg.data}")
+    }
+    
+    // Undocumented cluster 
+    // ---------------------------------------------------------------------------------------------------------------
+    if (clusterId == 0x8005) {
+        if (msg.command == "00") {
+            return zigbeeDebug("Active Endpoints Response: endpoints count=(${Integer.parseInt(msg.data[5], 16)}): ${msg.data}")
+        }
     }
     
     // Undocumented cluster
@@ -370,60 +393,7 @@ def parse(String description) {
     if (clusterId == 0x8034) {
         return zigbeeDebug("Leave Response: ${msg.data}")
     }
-
-    // Undocumented cluster - Used by firmware 1.0.012 (20211214)
-    // ---------------------------------------------------------------------------------------------------------------
-    if (clusterId == 0xFC7F) {
-        def button = msg.data[0] == "01" ? BUTTONS.DOT_1 : BUTTONS.DOT_2
-
-        // 1 Dot / 2 Dots button was pushed
-        if (msg.data[1] == "01") {
-            return triggerZigbeeEvent(name: "pushed", value: button[0], descriptionText: "Button #${button[0]} (${button[1]}) was pressed")
-        }
-
-        // 1 Dot / 2 Dots button was double tapped
-        if (msg.data[1] == "02") {
-            return triggerZigbeeEvent(name: "doubleTapped", value: button[0], descriptionText: "Button #${button[0]} (${button[1]}) was double tapped")
-        }
-        
-        // 1 Dot / 2 Dots button was held
-        if (msg.data[1] == "03") {
-            return triggerZigbeeEvent(name: "held", value: button[0], descriptionText: "Button #${button[0]} (${button[1]}) was held")
-        }
-    }
-
-    // Undocumented cluster - Used by firmware 1.0.35 (20230411)
-    // ---------------------------------------------------------------------------------------------------------------
-    if (clusterId == 0xFC80) {
-        def button = msg.sourceEndpoint == "02" ? BUTTONS.DOT_1 : BUTTONS.DOT_2
-
-        // IGNORED: 1 Dot / 2 Dots button was pressed-down
-        if (msg.command == "01") {
-            return zigbeeDebug("Button #${button[0]} (${button[1]}) was pressed-down (ignored as we wait for the next message to distinguish between click, double tap and hold)")
-        }
-
-        // 1 Dot / 2 Dots button was held
-        // Commands are issued in this order: 01 (key-down = ignored) -> 02 (button is held = update "held" attribute) -> 04 (button released = update "released" attribute)
-        if (msg.command == "02") {
-            return triggerZigbeeEvent(name: "held", value: button[0], descriptionText: "Button #${button[0]} (${button[1]}) was held")
-        }
-        
-        // 1 Dot / 2 Dots button was pushed
-        if (msg.command == "03") {
-            return triggerZigbeeEvent(name: "pushed", value: button[0], descriptionText: "Button #${button[0]} (${button[1]}) was pressed")
-        }
-
-        // IGNORED: 1 Dot / 2 Dots button was released
-        if (msg.command == "04") {
-            return triggerZigbeeEvent(name: "released", value: button[0], descriptionText: "Button #${button[0]} (${button[1]}) was released")
-        }
-        
-        // 1 Dot / 2 Dots button was double tapped
-        if (msg.command == "06") {
-            return triggerZigbeeEvent(name: "doubleTapped", value: button[0], descriptionText: "Button #${button[0]} (${button[1]}) was double tapped")
-        }
-    }
-    
+   
     // Unhandled Zigbee message
     warn("🔽 Received unknown Zigbee message: ${description}, msg: ${msg}")
 }
