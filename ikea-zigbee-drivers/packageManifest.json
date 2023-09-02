@@ -6,7 +6,7 @@
     "author": "Dan Danache (@agamemnon.dandanache)",
     "dateReleased": "2023-09-01",
     "documentationLink": "https://dan-danache.github.io/hubitat/ikea-zigbee-drivers/",
-    "communityLink": "https://community.hubitat.com/t/zigbee-visual-render-for-getchildandrouteinfo/119074",
+    "communityLink": "https://community.hubitat.com/t/release-ikea-symfonisk-sound-remote-gen2-e2123/123853",
     "licenseFile": "https://raw.githubusercontent.com/dan-danache/hubitat/main/LICENSE",
     "category": "Control",
     "tags": [ "Zigbee", "Buttons", "Lights & Switches" ],
