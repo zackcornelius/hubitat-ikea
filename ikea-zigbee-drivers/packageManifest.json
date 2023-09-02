@@ -12,8 +12,8 @@
     "tags": [ "Zigbee", "Buttons", "Lights & Switches" ],
     "drivers" : [{
         "id" : "c0dcc1b3-a01f-46b0-9a0f-e823f1107431",
-        "name": "IKEA Symfonisk Sound Remote E2123",
-        "description": "Zigbee driver for IKEA Symfonisk Sound Remote (E2123)",
+        "name": "IKEA Symfonisk Sound Remote Gen2 (E2123)",
+        "description": "Zigbee driver for IKEA Symfonisk Sound Remote Gen2 (E2123)",
         "namespace": "dandanache",
         "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_1.0.0/ikea-zigbee-drivers/E2123.groovy",
         "required": false,
