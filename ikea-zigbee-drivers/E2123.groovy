@@ -1,5 +1,6 @@
 /**
- * IKEA Symfonisk Sound Remote (E2123) Driver
+ * IKEA Symfonisk Sound Remote Gen2 (E2123) Driver
+ * Ver: 1.0.1
  *
  * @see https://www.ikea.com/us/en/p/symfonisk-sound-remote-gen-2-30527312/
  * @see https://zigbee.blakadder.com/Ikea_E2123.html
@@ -20,7 +21,7 @@ import groovy.transform.Field
 ]
 
 metadata {
-    definition(name: "IKEA Symfonisk Sound Remote E2123", namespace: "dandanache", author: "Dan Danache", importUrl: "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_1.0.0/ikea-zigbee-drivers/E2123.groovy") {
+    definition(name: "IKEA Symfonisk Sound Remote Gen2 (E2123)", namespace: "dandanache", author: "Dan Danache", importUrl: "https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E2123.groovy") {
         capability "Configuration"
         capability "Battery"
         capability "PushableButton"
@@ -40,15 +41,23 @@ metadata {
         input(
             name: "levelChange",
             type: "enum",
-            title: "Level change when Plus or Minus is pushed",
-            defaultValue: 5,
-            options: [1:"1 %", 5:"5 %", 10:"10 %", 20:"20 %", 25:"25 %"]
+            title: "Plus/Minus buttons level adjust (+/- %)*",
+            options: ["1": "1 %", "2": "2 %", "5": "5 %", "10": "10 %", "20":"20 %", "25":"25 %"],
+            defaultValue: "5",
+            required: true
         )
         input(
             name: "logLevel",
             type: "enum",
-            title: "Select log verbosity",
-            options: [1:"Debug", 2:"Info", 3:"Warning", 4:"Error"], defaultValue: 1
+            title: "Select log verbosity*",
+            options: [
+                "1": "Debug (log everything)",
+                "2": "Info (log only important events)",
+                "3": "Warning (log only events that require attention)",
+                "4": "Error (log only errors)"
+            ],
+            defaultValue: "2",
+            required: true
         )
     }
 }
@@ -66,8 +75,8 @@ def installed() {
 // Called when the "save Preferences" button is clicked
 def updated() {
     info("Applying preferences...")
-    info("🛠️ Preferences :: logLevel: ${logLevel}")
-    info("🛠️ Preferences :: levelChange: ${levelChange}%")
+    info("🛠️ logLevel: ${logLevel}")
+    info("🛠️ levelChange: ${levelChange}%")
 
     if (logLevel == "1") runIn(1800, "logsOff")
     else unschedule()
@@ -75,8 +84,10 @@ def updated() {
 
 // Handler method for scheduled job to disable debug logging
 def logsOff() {
-   log.warn('Automatically reverting log level to "Info"')
-   device.updateSetting("logLevel", [value: 2, type: "number"])
+   info('⏲️ Automatically reverting log level to "Info"')
+   device.clearSetting("logLevel")
+   device.removeSetting("logLevel")
+   device.updateSetting("logLevel", "2")
 }
 
 // ===================================================================================================================
@@ -215,8 +226,8 @@ def parse(String description) {
         if (msg.attrInt == 0x0021) {
             def percentage = Integer.parseInt(msg.value, 16)
             
-            // On later firmware versions; battery is reported with a double value (but why?)
-            if (getDataValue("softwareBuild") != "1.0.012") {
+            // On later firmware versions; battery is reported with a double value, upto "200" (but why?)
+            if (getDataValue("softwareBuild") != null && getDataValue("softwareBuild").value != "1.0.012") {
                 percentage = Math.round(percentage / 2);
             }
 
