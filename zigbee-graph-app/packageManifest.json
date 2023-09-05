@@ -7,7 +7,7 @@
     "dateReleased": "2023-06-30",
     "documentationLink": "https://community.hubitat.com/t/zigbee-visual-render-for-getchildandrouteinfo/119074",
     "communityLink": "https://community.hubitat.com/t/zigbee-visual-render-for-getchildandrouteinfo/119074",
-    "licenseFile": "https://raw.githubusercontent.com/dan-danache/hubitat/main/LICENSE",
+    "licenseFile": "https://raw.githubusercontent.com/dan-danache/hubitat/master/LICENSE",
     "category": "Utility",
     "tags": [ "Zigbee", "Tools & Utilities" ],
     "files": [{
