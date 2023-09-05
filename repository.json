@@ -1,6 +1,7 @@
 {
     "author": "Dan Danache",
     "gitHubUrl": "https://github.com/dan-danache/hubitat",
+    "payPalUrl": "https://www.buymeacoffee.com/dandanache",
     "packages": [
         {
             "id": "4e186d70-b8b5-4069-8ae4-f6a5c25ca734",
