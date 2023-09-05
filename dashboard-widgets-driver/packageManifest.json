@@ -7,7 +7,7 @@
     "dateReleased": "2023-08-02",
     "documentationLink": "https://dan-danache.github.io/hubitat/dashboard-widgets-driver/",
     "communityLink": "https://community.hubitat.com/t/zigbee-visual-render-for-getchildandrouteinfo/119074",
-    "licenseFile": "https://raw.githubusercontent.com/dan-danache/hubitat/main/LICENSE",
+    "licenseFile": "https://raw.githubusercontent.com/dan-danache/hubitat/master/LICENSE",
     "category": "Utility",
     "tags": [ "Dashboards" ],
     "drivers" : [{
