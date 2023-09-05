@@ -1,10 +1,10 @@
 {
     "packageName": "IKEA Zigbee drivers",
-    "version": "1.1.0",
-    "releaseNotes": "v1.1.0\n - Add driver for IKEA Tradfri Remote Control (E1810\n - Add \"ReleasableButton\" capability for the dots buttons",
+    "version": "1.2.0",
+    "releaseNotes": "v1.2.0\n - Cleanup drivers code",
     "minimumHEVersion": "2.1.9",
     "author": "Dan Danache (@agamemnon.dandanache)",
-    "dateReleased": "2023-09-03",
+    "dateReleased": "2023-09-05",
     "documentationLink": "https://dan-danache.github.io/hubitat/ikea-zigbee-drivers/",
     "communityLink": "https://community.hubitat.com/t/release-ikea-symfonisk-sound-remote-gen2-e2123/123853",
     "licenseFile": "https://raw.githubusercontent.com/dan-danache/hubitat/main/LICENSE",
@@ -16,7 +16,7 @@
             "name": "IKEA Symfonisk Sound Remote Gen2 (E2123)",
             "description": "Zigbee driver for IKEA Symfonisk Sound Remote Gen2 (E2123)",
             "namespace": "dandanache",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_1.1.0/ikea-zigbee-drivers/E2123.groovy",
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_1.2.0/ikea-zigbee-drivers/E2123.groovy",
             "required": false,
             "oauth": false
         },
@@ -25,7 +25,7 @@
             "name": "IKEA Tradfri Remote Control (E1810)",
             "description": "Zigbee driver for IKEA Tradfri Remote Control (E1810)",
             "namespace": "dandanache",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_1.1.0/ikea-zigbee-drivers/E1810.groovy",
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_1.2.0/ikea-zigbee-drivers/E1810.groovy",
             "required": false,
             "oauth": false
         }
