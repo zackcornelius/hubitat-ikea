@@ -17,8 +17,7 @@
             "description": "Zigbee driver for IKEA Symfonisk Sound Remote Gen2 (E2123)",
             "namespace": "dandanache",
             "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_1.2.0/ikea-zigbee-drivers/E2123.groovy",
-            "required": false,
-            "oauth": false
+            "required": false
         },
         {
             "id" : "8eeec878-5a6c-44c4-b142-5afebff2387f",
@@ -26,8 +25,7 @@
             "description": "Zigbee driver for IKEA Tradfri Remote Control (E1810)",
             "namespace": "dandanache",
             "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_1.2.0/ikea-zigbee-drivers/E1810.groovy",
-            "required": false,
-            "oauth": false
+            "required": false
         }
     ]
 }
