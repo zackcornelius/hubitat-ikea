@@ -32,7 +32,6 @@ Follow the steps below if you don't know what "Hubitat Package Manager" is:
 | Product Image | <img src="https://www.ikea.com/us/en/images/products/symfonisk-sound-remote-gen-2__1112597_pe871228_s5.jpg?f=xl" style="width: 200px"> |
 | Product Code | [305.273.12](https://www.ikea.com/us/en/p/symfonisk-sound-remote-gen-2-30527312/) |
 | Zigbee ID | SYMFONISK sound remote gen2 |
-| Hubitat Capabilities | Configuration, Battery, PushableButton, DoubleTapableButton, HoldableButton, ReleasableButton, Switch, SwitchLevel |
 | Manual install file | `https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E2123.groovy` |
 | Tested firmwares | `1.0.012` `1.0.35` |
 
@@ -56,7 +55,6 @@ Follow the steps below in order to pair your IKEA Sound Remote with your Hubitat
 | Product Image | <img src="https://zigbee.blakadder.com/assets/images/devices/Ikea_E1810.webp" style="width: 200px"> |
 | Product Code | 304.431.24 |
 | Zigbee ID | TRADFRI remote control |
-| Hubitat Capabilities | Configuration, Battery, PushableButton, HoldableButton, ReleasableButton, Switch, SwitchLevel |
 | Manual install file | `https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1810.groovy` |
 | Tested firmwares | `24.4.5` |
 
