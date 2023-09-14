@@ -58,7 +58,7 @@ Follow the steps below in order to pair the Tradfri Shortcut Button with your Hu
 |-----------|-------------|
 | Product Image | <img src="https://zigbee.blakadder.com/assets/images/devices/Ikea_E1743.webp" style="width: 200px"> |
 | Product Code | `203.563.82`｜`404.677.65`｜`403.563.81` |
-| Manual install file | `https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1812.groovy` |
+| Manual install file | `https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1743.groovy` |
 | Tested firmwares | `2.3.015` |
 
 > IMPORTANT: Old firmware versions (below 2.3.075) suppport binding to groups only and this functionality is not supported by the Hubitat hub. Please update the remote to the latest version.
