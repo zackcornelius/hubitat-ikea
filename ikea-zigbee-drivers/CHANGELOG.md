@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
  - Major rewrite using {{ Mustache }} templates
 
-# Added
+### Added
 - Add support for Tradfri Control Outlet (E1603)
 - Add support for Tradfri On/Off Switch (E1743)
 - Add support for Tradfri Shortcut Button (E1812)
