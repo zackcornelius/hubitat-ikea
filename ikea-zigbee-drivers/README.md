@@ -12,15 +12,15 @@ Supported devices:
 ## Driver Install
 ### Install using HPM (offers automatic updates)
 Follow the steps below if you already have the "Hubitat Package Manager" app installed in your Hubitat hub:
-   * Go to "Apps" and select "Hubitat Package Manager"
+   * In the Hubitat interface, go to "Apps" and select "Hubitat Package Manager"
    * Select "Install", then "Search by Keywords"
    * Enter "IKEA Zigbee drivers" in the search box and click "Next"
    * Select "IKEA Zigbee drivers by Dan Danache" and click "Next"
-   * Select the required driver from the dropdown and follow the install instructions
+   * Select the driver(s) you need from the dropdown list and follow the install instructions
 
 ### Manual Install
 Follow the steps below if you don't know what "Hubitat Package Manager" is:
-   * Go to "Drivers code"
+   * In the Hubitat interface, go to "Drivers code"
    * Click "New Driver" in the top right, then Click "Import" in the top right
    * Search below for your device, look for the "Manual install file" property and enter it in the URL field
    * Click "Import", then click "OK" and the code should load in the editor
