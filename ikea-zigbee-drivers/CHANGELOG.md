@@ -1,4 +1,4 @@
-# Symfonisk Sound Remote Gen2 (E2123) Driver - Changelog
+# IKEA Drivers Changelog
 
 All notable changes to this project will be documented in this file.
 
