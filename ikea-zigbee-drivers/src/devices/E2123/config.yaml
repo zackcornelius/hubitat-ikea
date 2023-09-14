@@ -1,0 +1,63 @@
+device:
+  model: IKEA Symfonisk Sound Remote Gen2
+  zigbeeId: SYMFONISK sound remote gen2
+  type: E2123
+  buttons:
+    list:
+    - { id: 'PLAY',  name: 'Play',  number: 1 }
+    - { id: 'PLUS',  name: 'Plus',  number: 2 }
+    - { id: 'MINUS', name: 'Minus', number: 3 }
+    - { id: 'NEXT',  name: 'Next',  number: 4 }
+    - { id: 'PREV',  name: 'Prev',  number: 5 }
+    - { id: 'DOT_1', name: '•',     number: 6 }
+    - { id: 'DOT_2', name: '••',    number: 7 }
+
+  capabilities:
+    Battery: true
+    DoubleTapableButton: true
+    HealthCheck:
+      schedule: 0 0 0/1 ? * * *
+      checkInterval: 3600  # every hour
+      thereshold: 43200    # report device as offline if no message was received in the last 12 hours (device should report battery level every 6 to 12 hours)
+    HoldableButton: true
+    PowerSource:
+      battery: true
+    PushableButton: true
+    ReleasableButton: true
+    Switch: true
+    SwitchLevel: true
+
+zigbee:
+  fingerprints:
+  - firmwares: 1.0.012
+    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC57", outClusters:"0003,0004,0006,0008,0019,1000,FC7F", model:"SYMFONISK sound remote gen2", manufacturer:"IKEA of Sweden"
+  - firmwares: 1.0.35
+    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC7C", outClusters:"0003,0004,0006,0008,0019,1000", model:"SYMFONISK sound remote gen2", manufacturer:"IKEA of Sweden"
+
+  binds:
+  - { endpoint: '0x01', cluster: '0x0006', reason: General - On/Off cluster }
+  - { endpoint: '0x01', cluster: '0x0008', reason: General - Level Control cluster }
+  - { endpoint: '0x01', cluster: '0xFC7F', reason: Unknown 64639 cluster --> For firmware 1.0.012 }
+  - { endpoint: '0x02', cluster: '0xFC80', reason: Heiman - Specific Scenes cluster --> For firmware 1.0.35 }
+  - { endpoint: '0x03', cluster: '0xFC80', reason: Heiman - Specific Scenes cluster --> For firmware 1.0.35 }
+
+  reporting:
+  - { cluster: '0x0001', attribute: '0x0021', type: 'DataType.UINT8', min: 21600, max: 43200, delta: '0x00', reason: 'Report battery level every 6 to 12 hours' }
+
+  messages:
+    handle:
+    - file: src/devices/E2123/events.groovy
+    - file: src/events/battery-percentage.groovy
+      params: { half: true }
+
+    ignore:
+    - cluster: '0x0001'
+      command: '0x07'
+      name: Configure Reporting Response
+
+    - cluster: '0x0003'
+      command: '0x01'
+      name: Identify Query Response
+
+    - cluster: '0x8034'
+      name: Leave Response

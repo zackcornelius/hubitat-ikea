@@ -1,23 +1,19 @@
 /**
- * IKEA Tradfri Remote Control (E1810)
+ * IKEA Tradfri Shortcut Button (E1812)
  *
  * @see https://dan-danache.github.io/hubitat/ikea-zigbee-drivers/
- * @see https://zigbee.blakadder.com/Ikea_E1810.html
+ * @see https://zigbee.blakadder.com/Ikea_E1812.html
  * @see https://ww8.ikea.com/ikeahomesmart/releasenotes/releasenotes.html
  */
 
 import groovy.time.TimeCategory
 import groovy.transform.Field
 
-@Field def DRIVER_NAME = "IKEA Tradfri Remote Control (E1810)"
+@Field def DRIVER_NAME = "IKEA Tradfri Shortcut Button (E1812)"
 @Field def DRIVER_VERSION = "1.3.0"
 @Field def ZDP_STATUS = ["00":"SUCCESS", "80":"INV_REQUESTTYPE", "81":"DEVICE_NOT_FOUND", "82":"INVALID_EP", "83":"NOT_ACTIVE", "84":"NOT_SUPPORTED", "85":"TIMEOUT", "86":"NO_MATCH", "88":"NO_ENTRY", "89":"NO_DESCRIPTOR", "8A":"INSUFFICIENT_SPACE", "8B":"NOT_PERMITTED", "8C":"TABLE_FULL", "8D":"NOT_AUTHORIZED", "8E":"DEVICE_BINDING_TABLE_FULL"]
 @Field def BUTTONS = [
-    "POWER": ["1", "Power"],
-    "PLUS": ["2", "🔆"],
-    "MINUS": ["3", "🔅"],
-    "NEXT": ["4", "Next"],
-    "PREV": ["5", "Prev"],
+    "ONOFF": ["1", "On/Off"],
 ]
 
 // Health Check config
@@ -27,19 +23,22 @@ import groovy.transform.Field
 ]
 
 metadata {
-    definition(name:DRIVER_NAME, namespace:"dandanache", author:"Dan Danache", importUrl:"https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1810.groovy") {
+    definition(name:DRIVER_NAME, namespace:"dandanache", author:"Dan Danache", importUrl:"https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1812.groovy") {
         capability "Battery"
         capability "Configuration"
+        capability "DoubleTapableButton"
         capability "HealthCheck"
         capability "HoldableButton"
         capability "PowerSource"
         capability "PushableButton"
         capability "ReleasableButton"
         capability "Switch"
-        capability "SwitchLevel"
 
-        // For firmwares: 24.4.5
-        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC57,FC7C", outClusters:"0003,0004,0005,0006,0008,0019,1000", model:"TRADFRI remote control", manufacturer:"IKEA of Sweden"
+        // For firmwares: 2.3.015 (23015631)
+        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0009,0020,1000", outClusters:"0003,0004,0006,0008,0019,0102,1000", model:"TRADFRI SHORTCUT Button", manufacturer:"IKEA of Sweden"
+
+        // For firmwares: 24.4.6
+        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0009,0020,1000", outClusters:"0003,0004,0006,0008,0019,0102,1000", model:"TRADFRI SHORTCUT Button", manufacturer:"IKEA of Sweden"
 
         // Should be part of capability.HealthCheck
         attribute "healthStatus", "ENUM", ["offline", "online", "unknown"]
@@ -59,23 +58,6 @@ metadata {
             defaultValue: "2",
             required: true
         )
-        input(
-            name: "levelChange",
-            type: "enum",
-            title: "Level adjust on button press (+/- %)",
-            options: ["1":"1%", "2":"2%", "5":"5%", "10":"10%", "20":"20%", "25":"25%", "33":"33%"],
-            defaultValue: "5",
-            required: true
-        )
-        input(
-            name: "minLevel",
-            type: "number",
-            title: "Minimum level",
-            description: "<small>Range 0~90</small>",
-            defaultValue: 0,
-            range: "0..90",
-            required: true
-        )
     }
 }
 
@@ -93,12 +75,6 @@ def installed() {
 def updated() {
     Log.info "Saving preferences..."
     Log.info "🛠️ logLevel = ${logLevel}"
-    Log.info "🛠️ levelChange = ${levelChange}%"
-    minLevel = minLevel.toDouble().trunc().toInteger()
-    device.clearSetting "minLevel"
-    device.removeSetting "minLevel"
-    device.updateSetting "minLevel", minLevel
-    Log.info "🛠️ minLevel = ${minLevel}"
 
     unschedule()
     if (logLevel == "1") runIn 1800, "logsOff"
@@ -149,6 +125,9 @@ def configure() {
     def numberOfButtons = BUTTONS.count{_ -> true}
     sendEvent name:"numberOfButtons", value:numberOfButtons, descriptionText:"Number of buttons set to ${numberOfButtons}"
 
+    // capability.DoubleTapableButton
+    doubleTap 0
+
     // capability.HoldableButton
     hold 0
 
@@ -157,9 +136,6 @@ def configure() {
 
     // capability.Switch
     on()
-
-    // capability.SwitchLevel
-    setLevel 5
 
     // capability.PowerSource
     sendEvent name:"powerSource", value:"battery", descriptionText:"Power source set to battery"
@@ -174,7 +150,6 @@ def configure() {
     cmds.addAll zigbee.configureReporting(0x0001, 0x0021, DataType.UINT8, 21600, 43200, 0x00) // Report battery level every 6 to 12 hours
 
     // Add Zigbee binds
-    cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0005 {${device.zigbeeId}} {}" // General - Scenes cluster
     cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {${device.zigbeeId}} {}" // General - On/Off cluster
     cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0008 {${device.zigbeeId}} {}" // General - Level Control cluster
 
@@ -190,6 +165,11 @@ def configure() {
     cmds.add "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0005 {00 ${zigbee.swapOctets(device.deviceNetworkId)}} {0x0000}"
 
     Utils.sendZigbeeCommands cmds
+}
+
+// capability.DoubleTapableButton
+def doubleTap(buttonNumber) {
+    Utils.sendDigitalEvent name:"doubleTapped", value:buttonNumber, descriptionText:"Button ${buttonNumber} was double tapped"
 }
 
 // capability.HealthCheck
@@ -238,12 +218,6 @@ def off() {
     Utils.sendDigitalEvent name:"switch", value:"off", descriptionText:"Was turned off"
 }
 
-// capability.SwitchLevel
-def setLevel(level, duration = 0) {
-    def newLevel = level < 0 ? 0 : (level > 100 ? 100 : level)
-    Utils.sendDigitalEvent name:"level", value:newLevel, unit:"%", descriptionText:"Level was set to ${newLevel}%"
-}
-
 // ===================================================================================================================
 // Handle incoming Zigbee messages
 // ===================================================================================================================
@@ -269,55 +243,28 @@ def parse(String description) {
         // Handle device specific Zigbee messages
         // ---------------------------------------------------------------------------------------------------------------
 
-        // Button Prev/Next was pressed
-        case { contains it, [clusterInt:0x0005, commandInt:0x07] }:
-            def button = msg.data[0] == "00" ? BUTTONS.NEXT : BUTTONS.PREV
-            return Utils.sendPhysicalEvent(name:"pushed", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
-        
-        // Button Prev/Next was held
-        case { contains it, [clusterInt:0x0005, commandInt:0x08] }:
-            def button = msg.data[0] == "00" ? BUTTONS.NEXT : BUTTONS.PREV
-            return Utils.sendPhysicalEvent(name:"held", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was held")
-        
-        // Button Prev/Next was released
-        case { contains it, [clusterInt:0x0005, commandInt:0x09] }:
-            def button = device.currentValue("held") == 4 ? BUTTONS.NEXT : BUTTONS.PREV
-            return Utils.sendPhysicalEvent(name:"released", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was released")
-        
-        // Set switch state
-        case { contains it, [clusterInt:0x0006, commandInt:0x00] }:
+        // Button was pushed
         case { contains it, [clusterInt:0x0006, commandInt:0x01] }:
-            def newState = msg.commandInt == 0x00 ? "off" : "on"
-            return Utils.sendPhysicalEvent(name:"switch", value:newState, descriptionText:"Was turned ${newState}")
-        
-        // Power button was pushed
-        case { contains it, [clusterInt:0x0006, commandInt:0x02] }:
-            def button = BUTTONS.POWER
-            Utils.sendPhysicalEvent(name:"pushed", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
+            def button = BUTTONS.ONOFF
+            Utils.sendPhysicalEvent(name:"pushed", value:button[0], descriptionText:"Button was pushed")
         
             // Also act as a switch
             return Utils.toggleSwitch()
         
-        // Plus/Minus button was pushed
-        case { contains it, [clusterInt:0x0008, commandInt:0x02] }:
-        case { contains it, [clusterInt:0x0008, commandInt:0x06] }:
-            def button = msg.commandInt == 0x02 ? BUTTONS.MINUS : BUTTONS.PLUS
-            Utils.sendPhysicalEvent(name:"pushed", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
+        // Button was double tapped
+        case { contains it, [clusterInt:0x0006, commandInt:0x00] }:
+            def button = BUTTONS.ONOFF;
+            return Utils.sendPhysicalEvent(name:"doubleTapped", value:button[0], isStateChange:false, descriptionText:"Button was double tapped")
         
-            // Also act as a dimmer
-            return button == BUTTONS.PLUS ? Utils.levelUp() : Utils.levelDown()
-        
-        // Plus/Minus button was held
-        case { contains it, [clusterInt:0x0008, commandInt:0x01] }:
+        // Button was held
         case { contains it, [clusterInt:0x0008, commandInt:0x05] }:
-            def button = msg.commandInt == 0x01 ? BUTTONS.MINUS : BUTTONS.PLUS
-            return Utils.sendPhysicalEvent(name:"held", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was held")
+            def button = BUTTONS.ONOFF;
+            return Utils.sendPhysicalEvent(name:"held", value:button[0], isStateChange:false, descriptionText:"Button was held")
         
-        // Plus/Minus button was released
-        case { contains it, [clusterInt:0x0008, commandInt:0x03] }:
+        // Button was released
         case { contains it, [clusterInt:0x0008, commandInt:0x07] }:
-            def button = msg.commandInt == 0x03 ? BUTTONS.MINUS : BUTTONS.PLUS
-            return Utils.sendPhysicalEvent(name:"released", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was released")
+            def button = BUTTONS.ONOFF;
+            return Utils.sendPhysicalEvent(name:"released", value:button[0], isStateChange:false, descriptionText:"Button was released")
 
         // General::Power (0x0001) / Battery report (0x0021)
         case { contains it, [clusterInt:0x0001, attrInt:0x0021] }:
@@ -337,7 +284,7 @@ def parse(String description) {
                 case 0x0003: return Utils.zigbeeDataValue("hwVersion", msg.value)
                 case 0x0004: return Utils.zigbeeDataValue("manufacturer", msg.value)
                 case 0x0005:
-                    if (msg.value == "TRADFRI remote control") updateDataValue "type", "E1810"
+                    if (msg.value == "TRADFRI SHORTCUT Button") updateDataValue "type", "E1812"
                     return Utils.zigbeeDataValue("model", msg.value)
                 case 0x4000: return Utils.zigbeeDataValue("softwareBuild", msg.value)
             }

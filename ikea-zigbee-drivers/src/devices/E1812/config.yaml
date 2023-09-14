@@ -1,0 +1,56 @@
+device:
+  model: IKEA Tradfri Shortcut Button
+  zigbeeId: TRADFRI SHORTCUT Button
+  type: E1812
+  buttons:
+    list:
+    - { id: 'ONOFF', name: 'On/Off', number: 1 }
+
+  capabilities:
+    Battery: true
+    DoubleTapableButton: true
+    HealthCheck:
+      schedule: 0 0 0/1 ? * * *
+      checkInterval: 3600  # every hour
+      thereshold: 43200    # report device as offline if no message was received in the last 12 hours (device should report battery level every 6 to 12 hours)
+    HoldableButton: true
+    PowerSource:
+      battery: true
+    PushableButton: true
+    ReleasableButton: true
+    Switch: true
+
+zigbee:
+  fingerprints:
+  - firmwares: 2.3.015 (23015631)
+    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0009,0020,1000", outClusters:"0003,0004,0006,0008,0019,0102,1000", model:"TRADFRI SHORTCUT Button", manufacturer:"IKEA of Sweden"
+
+  - firmwares: 24.4.6
+    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0009,0020,1000", outClusters:"0003,0004,0006,0008,0019,0102,1000", model:"TRADFRI SHORTCUT Button", manufacturer:"IKEA of Sweden"
+
+  binds:
+  - { endpoint: '0x01', cluster: '0x0006', reason: General - On/Off cluster }
+
+  # TODO: Second bind was doubling the events on firmware 2.3.015, but held/released events don't fire without it on firmware 24.4.6
+  - { endpoint: '0x01', cluster: '0x0008', reason: General - Level Control cluster }
+
+  reporting:
+  - { cluster: '0x0001', attribute: '0x0021', type: 'DataType.UINT8', min: 21600, max: 43200, delta: '0x00', reason: 'Report battery level every 6 to 12 hours' }
+
+  messages:
+    handle:
+    - file: src/devices/E1812/events.groovy
+    - file: src/events/battery-percentage.groovy
+      params: { half: true }
+
+    ignore:
+    - cluster: '0x0001'
+      command: '0x07'
+      name: Configure Reporting Response
+
+    - cluster: '0x0003'
+      command: '0x01'
+      name: Identify Query Response
+
+    - cluster: '0x8034'
+      name: Leave Response

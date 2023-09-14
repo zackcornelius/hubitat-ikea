@@ -1,49 +1,48 @@
 /**
- * IKEA Tradfri Remote Control (E1810)
+ * IKEA Tradfri Control Outlet (E1603)
  *
  * @see https://dan-danache.github.io/hubitat/ikea-zigbee-drivers/
- * @see https://zigbee.blakadder.com/Ikea_E1810.html
+ * @see https://zigbee.blakadder.com/Ikea_E1603.html
  * @see https://ww8.ikea.com/ikeahomesmart/releasenotes/releasenotes.html
  */
 
 import groovy.time.TimeCategory
 import groovy.transform.Field
 
-@Field def DRIVER_NAME = "IKEA Tradfri Remote Control (E1810)"
+@Field def DRIVER_NAME = "IKEA Tradfri Control Outlet (E1603)"
 @Field def DRIVER_VERSION = "1.3.0"
 @Field def ZDP_STATUS = ["00":"SUCCESS", "80":"INV_REQUESTTYPE", "81":"DEVICE_NOT_FOUND", "82":"INVALID_EP", "83":"NOT_ACTIVE", "84":"NOT_SUPPORTED", "85":"TIMEOUT", "86":"NO_MATCH", "88":"NO_ENTRY", "89":"NO_DESCRIPTOR", "8A":"INSUFFICIENT_SPACE", "8B":"NOT_PERMITTED", "8C":"TABLE_FULL", "8D":"NOT_AUTHORIZED", "8E":"DEVICE_BINDING_TABLE_FULL"]
-@Field def BUTTONS = [
-    "POWER": ["1", "Power"],
-    "PLUS": ["2", "🔆"],
-    "MINUS": ["3", "🔅"],
-    "NEXT": ["4", "Next"],
-    "PREV": ["5", "Prev"],
-]
 
 // Health Check config
 @Field def HEALTH_CHECK = [
     "schedule"   : "0 0 0/1 ? * * *", // Health will be checked using this cron schedule
-    "thereshold" : 43200              // When checking, mark the device as offline if no Zigbee message was received in the last 43200 seconds
+    "thereshold" : 3600              // When checking, mark the device as offline if no Zigbee message was received in the last 3600 seconds
 ]
 
 metadata {
-    definition(name:DRIVER_NAME, namespace:"dandanache", author:"Dan Danache", importUrl:"https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1810.groovy") {
-        capability "Battery"
+    definition(name:DRIVER_NAME, namespace:"dandanache", author:"Dan Danache", importUrl:"https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1603.groovy") {
         capability "Configuration"
         capability "HealthCheck"
-        capability "HoldableButton"
+        capability "Outlet"
         capability "PowerSource"
-        capability "PushableButton"
-        capability "ReleasableButton"
-        capability "Switch"
-        capability "SwitchLevel"
+        capability "Refresh"
 
-        // For firmwares: 24.4.5
-        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC57,FC7C", outClusters:"0003,0004,0005,0006,0008,0019,1000", model:"TRADFRI remote control", manufacturer:"IKEA of Sweden"
+        // For firmwares: 2.0.024
+        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0003,0004,0005,0006,0008,1000,FC7C", outClusters:"0005,0019,0020,1000", model:"TRADFRI control outlet", manufacturer:"IKEA of Sweden"
+
+        // For firmwares: 2.3.089
+        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0003,0004,0005,0006,0008,1000,FC7C", outClusters:"0019,0020,1000", model:"TRADFRI control outlet", manufacturer:"IKEA of Sweden"
 
         // Should be part of capability.HealthCheck
         attribute "healthStatus", "ENUM", ["offline", "online", "unknown"]
+
+        // Attributes for capability.ZigbeeRouter
+        attribute "neighbors", "STRING"
+        attribute "routes", "STRING"
     }
+
+    // Commands for capability.ZigbeeRouter
+    command "requestRoutingData"
 
     preferences {
         input(
@@ -59,23 +58,6 @@ metadata {
             defaultValue: "2",
             required: true
         )
-        input(
-            name: "levelChange",
-            type: "enum",
-            title: "Level adjust on button press (+/- %)",
-            options: ["1":"1%", "2":"2%", "5":"5%", "10":"10%", "20":"20%", "25":"25%", "33":"33%"],
-            defaultValue: "5",
-            required: true
-        )
-        input(
-            name: "minLevel",
-            type: "number",
-            title: "Minimum level",
-            description: "<small>Range 0~90</small>",
-            defaultValue: 0,
-            range: "0..90",
-            required: true
-        )
     }
 }
 
@@ -86,19 +68,12 @@ metadata {
 // Called when the device is first added
 def installed() {
     Log.info "Installing Zigbee device...."
-    Log.warn "[IMPORTANT] Make sure that you keep your IKEA device as close as you can to your Hubitat hub until the LED stops blinking. Otherwise it will successfully pair but it won't work properly!"
 }
 
 // Called when the "Save Preferences" button is clicked
 def updated() {
     Log.info "Saving preferences..."
     Log.info "🛠️ logLevel = ${logLevel}"
-    Log.info "🛠️ levelChange = ${levelChange}%"
-    minLevel = minLevel.toDouble().trunc().toInteger()
-    device.clearSetting "minLevel"
-    device.removeSetting "minLevel"
-    device.updateSetting "minLevel", minLevel
-    Log.info "🛠️ minLevel = ${minLevel}"
 
     unschedule()
     if (logLevel == "1") runIn 1800, "logsOff"
@@ -130,7 +105,6 @@ def healthCheck() {
 // Note: This method is also called when the device is initially installed
 def configure() {
     Log.info "Configuring device..."
-    Log.debug '[IMPORTANT] Click the "Configure" button immediately after pushing any button on the remote so that the Zigbee messages we send during configuration will reach the device before it goes to sleep!'
 
     // Advertise driver name and value
     updateDataValue "driverName", DRIVER_NAME
@@ -144,25 +118,8 @@ def configure() {
     state.lastRx = 0
     state.lastTx = 0
 
-    // capability.PushableButton
-    push 0
-    def numberOfButtons = BUTTONS.count{_ -> true}
-    sendEvent name:"numberOfButtons", value:numberOfButtons, descriptionText:"Number of buttons set to ${numberOfButtons}"
-
-    // capability.HoldableButton
-    hold 0
-
-    // capability.ReleasableButton
-    release 0
-
-    // capability.Switch
-    on()
-
-    // capability.SwitchLevel
-    setLevel 5
-
     // capability.PowerSource
-    sendEvent name:"powerSource", value:"battery", descriptionText:"Power source set to battery"
+    sendEvent name:"powerSource", value:"mains", descriptionText:"Power source set to mains"
 
     // capability.HealthCheck
     sendEvent name:"healthStatus", value:"unknown", descriptionText:"Health status set to unknown"
@@ -171,12 +128,10 @@ def configure() {
     List<String> cmds = []
 
     // Configure Zigbee reporting
-    cmds.addAll zigbee.configureReporting(0x0001, 0x0021, DataType.UINT8, 21600, 43200, 0x00) // Report battery level every 6 to 12 hours
+    cmds.addAll zigbee.configureReporting(0x0006, 0x0000, 0x10, 300, 600, 0x00) // Report On/Off status every 5 to 10 minutes
 
     // Add Zigbee binds
-    cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0005 {${device.zigbeeId}} {}" // General - Scenes cluster
-    cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {${device.zigbeeId}} {}" // General - On/Off cluster
-    cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0008 {${device.zigbeeId}} {}" // General - Level Control cluster
+    // -- No binds needed
 
     // Query Zigbee attributes
     cmds.addAll zigbee.readAttribute(0x0000, 0x0001)  // ApplicationVersion
@@ -184,7 +139,6 @@ def configure() {
     cmds.addAll zigbee.readAttribute(0x0000, 0x0004)  // ManufacturerName
     cmds.addAll zigbee.readAttribute(0x0000, 0x0005)  // ModelIdentifier
     cmds.addAll zigbee.readAttribute(0x0000, 0x4000)  // SWBuildID
-    cmds.addAll zigbee.readAttribute(0x0001, 0x0021)  // BatteryPercentage
 
     // Query all active endpoints
     cmds.add "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0005 {00 ${zigbee.swapOctets(device.deviceNetworkId)}} {0x0000}"
@@ -194,7 +148,10 @@ def configure() {
 
 // capability.HealthCheck
 def ping() {
-    pingExecute()
+    // Request the device to send the value for the OnOff attribute
+    Log.info "Ping command sent to the device; we'll wait 5 seconds for a reply ..."
+    Utils.sendZigbeeCommands(zigbee.readAttribute(0x0006, 0x0000))
+    runIn 5, "pingExecute"
 }
 
 def pingExecute() {
@@ -215,33 +172,31 @@ def pingExecute() {
     Log.info "Will me marked as offline if no message is received until ${thereshold.format("yyyy-MM-dd HH:mm:ss", location.timeZone)} (${offlineMarkAgo} from now)"
 }
 
-// capability.HoldableButton
-def hold(buttonNumber) {
-    Utils.sendDigitalEvent name:"held", value:buttonNumber, descriptionText:"Button ${buttonNumber} was held"
-}
-
-// capability.PushableButton
-def push(buttonNumber) {
-    Utils.sendDigitalEvent name:"pushed", value:buttonNumber, descriptionText:"Button ${buttonNumber} was pressed"
-}
-
-// capability.ReleasableButton
-def release(buttonNumber) {
-    Utils.sendDigitalEvent name:"released", value:buttonNumber, descriptionText:"Button ${buttonNumber} was released"
-}
-
-// capability.Switch
+// capability.Outlet
 def on() {
-    Utils.sendDigitalEvent name:"switch", value:"on", descriptionText:"Was turned on"
+    Log.debug "Sending on command"
+    Utils.sendZigbeeCommands(zigbee.on())
 }
 def off() {
-    Utils.sendDigitalEvent name:"switch", value:"off", descriptionText:"Was turned off"
+    Log.debug "Sending off command"
+    Utils.sendZigbeeCommands(zigbee.off())
 }
 
-// capability.SwitchLevel
-def setLevel(level, duration = 0) {
-    def newLevel = level < 0 ? 0 : (level > 100 ? 100 : level)
-    Utils.sendDigitalEvent name:"level", value:newLevel, unit:"%", descriptionText:"Level was set to ${newLevel}%"
+// capability.Refresh
+def refresh() {
+    Log.debug "Asking device to send its switch status ..."
+    Utils.sendZigbeeCommands(zigbee.readAttribute(0x0006, 0x0000))
+}
+
+// capability.ZigbeeRouter
+def requestRoutingData() {
+    Log.info "Asking the device to send the Neighbors Table and the Routing Table data ..."
+    List<String> cmds = []
+
+    // Ask for the Neighbors Table and the Routing Table
+    cmds += "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0031 {00} {0x00}"
+    cmds += "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0032 {00} {0x00}"
+    Utils.sendZigbeeCommands cmds
 }
 
 // ===================================================================================================================
@@ -269,61 +224,22 @@ def parse(String description) {
         // Handle device specific Zigbee messages
         // ---------------------------------------------------------------------------------------------------------------
 
-        // Button Prev/Next was pressed
-        case { contains it, [clusterInt:0x0005, commandInt:0x07] }:
-            def button = msg.data[0] == "00" ? BUTTONS.NEXT : BUTTONS.PREV
-            return Utils.sendPhysicalEvent(name:"pushed", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
+        // Switch state was changed
+        case { contains it, [clusterInt:0x0006, commandInt:0x0B] }:
+            def newState = msg.data[0] == "00" ? "off" : "on"
+            Log.debug "Reported switch status as ${newState}"
+            return Utils.updateSwitch(newState)
         
-        // Button Prev/Next was held
-        case { contains it, [clusterInt:0x0005, commandInt:0x08] }:
-            def button = msg.data[0] == "00" ? BUTTONS.NEXT : BUTTONS.PREV
-            return Utils.sendPhysicalEvent(name:"held", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was held")
+        // Device sent value for the OnOff attribute
+        case { contains it, [clusterInt:0x0006, attrInt: 0x0000] }:
+            def newState = msg.value == "00" ? "off" : "on"
+            Log.debug "Reported switch status as ${newState}"
+            return Utils.updateSwitch(newState)
         
-        // Button Prev/Next was released
-        case { contains it, [clusterInt:0x0005, commandInt:0x09] }:
-            def button = device.currentValue("held") == 4 ? BUTTONS.NEXT : BUTTONS.PREV
-            return Utils.sendPhysicalEvent(name:"released", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was released")
-        
-        // Set switch state
-        case { contains it, [clusterInt:0x0006, commandInt:0x00] }:
-        case { contains it, [clusterInt:0x0006, commandInt:0x01] }:
-            def newState = msg.commandInt == 0x00 ? "off" : "on"
-            return Utils.sendPhysicalEvent(name:"switch", value:newState, descriptionText:"Was turned ${newState}")
-        
-        // Power button was pushed
-        case { contains it, [clusterInt:0x0006, commandInt:0x02] }:
-            def button = BUTTONS.POWER
-            Utils.sendPhysicalEvent(name:"pushed", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
-        
-            // Also act as a switch
-            return Utils.toggleSwitch()
-        
-        // Plus/Minus button was pushed
-        case { contains it, [clusterInt:0x0008, commandInt:0x02] }:
-        case { contains it, [clusterInt:0x0008, commandInt:0x06] }:
-            def button = msg.commandInt == 0x02 ? BUTTONS.MINUS : BUTTONS.PLUS
-            Utils.sendPhysicalEvent(name:"pushed", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
-        
-            // Also act as a dimmer
-            return button == BUTTONS.PLUS ? Utils.levelUp() : Utils.levelDown()
-        
-        // Plus/Minus button was held
-        case { contains it, [clusterInt:0x0008, commandInt:0x01] }:
-        case { contains it, [clusterInt:0x0008, commandInt:0x05] }:
-            def button = msg.commandInt == 0x01 ? BUTTONS.MINUS : BUTTONS.PLUS
-            return Utils.sendPhysicalEvent(name:"held", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was held")
-        
-        // Plus/Minus button was released
-        case { contains it, [clusterInt:0x0008, commandInt:0x03] }:
-        case { contains it, [clusterInt:0x0008, commandInt:0x07] }:
-            def button = msg.commandInt == 0x03 ? BUTTONS.MINUS : BUTTONS.PLUS
-            return Utils.sendPhysicalEvent(name:"released", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was released")
-
-        // General::Power (0x0001) / Battery report (0x0021)
-        case { contains it, [clusterInt:0x0001, attrInt:0x0021] }:
-            def percentage =  Integer.parseInt(msg.value, 16)
-            percentage =  Math.round(percentage / 2)
-            return Utils.sendPhysicalEvent(name:"battery", value:percentage, unit:"%", descriptionText:"Battery is ${percentage}% full")
+        // Device_annce
+        case { contains it, [clusterInt:0x0013, commandInt:0x00] }:
+            Log.info "Has been plugged back in. Querying its switch status..."
+            return Utils.sendZigbeeCommands(zigbee.readAttribute(0x0006, 0x0000))
 
         // ---------------------------------------------------------------------------------------------------------------
         // Handle common Zigbee messages
@@ -337,7 +253,7 @@ def parse(String description) {
                 case 0x0003: return Utils.zigbeeDataValue("hwVersion", msg.value)
                 case 0x0004: return Utils.zigbeeDataValue("manufacturer", msg.value)
                 case 0x0005:
-                    if (msg.value == "TRADFRI remote control") updateDataValue "type", "E1810"
+                    if (msg.value == "TRADFRI control outlet") updateDataValue "type", "E1603"
                     return Utils.zigbeeDataValue("model", msg.value)
                 case 0x4000: return Utils.zigbeeDataValue("softwareBuild", msg.value)
             }
@@ -424,6 +340,38 @@ def parse(String description) {
             return Utils.processedZigbeeMessage("Bind Response", "data=${msg.data}")
 
         // ---------------------------------------------------------------------------------------------------------------
+        // capability.ZigbeeRouter
+        // ---------------------------------------------------------------------------------------------------------------
+
+        // Mgmt_Lqi_rsp = { 08:Status, 08:NeighborTableEntries, 08:StartIndex, 08:NeighborTableListCount, n*176:NeighborTableList }
+        // NeighborTableList = { 64:ExtendedPanId, 64:IEEEAddress, 16:NetworkAddress, 02:DeviceType, 02:RxOnWhenIdle, 03:Relationship, 01:Reserved, 02:PermitJoining, 06:Reserved, 08:Depth, 08:LQI }
+        // Example: [6E, 00, 08, 00, 03, 50, 53, 3A, 0D, 00, DF, 66, 15, E9, A6, C9, 17, 00, 6F, 0D, 00, 00, 00, 24, 02, 00, CF, 50, 53, 3A, 0D, 00, DF, 66, 15, 80, BF, CA, 6B, 6A, 38, C1, A4, 4A, 16, 05, 02, 0F, CD, 50, 53, 3A, 0D, 00, DF, 66, 15, D3, FA, E1, 25, 00, 4B, 12, 00, 64, 17, 25, 02, 0F, 36]
+        case { contains it, [clusterInt:0x8031, commandInt:0x00] }:
+            if (msg.data[1] != "00") {
+                return Utils.failedZigbeeMessage("Neighbors Table Response", msg)
+            }
+            def entriesCount = Integer.parseInt(msg.data[4], 16)
+
+            // Use base64 encoding instead of hex encoding to make the message a bit shorter
+            def base64 = msg.data.join().decodeHex().encodeBase64().toString() // Decode test: https://base64.guru/converter/decode/hex
+            sendEvent name:"neighbors", value:"${entriesCount} entries", descriptionText:base64, isStateChange:true, type:"physical"
+            return Utils.processedZigbeeMessage("Neighbors Table Response", "entries=${entriesCount}, data=${msg.data}")
+
+        // Mgmt_Rtg_rsp = { 08:Status, 08:RoutingTableEntries, 08:StartIndex, 08:RoutingTableListCount, n*40:RoutingTableList }
+        // Example: [6F, 00, 0A, 00, 0A, 00, 00, 10, 00, 00, AD, 56, 00, AD, 56, ED, EE, 00, 4A, 16, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00]
+        // RoutingTableList = { 16:DestinationAddress, 03:RouteStatus, 01:MemoryConstrained, 01:ManyToOne, 01:RouteRecordRequired, 02:Reserved, 16:NextHopAddress }
+        case { contains it, [clusterInt:0x8032, commandInt:0x00] }:
+            if (msg.data[1] != "00") {
+                return Utils.failedZigbeeMessage("Routing Table Response", msg)
+            }
+            def entriesCount = Integer.parseInt(msg.data[4], 16)
+
+            // Use base64 encoding instead of hex encoding to make the message a bit shorter
+            def base64 = msg.data.join().decodeHex().encodeBase64().toString()
+            sendEvent name:"routes", value:"${entriesCount} entries", descriptionText:base64, isStateChange:true, type:"physical"
+            return Utils.processedZigbeeMessage("Routing Table Response", "entries=${entriesCount}, data=${msg.data}")
+
+        // ---------------------------------------------------------------------------------------------------------------
         // Ignored Zigbee messages
         // ---------------------------------------------------------------------------------------------------------------
 
@@ -432,6 +380,12 @@ def parse(String description) {
 
         case { contains it, [clusterInt:0x0003, commandInt:0x01] }:
             return Utils.ignoredZigbeeMessage("Identify Query Response", msg)
+
+        case { contains it, [clusterInt:0x0006, commandInt:0x07] }:
+            return Utils.ignoredZigbeeMessage("Reporting Configuration Response", msg)
+
+        case { contains it, [clusterInt:0x0006, commandInt:0x00] }:
+            return Utils.ignoredZigbeeMessage("Unknown Zigbee Response with weird payload", msg)
 
         case { contains it, [clusterInt:0x8034] }:
             return Utils.ignoredZigbeeMessage("Leave Response", msg)

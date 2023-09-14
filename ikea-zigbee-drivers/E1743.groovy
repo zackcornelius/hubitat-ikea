@@ -1,23 +1,20 @@
 /**
- * IKEA Tradfri Remote Control (E1810)
+ * IKEA Tradfri On/Off Switch (E1743)
  *
  * @see https://dan-danache.github.io/hubitat/ikea-zigbee-drivers/
- * @see https://zigbee.blakadder.com/Ikea_E1810.html
+ * @see https://zigbee.blakadder.com/Ikea_E1743.html
  * @see https://ww8.ikea.com/ikeahomesmart/releasenotes/releasenotes.html
  */
 
 import groovy.time.TimeCategory
 import groovy.transform.Field
 
-@Field def DRIVER_NAME = "IKEA Tradfri Remote Control (E1810)"
+@Field def DRIVER_NAME = "IKEA Tradfri On/Off Switch (E1743)"
 @Field def DRIVER_VERSION = "1.3.0"
 @Field def ZDP_STATUS = ["00":"SUCCESS", "80":"INV_REQUESTTYPE", "81":"DEVICE_NOT_FOUND", "82":"INVALID_EP", "83":"NOT_ACTIVE", "84":"NOT_SUPPORTED", "85":"TIMEOUT", "86":"NO_MATCH", "88":"NO_ENTRY", "89":"NO_DESCRIPTOR", "8A":"INSUFFICIENT_SPACE", "8B":"NOT_PERMITTED", "8C":"TABLE_FULL", "8D":"NOT_AUTHORIZED", "8E":"DEVICE_BINDING_TABLE_FULL"]
 @Field def BUTTONS = [
-    "POWER": ["1", "Power"],
-    "PLUS": ["2", "🔆"],
-    "MINUS": ["3", "🔅"],
-    "NEXT": ["4", "Next"],
-    "PREV": ["5", "Prev"],
+    "ON": ["1", "On"],
+    "OFF": ["2", "Off"],
 ]
 
 // Health Check config
@@ -27,7 +24,7 @@ import groovy.transform.Field
 ]
 
 metadata {
-    definition(name:DRIVER_NAME, namespace:"dandanache", author:"Dan Danache", importUrl:"https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1810.groovy") {
+    definition(name:DRIVER_NAME, namespace:"dandanache", author:"Dan Danache", importUrl:"https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1743.groovy") {
         capability "Battery"
         capability "Configuration"
         capability "HealthCheck"
@@ -38,8 +35,8 @@ metadata {
         capability "Switch"
         capability "SwitchLevel"
 
-        // For firmwares: 24.4.5
-        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC57,FC7C", outClusters:"0003,0004,0005,0006,0008,0019,1000", model:"TRADFRI remote control", manufacturer:"IKEA of Sweden"
+        // For firmwares: 2.2.010, 24.4.6
+        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0009,0020,1000,FC7C", outClusters:"0003,0004,0006,0008,0019,0102,1000", model:"TRADFRI on/off switch", manufacturer:"IKEA of Sweden"
 
         // Should be part of capability.HealthCheck
         attribute "healthStatus", "ENUM", ["offline", "online", "unknown"]
@@ -174,9 +171,7 @@ def configure() {
     cmds.addAll zigbee.configureReporting(0x0001, 0x0021, DataType.UINT8, 21600, 43200, 0x00) // Report battery level every 6 to 12 hours
 
     // Add Zigbee binds
-    cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0005 {${device.zigbeeId}} {}" // General - Scenes cluster
     cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {${device.zigbeeId}} {}" // General - On/Off cluster
-    cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0008 {${device.zigbeeId}} {}" // General - Level Control cluster
 
     // Query Zigbee attributes
     cmds.addAll zigbee.readAttribute(0x0000, 0x0001)  // ApplicationVersion
@@ -269,54 +264,27 @@ def parse(String description) {
         // Handle device specific Zigbee messages
         // ---------------------------------------------------------------------------------------------------------------
 
-        // Button Prev/Next was pressed
-        case { contains it, [clusterInt:0x0005, commandInt:0x07] }:
-            def button = msg.data[0] == "00" ? BUTTONS.NEXT : BUTTONS.PREV
-            return Utils.sendPhysicalEvent(name:"pushed", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
-        
-        // Button Prev/Next was held
-        case { contains it, [clusterInt:0x0005, commandInt:0x08] }:
-            def button = msg.data[0] == "00" ? BUTTONS.NEXT : BUTTONS.PREV
-            return Utils.sendPhysicalEvent(name:"held", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was held")
-        
-        // Button Prev/Next was released
-        case { contains it, [clusterInt:0x0005, commandInt:0x09] }:
-            def button = device.currentValue("held") == 4 ? BUTTONS.NEXT : BUTTONS.PREV
-            return Utils.sendPhysicalEvent(name:"released", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was released")
-        
-        // Set switch state
+        // I/O button was pressed
         case { contains it, [clusterInt:0x0006, commandInt:0x00] }:
         case { contains it, [clusterInt:0x0006, commandInt:0x01] }:
-            def newState = msg.commandInt == 0x00 ? "off" : "on"
-            return Utils.sendPhysicalEvent(name:"switch", value:newState, descriptionText:"Was turned ${newState}")
-        
-        // Power button was pushed
-        case { contains it, [clusterInt:0x0006, commandInt:0x02] }:
-            def button = BUTTONS.POWER
+            def button = msg.commandInt == 0x00 ? BUTTONS.OFF : BUTTONS.ON
             Utils.sendPhysicalEvent(name:"pushed", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
         
             // Also act as a switch
-            return Utils.toggleSwitch()
-        
-        // Plus/Minus button was pushed
-        case { contains it, [clusterInt:0x0008, commandInt:0x02] }:
-        case { contains it, [clusterInt:0x0008, commandInt:0x06] }:
-            def button = msg.commandInt == 0x02 ? BUTTONS.MINUS : BUTTONS.PLUS
-            Utils.sendPhysicalEvent(name:"pushed", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
+            Utils.updateSwitch(msg.commandInt == 0x00 ? "off" : "on")
         
             // Also act as a dimmer
-            return button == BUTTONS.PLUS ? Utils.levelUp() : Utils.levelDown()
+            return button == BUTTONS.ON ? Utils.levelUp() : Utils.levelDown()
         
-        // Plus/Minus button was held
+        // I/O button was held
         case { contains it, [clusterInt:0x0008, commandInt:0x01] }:
         case { contains it, [clusterInt:0x0008, commandInt:0x05] }:
-            def button = msg.commandInt == 0x01 ? BUTTONS.MINUS : BUTTONS.PLUS
+            def button = msg.commandInt == 0x01 ? BUTTONS.OFF : BUTTONS.ON
             return Utils.sendPhysicalEvent(name:"held", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was held")
         
-        // Plus/Minus button was released
-        case { contains it, [clusterInt:0x0008, commandInt:0x03] }:
+        // I/O button was released
         case { contains it, [clusterInt:0x0008, commandInt:0x07] }:
-            def button = msg.commandInt == 0x03 ? BUTTONS.MINUS : BUTTONS.PLUS
+            def button = device.currentValue("held", true) == 1 ? BUTTONS.ON : BUTTONS.OFF
             return Utils.sendPhysicalEvent(name:"released", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was released")
 
         // General::Power (0x0001) / Battery report (0x0021)
@@ -337,7 +305,7 @@ def parse(String description) {
                 case 0x0003: return Utils.zigbeeDataValue("hwVersion", msg.value)
                 case 0x0004: return Utils.zigbeeDataValue("manufacturer", msg.value)
                 case 0x0005:
-                    if (msg.value == "TRADFRI remote control") updateDataValue "type", "E1810"
+                    if (msg.value == "TRADFRI on/off switch") updateDataValue "type", "E1743"
                     return Utils.zigbeeDataValue("model", msg.value)
                 case 0x4000: return Utils.zigbeeDataValue("softwareBuild", msg.value)
             }
@@ -430,8 +398,8 @@ def parse(String description) {
         case { contains it, [clusterInt:0x0001, commandInt:0x07] }:
             return Utils.ignoredZigbeeMessage("Configure Reporting Response", msg)
 
-        case { contains it, [clusterInt:0x0003, commandInt:0x01] }:
-            return Utils.ignoredZigbeeMessage("Identify Query Response", msg)
+        case { contains it, [clusterInt:0x0013] }:
+            return Utils.ignoredZigbeeMessage("Device Announce Response", msg)
 
         case { contains it, [clusterInt:0x8034] }:
             return Utils.ignoredZigbeeMessage("Leave Response", msg)

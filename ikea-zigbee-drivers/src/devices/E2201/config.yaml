@@ -1,0 +1,52 @@
+device:
+  model: IKEA Rodret Dimmer
+  zigbeeId: RODRET Dimmer
+  type: E2201
+  buttons:
+    list:
+    - { id: 'ON',  name: 'On',  number: 1 }
+    - { id: 'OFF', name: 'Off', number: 2 }
+
+  capabilities:
+    Battery: true
+    HealthCheck:
+      schedule: 0 0 0/1 ? * * *
+      checkInterval: 3600  # every hour
+      thereshold: 43200    # report device as offline if no message was received in the last 12 hours (device should report battery level every 6 to 12 hours)
+    HoldableButton: true
+    PowerSource:
+      battery: true
+    PushableButton: true
+    ReleasableButton: true
+    Switch: true
+    SwitchLevel: true
+
+zigbee:
+  fingerprints:
+  - firmwares: 1.0.47
+    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC7C", outClusters:"0003,0004,0006,0008,0019,1000", model:"RODRET Dimmer", manufacturer:"IKEA of Sweden"
+
+  binds:
+  - { endpoint: '0x01', cluster: '0x0006', reason: General - On/Off cluster }
+  - { endpoint: '0x01', cluster: '0x0008', reason: General - Level Control cluster }
+
+  reporting:
+  - { cluster: '0x0001', attribute: '0x0021', type: 'DataType.UINT8', min: 21600, max: 43200, delta: '0x00', reason: 'Report battery level every 6 to 12 hours' }
+
+  messages:
+    handle:
+    - file: src/devices/E2201/events.groovy
+    - file: src/events/battery-percentage.groovy
+      params: { half: true }
+
+    ignore:
+    - cluster: '0x0001'
+      command: '0x07'
+      name: Configure Reporting Response
+
+    - cluster: '0x0003'
+      command: '0x01'
+      name: Identify Query Response
+
+    - cluster: '0x8034'
+      name: Leave Response
