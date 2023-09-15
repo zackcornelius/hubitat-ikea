@@ -4,6 +4,7 @@ device:
   type: E1603
 
   capabilities:
+    Configuration: true
     HealthCheck:
       schedule: 0 0 0/1 ? * * *
       checkInterval: 3600  # every hour
@@ -11,7 +12,11 @@ device:
     PowerSource:
       mains: true
     Outlet: true
-    Refresh: true
+    Refresh:
+      readAttributes:
+      - { cluster: '0x0006', attr: '0x0000', description: 'Switch status = { 0x00:OFF, 0x01:ON }' }
+      - { cluster: '0x0006', attr: '0x4003', description: 'StartupOnOff = { 0x00:OFF, 0x01:ON, 0xFF:PREVIOUS' }
+    StartupOnOff: true
     ZigbeeRouter: true
 
 zigbee:
@@ -37,6 +42,10 @@ zigbee:
     - cluster: '0x0003'
       command: '0x01'
       name: Identify Query Response
+
+    - cluster: '0x0006'
+      command: '0x04'
+      name: Attribute Write Response
 
     - cluster: '0x0006'
       command: '0x07'

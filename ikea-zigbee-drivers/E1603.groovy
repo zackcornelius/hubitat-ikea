@@ -10,7 +10,7 @@ import groovy.time.TimeCategory
 import groovy.transform.Field
 
 @Field def DRIVER_NAME = "IKEA Tradfri Control Outlet (E1603)"
-@Field def DRIVER_VERSION = "2.0.1"
+@Field def DRIVER_VERSION = "2.2.0"
 @Field def ZDP_STATUS = ["00":"SUCCESS", "80":"INV_REQUESTTYPE", "81":"DEVICE_NOT_FOUND", "82":"INVALID_EP", "83":"NOT_ACTIVE", "84":"NOT_SUPPORTED", "85":"TIMEOUT", "86":"NO_MATCH", "88":"NO_ENTRY", "89":"NO_DESCRIPTOR", "8A":"INSUFFICIENT_SPACE", "8B":"NOT_PERMITTED", "8C":"TABLE_FULL", "8D":"NOT_AUTHORIZED", "8E":"DEVICE_BINDING_TABLE_FULL"]
 
 // Health Check config
@@ -58,6 +58,14 @@ metadata {
             defaultValue: "2",
             required: true
         )
+        input(
+            name: "startupOnOff",
+            type: "enum",
+            title: "Behavior after a power outage",
+            options: ["ON":"Turn power On", "OFF":"Turn power Off", "PREV":"Restore previous state"],
+            defaultValue: "PREV",
+            required: true
+        )
     }
 }
 
@@ -78,6 +86,10 @@ def updated() {
     unschedule()
     if (logLevel == "1") runIn 1800, "logsOff"
     schedule HEALTH_CHECK.schedule, "healthCheck"
+
+    // Configure StartupOnOff
+    Log.info "🛠️ startupOnOff = ${startupOnOff}"
+    Utils.sendZigbeeCommands zigbee.writeAttribute(0x0006, 0x4003, 0x30, startupOnOff == "OFF" ? 0x00 : (startupOnOff == "ON" ? 0x01 : 0xFF))
 }
 
 // Handler method for scheduled job to disable debug logging
@@ -184,8 +196,12 @@ def off() {
 
 // capability.Refresh
 def refresh() {
-    Log.debug "Asking device to send its switch status ..."
-    Utils.sendZigbeeCommands(zigbee.readAttribute(0x0006, 0x0000))
+    List<String> cmds = [];
+
+    cmds += zigbee.readAttribute(0x0006, 0x0000)  // Switch status = { 0x00:OFF, 0x01:ON }
+    cmds += zigbee.readAttribute(0x0006, 0x4003)  // StartupOnOff = { 0x00:OFF, 0x01:ON, 0xFF:PREVIOUS
+
+    Utils.sendZigbeeCommands(cmds)
 }
 
 // capability.ZigbeeRouter
@@ -227,19 +243,29 @@ def parse(String description) {
         // Switch state was changed
         case { contains it, [clusterInt:0x0006, commandInt:0x0B] }:
             def newState = msg.data[0] == "00" ? "off" : "on"
-            Log.debug "Reported switch status as ${newState}"
+            Log.debug "Reported OnOff status as ${newState}"
             return Utils.updateSwitch(newState)
         
-        // Device sent value for the OnOff attribute
+        // Read Attribute Response: OnOff
         case { contains it, [clusterInt:0x0006, attrInt: 0x0000] }:
             def newState = msg.value == "00" ? "off" : "on"
-            Log.debug "Reported switch status as ${newState}"
+            Log.debug "Reported OnOff status as ${newState}"
             return Utils.updateSwitch(newState)
         
-        // Device_annce
-        case { contains it, [clusterInt:0x0013, commandInt:0x00] }:
-            Log.info "Has been plugged back in. Querying its switch status..."
-            return Utils.sendZigbeeCommands(zigbee.readAttribute(0x0006, 0x0000))
+        // Read Attribute Response: StartupOnOff
+        case { contains it, [clusterInt:0x0006, attrInt: 0x4003] }:
+            def newValue = ""
+            switch (Integer.parseInt(msg.value, 16)) {
+                case 0x00: newValue = "OFF"; break
+                case 0x01: newValue = "ON"; break
+                case 0xFF: newValue = "PREV"; break
+                default: return Log.warn("Received attribute value: StartupOnOff=${msg.value}")
+            }
+            startupOnOff = newValue
+            device.clearSetting "startupOnOff"
+            device.removeSetting "startupOnOff"
+            device.updateSetting "startupOnOff", newValue
+            return Log.debug("Reported StartupOnOff as ${newValue}")
 
         // ---------------------------------------------------------------------------------------------------------------
         // Handle common Zigbee messages
@@ -247,7 +273,7 @@ def parse(String description) {
 
         // General::Basic cluster (0x0000) - Read Attribute Response (0x01)
         case { contains it, [clusterInt:0x0000, commandInt:0x01] }:
-            Utils.processedZigbeeMessage("Read Attribute Response", "attribute=${msg.attrId}")
+            Utils.processedZigbeeMessage("Read Attribute Response", "cluster=0x${msg.cluster}, attribute=0x${msg.attrId}, value=${msg.value}")
             switch (msg.attrInt) {
                 case 0x0001: return Utils.zigbeeDataValue("application", msg.value)
                 case 0x0003: return Utils.zigbeeDataValue("hwVersion", msg.value)
@@ -257,7 +283,7 @@ def parse(String description) {
                     return Utils.zigbeeDataValue("model", msg.value)
                 case 0x4000: return Utils.zigbeeDataValue("softwareBuild", msg.value)
             }
-            return warn("Unexpected Zigbee attribute: attribute=${msg.attrInt}, msg=${msg}")
+            return Log.warn("Unexpected Zigbee attribute: cluster=0x${msg.cluster}, attribute=0x${msg.attrId}, msg=${msg}")
 
         // Simple_Desc_rsp = { 08:Status, 16:NWKAddrOfInterest, 08:Length, 08:Endpoint, 16:ApplicationProfileIdentifier, 16:ApplicationDeviceIdentifier, 08:Reserved, 16:InClusterCount, n*16:InClusterList, 16:OutClusterCount, n*16:OutClusterList }
         // Example: [B7, 00, 18, 4A, 14, 03, 04, 01, 06, 00, 01, 03, 00,  00, 03, 00, 80, FC, 03, 03, 00, 04, 00, 80, FC] -> endpointId=03, inClusters=[0000, 0003, FC80], outClusters=[0003, 0004, FC80]
@@ -324,10 +350,14 @@ def parse(String description) {
 
         // Device_annce = { 16:NWKAddr, 64:IEEEAddr , 01:Capability }
         // Example : [82, CF, A0, 71, 0F, 68, FE, FF, 08, AC, 70, 80] -> addr=A0CF, zigbeeId=70AC08FFFE680F71, capabilities=10000000
-        case { contains it, [clusterInt:0x0013] }:
+        case { contains it, [clusterInt:0x0013, commandInt:0x00] }:
             def addr = msg.data[1..2].reverse().join()
             def zigbeeId = msg.data[3..10].reverse().join()
             def capabilities = Integer.toBinaryString(Integer.parseInt(msg.data[11], 16))
+
+            // Welcome back; let's sync state
+            Log.debug("Device rejoined the network. Calling refresh() to sync state ...")
+            refresh()
             return Utils.processedZigbeeMessage("Device Announce Response", "addr=${addr}, zigbeeId=${zigbeeId}, capabilities=${capabilities}")
 
         // Bind_rsp = { 08:Status }
@@ -380,6 +410,9 @@ def parse(String description) {
 
         case { contains it, [clusterInt:0x0003, commandInt:0x01] }:
             return Utils.ignoredZigbeeMessage("Identify Query Response", msg)
+
+        case { contains it, [clusterInt:0x0006, commandInt:0x04] }:
+            return Utils.ignoredZigbeeMessage("Attribute Write Response", msg)
 
         case { contains it, [clusterInt:0x0006, commandInt:0x07] }:
             return Utils.ignoredZigbeeMessage("Reporting Configuration Response", msg)

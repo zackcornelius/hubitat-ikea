@@ -9,6 +9,7 @@ device:
 
   capabilities:
     Battery: true
+    Configuration: true
     HealthCheck:
       schedule: 0 0 0/1 ? * * *
       checkInterval: 3600  # every hour

@@ -38,6 +38,7 @@ Follow the steps below if you don't know what "Hubitat Package Manager" is:
 
 ### Features
 * Power on / off control
+* Configure what happens after a power outage (Turn On, Turn Off, Restore previous state)
 * Health status (online / offline)
 * Refresh switch state on demand
 * Report Zigbee Neighbors and Routing Tables (device acts as a Zigbee router)

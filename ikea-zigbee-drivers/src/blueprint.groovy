@@ -123,6 +123,16 @@ metadata {
             required: true
         )
         {{/ device.capabilities.SwitchLevel }}
+        {{# device.capabilities.StartupOnOff }}
+        input(
+            name: "startupOnOff",
+            type: "enum",
+            title: "Behavior after a power outage",
+            options: ["ON":"Turn power On", "OFF":"Turn power Off", "PREV":"Restore previous state"],
+            defaultValue: "PREV",
+            required: true
+        )
+        {{ /device.capabilities.StartupOnOff }}
     }
 }
 
@@ -156,6 +166,12 @@ def updated() {
     {{# device.capabilities.HealthCheck }}
     schedule HEALTH_CHECK.schedule, "healthCheck"
     {{/ device.capabilities.HealthCheck }}
+    {{# device.capabilities.StartupOnOff }}
+
+    // Configure StartupOnOff
+    Log.info "🛠️ startupOnOff = ${startupOnOff}"
+    Utils.sendZigbeeCommands zigbee.writeAttribute(0x0006, 0x4003, 0x30, startupOnOff == "OFF" ? 0x00 : (startupOnOff == "ON" ? 0x01 : 0xFF))
+    {{/ device.capabilities.StartupOnOff }}
 }
 
 // Handler method for scheduled job to disable debug logging
@@ -356,8 +372,13 @@ def push(buttonNumber) {
 
 // capability.Refresh
 def refresh() {
-    Log.debug "Asking device to send its switch status ..."
-    Utils.sendZigbeeCommands(zigbee.readAttribute(0x0006, 0x0000))
+    List<String> cmds = [];
+
+    {{# readAttributes }}
+    cmds += zigbee.readAttribute({{ cluster }}, {{ attr }})  // {{ description }}
+    {{/ readAttributes }}
+
+    Utils.sendZigbeeCommands(cmds)
 }
 {{/ device.capabilities.Refresh }}
 {{# device.capabilities.ReleasableButton }}
@@ -436,7 +457,7 @@ def parse(String description) {
 
         // General::Basic cluster (0x0000) - Read Attribute Response (0x01)
         case { contains it, [clusterInt:0x0000, commandInt:0x01] }:
-            Utils.processedZigbeeMessage("Read Attribute Response", "attribute=${msg.attrId}")
+            Utils.processedZigbeeMessage("Read Attribute Response", "cluster=0x${msg.cluster}, attribute=0x${msg.attrId}, value=${msg.value}")
             switch (msg.attrInt) {
                 case 0x0001: return Utils.zigbeeDataValue("application", msg.value)
                 case 0x0003: return Utils.zigbeeDataValue("hwVersion", msg.value)
@@ -446,7 +467,7 @@ def parse(String description) {
                     return Utils.zigbeeDataValue("model", msg.value)
                 case 0x4000: return Utils.zigbeeDataValue("softwareBuild", msg.value)
             }
-            return warn("Unexpected Zigbee attribute: attribute=${msg.attrInt}, msg=${msg}")
+            return Log.warn("Unexpected Zigbee attribute: cluster=0x${msg.cluster}, attribute=0x${msg.attrId}, msg=${msg}")
 
         // Simple_Desc_rsp = { 08:Status, 16:NWKAddrOfInterest, 08:Length, 08:Endpoint, 16:ApplicationProfileIdentifier, 16:ApplicationDeviceIdentifier, 08:Reserved, 16:InClusterCount, n*16:InClusterList, 16:OutClusterCount, n*16:OutClusterList }
         // Example: [B7, 00, 18, 4A, 14, 03, 04, 01, 06, 00, 01, 03, 00,  00, 03, 00, 80, FC, 03, 03, 00, 04, 00, 80, FC] -> endpointId=03, inClusters=[0000, 0003, FC80], outClusters=[0003, 0004, FC80]
@@ -513,10 +534,16 @@ def parse(String description) {
 
         // Device_annce = { 16:NWKAddr, 64:IEEEAddr , 01:Capability }
         // Example : [82, CF, A0, 71, 0F, 68, FE, FF, 08, AC, 70, 80] -> addr=A0CF, zigbeeId=70AC08FFFE680F71, capabilities=10000000
-        case { contains it, [clusterInt:0x0013] }:
+        case { contains it, [clusterInt:0x0013, commandInt:0x00] }:
             def addr = msg.data[1..2].reverse().join()
             def zigbeeId = msg.data[3..10].reverse().join()
             def capabilities = Integer.toBinaryString(Integer.parseInt(msg.data[11], 16))
+            {{# device.capabilities.Refresh }}
+
+            // Welcome back; let's sync state
+            Log.debug("Device rejoined the network. Calling refresh() to sync state ...")
+            refresh()
+            {{/ device.capabilities.Refresh }}
             return Utils.processedZigbeeMessage("Device Announce Response", "addr=${addr}, zigbeeId=${zigbeeId}, capabilities=${capabilities}")
 
         // Bind_rsp = { 08:Status }

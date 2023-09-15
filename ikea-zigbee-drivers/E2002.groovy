@@ -10,7 +10,7 @@ import groovy.time.TimeCategory
 import groovy.transform.Field
 
 @Field def DRIVER_NAME = "IKEA Styrbar Remote Control N2 (E2002)"
-@Field def DRIVER_VERSION = "2.0.1"
+@Field def DRIVER_VERSION = "2.2.0"
 @Field def ZDP_STATUS = ["00":"SUCCESS", "80":"INV_REQUESTTYPE", "81":"DEVICE_NOT_FOUND", "82":"INVALID_EP", "83":"NOT_ACTIVE", "84":"NOT_SUPPORTED", "85":"TIMEOUT", "86":"NO_MATCH", "88":"NO_ENTRY", "89":"NO_DESCRIPTOR", "8A":"INSUFFICIENT_SPACE", "8B":"NOT_PERMITTED", "8C":"TABLE_FULL", "8D":"NOT_AUTHORIZED", "8E":"DEVICE_BINDING_TABLE_FULL"]
 @Field def BUTTONS = [
     "PLUS": ["1", "🔆"],
@@ -330,7 +330,7 @@ def parse(String description) {
 
         // General::Basic cluster (0x0000) - Read Attribute Response (0x01)
         case { contains it, [clusterInt:0x0000, commandInt:0x01] }:
-            Utils.processedZigbeeMessage("Read Attribute Response", "attribute=${msg.attrId}")
+            Utils.processedZigbeeMessage("Read Attribute Response", "cluster=0x${msg.cluster}, attribute=0x${msg.attrId}, value=${msg.value}")
             switch (msg.attrInt) {
                 case 0x0001: return Utils.zigbeeDataValue("application", msg.value)
                 case 0x0003: return Utils.zigbeeDataValue("hwVersion", msg.value)
@@ -340,7 +340,7 @@ def parse(String description) {
                     return Utils.zigbeeDataValue("model", msg.value)
                 case 0x4000: return Utils.zigbeeDataValue("softwareBuild", msg.value)
             }
-            return warn("Unexpected Zigbee attribute: attribute=${msg.attrInt}, msg=${msg}")
+            return Log.warn("Unexpected Zigbee attribute: cluster=0x${msg.cluster}, attribute=0x${msg.attrId}, msg=${msg}")
 
         // Simple_Desc_rsp = { 08:Status, 16:NWKAddrOfInterest, 08:Length, 08:Endpoint, 16:ApplicationProfileIdentifier, 16:ApplicationDeviceIdentifier, 08:Reserved, 16:InClusterCount, n*16:InClusterList, 16:OutClusterCount, n*16:OutClusterList }
         // Example: [B7, 00, 18, 4A, 14, 03, 04, 01, 06, 00, 01, 03, 00,  00, 03, 00, 80, FC, 03, 03, 00, 04, 00, 80, FC] -> endpointId=03, inClusters=[0000, 0003, FC80], outClusters=[0003, 0004, FC80]
@@ -407,7 +407,7 @@ def parse(String description) {
 
         // Device_annce = { 16:NWKAddr, 64:IEEEAddr , 01:Capability }
         // Example : [82, CF, A0, 71, 0F, 68, FE, FF, 08, AC, 70, 80] -> addr=A0CF, zigbeeId=70AC08FFFE680F71, capabilities=10000000
-        case { contains it, [clusterInt:0x0013] }:
+        case { contains it, [clusterInt:0x0013, commandInt:0x00] }:
             def addr = msg.data[1..2].reverse().join()
             def zigbeeId = msg.data[3..10].reverse().join()
             def capabilities = Integer.toBinaryString(Integer.parseInt(msg.data[11], 16))
