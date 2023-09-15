@@ -39,6 +39,9 @@ metadata {
         // For firmwares: 1.0.024
         fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC57", outClusters:"0003,0006,0008,0019,1000", model:"Remote Control N2", manufacturer:"IKEA of Sweden"
 
+        // For firmwares: 2.4.5
+        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC57,FC7C", outClusters:"0003,0005,0006,0008,0019,1000", model:"Remote Control N2", manufacturer:"IKEA of Sweden"
+
         // Should be part of capability.HealthCheck
         attribute "healthStatus", "ENUM", ["offline", "online", "unknown"]
     }
@@ -169,7 +172,9 @@ def configure() {
     cmds.addAll zigbee.configureReporting(0x0001, 0x0021, DataType.UINT8, 21600, 43200, 0x00) // Report battery level every 6 to 12 hours
 
     // Add Zigbee binds
+    cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0005 {${device.zigbeeId}} {}" // General - Scenes cluster
     cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {${device.zigbeeId}} {}" // General - On/Off cluster
+    cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0008 {${device.zigbeeId}} {}" // General - Level Control cluster
 
     // Query Zigbee attributes
     cmds.addAll zigbee.readAttribute(0x0000, 0x0001)  // ApplicationVersion
@@ -271,17 +276,52 @@ def parse(String description) {
         
         // Plus/Minus button was released
         case { contains it, [clusterInt:0x0008, commandInt:0x07] }:
-            def button = device.currentValue("held", true) == 1 ? BUTTONS.PLUS : BUTTONS.MINUS
+        case { contains it, [clusterInt:0x0008, commandInt:0x03] }:
+            def button = device.currentValue("held", true) == 2 || msg.commandInt == 0x03 ? BUTTONS.MINUS : BUTTONS.PLUS
             return Utils.sendPhysicalEvent(name:"released", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was released")
         
         // Next/Prev button was pushed
         case { contains it, [clusterInt:0x0005, commandInt:0x07] }:
             def button = msg.data[0] == "00" ? BUTTONS.NEXT : BUTTONS.PREV
             return Utils.sendPhysicalEvent(name:"pushed", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
+        
+        /*
+        Holding the PREV and NEXT buttons works in a weird way:
+        
+        When PREV button is held, the following Zigbee messages are received:
+        #1. [12:55:35.429] description=[catchall: 0104 0005 01 01 0040 00 926B 01 01 117C 09 00 0000]
+        #2. [12:55:35.908] description=[catchall: 0104 0006 01 01 0040 00 926B 01 00 0000 01 00 ]             <-- button 1 (🔆) was pushed [physical]
+        #3. [12:55:36.422] description=[catchall: 0104 0005 01 01 0040 00 926B 01 00 0000 05 00 0000000000]
+        #4. [12:55:37.411] description=[catchall: 0104 0005 01 01 0040 00 926B 01 01 117C 08 00 010D00]
+        
+        When PREV button is released, the following Zigbee message is received:
+        #5. [on release]   description=[catchall: 0104 0005 01 01 0040 00 926B 01 01 117C 09 00 XXXX]
+        
+        When NEXT button is held, the following Zigbee messages are received:
+        #1. [12:56:59.463] description=[catchall: 0104 0005 01 01 0040 00 926B 01 01 117C 09 00 0000]
+        #2. [12:56:59.962] description=[catchall: 0104 0006 01 01 0040 00 926B 01 00 0000 01 00 ]             <-- button 1 (🔆) was pushed [physical]
+        #3. [12:57:00.480] description=[catchall: 0104 0005 01 01 0040 00 926B 01 00 0000 05 00 0000000000]
+        #4. [12:57:01.466] description=[catchall: 0104 0005 01 01 0040 00 926B 01 01 117C 08 00 000D00]
+        
+        When NEXT button is released, the following Zigbee message is received:
+        #5. [on release]   description=[catchall: 0104 0005 01 01 0040 00 926B 01 01 117C 09 00 XXXX]
+        
+        There is at least 2 seconds delay between the moment the device figured out that the button is held (not a click)
+        and the moment message #4 is received (the moment we can figure out what button was held (010D00 vs 000D00)).
+        
+        IMHO, this weird behavior makes the use of the hold actions on the PREV and NEXT button unusable.
+        */
 
         // General::Power (0x0001) / Battery report (0x0021)
         case { contains it, [clusterInt:0x0001, attrInt:0x0021] }:
             def percentage =  Integer.parseInt(msg.value, 16)
+        
+            // (0xFF) 255 is an invalid value for the battery percentage attribute, so we just ignore it
+            if (percentage == 255) {
+                Log.warn "Ignored invalid battery percentage value: 0xFF (255)"
+                return
+            }
+        
             return Utils.sendPhysicalEvent(name:"battery", value:percentage, unit:"%", descriptionText:"Battery is ${percentage}% full")
 
         // ---------------------------------------------------------------------------------------------------------------

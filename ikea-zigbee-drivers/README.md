@@ -150,7 +150,7 @@ Follow the steps below in order to pair the Tradfri Shortcut Button with your Hu
 | Product Image | <img src="https://zigbee.blakadder.com/assets/images/devices/Ikea_E2002.webp" style="width: 200px"> |
 | Product Code | `304.883.63` |
 | Manual install file | `https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E2002.groovy` |
-| Tested firmwares | `1.0.024` |
+| Tested firmwares | `1.0.024`｜`2.4.5` |
 
 ### Features
 * Button Push events for: all buttons
@@ -161,7 +161,7 @@ Follow the steps below in order to pair the Tradfri Shortcut Button with your Hu
 * Health status (online / offline)
 
 ### Issues
-* On firmware `1.0.024`, the Hold / Release events don't work correctly on the Next and Prev buttons
+* The Hold / Release events don't work correctly on the Next and Prev buttons
 
 ### Device Pairing
 Follow the steps below in order to pair the Tradfri Shortcut Button with your Hubitat hub:
