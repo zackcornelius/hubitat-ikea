@@ -10,7 +10,7 @@ import groovy.time.TimeCategory
 import groovy.transform.Field
 
 @Field def DRIVER_NAME = "IKEA Tradfri Shortcut Button (E1812)"
-@Field def DRIVER_VERSION = "2.2.0"
+@Field def DRIVER_VERSION = "2.3.0"
 @Field def ZDP_STATUS = ["00":"SUCCESS", "80":"INV_REQUESTTYPE", "81":"DEVICE_NOT_FOUND", "82":"INVALID_EP", "83":"NOT_ACTIVE", "84":"NOT_SUPPORTED", "85":"TIMEOUT", "86":"NO_MATCH", "88":"NO_ENTRY", "89":"NO_DESCRIPTOR", "8A":"INSUFFICIENT_SPACE", "8B":"NOT_PERMITTED", "8C":"TABLE_FULL", "8D":"NOT_AUTHORIZED", "8E":"DEVICE_BINDING_TABLE_FULL"]
 @Field def BUTTONS = [
     "ONOFF": ["1", "On/Off"],
@@ -218,6 +218,7 @@ def off() {
     Utils.sendDigitalEvent name:"switch", value:"off", descriptionText:"Was turned off"
 }
 
+
 // ===================================================================================================================
 // Handle incoming Zigbee messages
 // ===================================================================================================================
@@ -297,7 +298,7 @@ def parse(String description) {
             }
             return Log.warn("Unexpected Zigbee attribute: cluster=0x${msg.cluster}, attribute=0x${msg.attrId}, msg=${msg}")
 
-        // Simple_Desc_rsp = { 08:Status, 16:NWKAddrOfInterest, 08:Length, 08:Endpoint, 16:ApplicationProfileIdentifier, 16:ApplicationDeviceIdentifier, 08:Reserved, 16:InClusterCount, n*16:InClusterList, 16:OutClusterCount, n*16:OutClusterList }
+        // Simple_Desc_rsp := { 08:Status, 16:NWKAddrOfInterest, 08:Length, 08:Endpoint, 16:ApplicationProfileIdentifier, 16:ApplicationDeviceIdentifier, 08:Reserved, 16:InClusterCount, n*16:InClusterList, 16:OutClusterCount, n*16:OutClusterList }
         // Example: [B7, 00, 18, 4A, 14, 03, 04, 01, 06, 00, 01, 03, 00,  00, 03, 00, 80, FC, 03, 03, 00, 04, 00, 80, FC] -> endpointId=03, inClusters=[0000, 0003, FC80], outClusters=[0003, 0004, FC80]
         case { contains it, [clusterInt:0x8004] }:
             if (msg.data[1] != "00") {
@@ -332,7 +333,7 @@ def parse(String description) {
             Utils.zigbeeDataValue "outClusters (${endpointId})", outClusters.join(",")
             return Utils.processedZigbeeMessage("Simple Descriptor Response", "endpointId=${endpointId}, inClusters=${inClusters}, outClusters=${outClusters}")
 
-        // Active_EP_rsp = { 08:Status, 16:NWKAddrOfInterest, 08:ActiveEPCount, n*08:ActiveEPList }
+        // Active_EP_rsp := { 08:Status, 16:NWKAddrOfInterest, 08:ActiveEPCount, n*08:ActiveEPList }
         // Three endpoints example: [83, 00, 18, 4A, 03, 01, 02, 03] -> endpointIds=[01, 02, 03]
         case { contains it, [clusterInt:0x8005] }:
             if (msg.data[1] != "00") {
@@ -360,17 +361,17 @@ def parse(String description) {
             }
             return Utils.processedZigbeeMessage("Active Endpoints Response", "endpointIds=${endpointIds}")
 
-        // Device_annce = { 16:NWKAddr, 64:IEEEAddr , 01:Capability }
-        // Example : [82, CF, A0, 71, 0F, 68, FE, FF, 08, AC, 70, 80] -> addr=A0CF, zigbeeId=70AC08FFFE680F71, capabilities=10000000
+        // Device_annce := { 16:NWKAddr, 64:IEEEAddr , 01:Capability }
+        // Example: [82, CF, A0, 71, 0F, 68, FE, FF, 08, AC, 70, 80] -> addr=A0CF, zigbeeId=70AC08FFFE680F71, capabilities=10000000
         case { contains it, [clusterInt:0x0013, commandInt:0x00] }:
             def addr = msg.data[1..2].reverse().join()
             def zigbeeId = msg.data[3..10].reverse().join()
             def capabilities = Integer.toBinaryString(Integer.parseInt(msg.data[11], 16))
             return Utils.processedZigbeeMessage("Device Announce Response", "addr=${addr}, zigbeeId=${zigbeeId}, capabilities=${capabilities}")
 
-        // Bind_rsp = { 08:Status }
-        // Success example : [26, 00] -> status = SUCCESS
-        // Fail example    : [26, 82] -> status = INVALID_EP
+        // Bind_rsp := { 08:Status }
+        // Success example: [26, 00] -> status = SUCCESS
+        // Fail example: [26, 82] -> status = INVALID_EP
         case { contains it, [clusterInt:0x8021] }:
             if (msg.data[1] != "00") {
                 return Utils.failedZigbeeMessage("Bind Response", msg)

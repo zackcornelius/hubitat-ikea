@@ -1,4 +1,7 @@
-// Motion detected
-// data = [03, FD, FF, 04, 01, 01, 19, 00, 00]
-case { contains it, [clusterInt:0x0006, commandInt:0x00] }:
-    return Utils.sendPhysicalEvent(name:"motion", value:"active", descriptionText:"Motion was detected")
+// OnWithTimedOff := { 08:OnOffControl, 16:OnTime, 16:OffWaitTime }
+// OnOffControl := { 01:AcceptOnlyWhenOn, 07:Reserved }
+// Example: [01, 08, 07, 00, 00] -> acceptOnlyWhenOn=true, onTime=180, offWaitTime=0
+case { contains it, [clusterInt:0x0006, commandInt:0x42] }:
+    def onTime = Math.round(Integer.parseInt(msg.data[1..2].reverse().join(), 16) / 10)
+    runIn onTime, "motionInactive"
+    return Utils.sendPhysicalEvent(name:"motion", value:"active", descriptionText:"Is active")

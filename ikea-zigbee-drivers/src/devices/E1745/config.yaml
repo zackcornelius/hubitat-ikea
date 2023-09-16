@@ -18,8 +18,8 @@ device:
 
 zigbee:
   fingerprints:
-  - firmwares: 2.0.022
-    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0009,0020,1000,FC7C", outClusters:"0003,0004,0006,0008,0019,1000", model:"TRADFRI motion sensor", manufacturer:"IKEA of Sweden"
+  - firmwares: 24.4.5
+    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC57,FC7C", outClusters:"0003,0004,0006,0008,0019,1000", model:"TRADFRI motion sensor", manufacturer:"IKEA of Sweden"
 
   binds:
   - { endpoint: '0x01', cluster: '0x0006', reason: General - On/Off cluster }
@@ -40,6 +40,12 @@ zigbee:
     - cluster: '0x0003'
       command: '0x01'
       name: Identify Query Response
+
+    # We get this entry in the log when the "Configure" button is clicked
+    # Payload data is [03, FD, FF, 04, 01, 01, 19, 00, 00]
+    - cluster: '0x0006'
+      command: '0x00'
+      name: Unknown Zigbee Response with weird payload
 
     - cluster: '0x8034'
       name: Leave Response

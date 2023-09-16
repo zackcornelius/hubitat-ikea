@@ -10,7 +10,7 @@ import groovy.time.TimeCategory
 import groovy.transform.Field
 
 @Field def DRIVER_NAME = "IKEA Tradfri Control Outlet (E1603)"
-@Field def DRIVER_VERSION = "2.2.0"
+@Field def DRIVER_VERSION = "2.3.0"
 @Field def ZDP_STATUS = ["00":"SUCCESS", "80":"INV_REQUESTTYPE", "81":"DEVICE_NOT_FOUND", "82":"INVALID_EP", "83":"NOT_ACTIVE", "84":"NOT_SUPPORTED", "85":"TIMEOUT", "86":"NO_MATCH", "88":"NO_ENTRY", "89":"NO_DESCRIPTOR", "8A":"INSUFFICIENT_SPACE", "8B":"NOT_PERMITTED", "8C":"TABLE_FULL", "8D":"NOT_AUTHORIZED", "8E":"DEVICE_BINDING_TABLE_FULL"]
 
 // Health Check config
@@ -215,6 +215,7 @@ def requestRoutingData() {
     Utils.sendZigbeeCommands cmds
 }
 
+
 // ===================================================================================================================
 // Handle incoming Zigbee messages
 // ===================================================================================================================
@@ -285,7 +286,7 @@ def parse(String description) {
             }
             return Log.warn("Unexpected Zigbee attribute: cluster=0x${msg.cluster}, attribute=0x${msg.attrId}, msg=${msg}")
 
-        // Simple_Desc_rsp = { 08:Status, 16:NWKAddrOfInterest, 08:Length, 08:Endpoint, 16:ApplicationProfileIdentifier, 16:ApplicationDeviceIdentifier, 08:Reserved, 16:InClusterCount, n*16:InClusterList, 16:OutClusterCount, n*16:OutClusterList }
+        // Simple_Desc_rsp := { 08:Status, 16:NWKAddrOfInterest, 08:Length, 08:Endpoint, 16:ApplicationProfileIdentifier, 16:ApplicationDeviceIdentifier, 08:Reserved, 16:InClusterCount, n*16:InClusterList, 16:OutClusterCount, n*16:OutClusterList }
         // Example: [B7, 00, 18, 4A, 14, 03, 04, 01, 06, 00, 01, 03, 00,  00, 03, 00, 80, FC, 03, 03, 00, 04, 00, 80, FC] -> endpointId=03, inClusters=[0000, 0003, FC80], outClusters=[0003, 0004, FC80]
         case { contains it, [clusterInt:0x8004] }:
             if (msg.data[1] != "00") {
@@ -320,7 +321,7 @@ def parse(String description) {
             Utils.zigbeeDataValue "outClusters (${endpointId})", outClusters.join(",")
             return Utils.processedZigbeeMessage("Simple Descriptor Response", "endpointId=${endpointId}, inClusters=${inClusters}, outClusters=${outClusters}")
 
-        // Active_EP_rsp = { 08:Status, 16:NWKAddrOfInterest, 08:ActiveEPCount, n*08:ActiveEPList }
+        // Active_EP_rsp := { 08:Status, 16:NWKAddrOfInterest, 08:ActiveEPCount, n*08:ActiveEPList }
         // Three endpoints example: [83, 00, 18, 4A, 03, 01, 02, 03] -> endpointIds=[01, 02, 03]
         case { contains it, [clusterInt:0x8005] }:
             if (msg.data[1] != "00") {
@@ -348,8 +349,8 @@ def parse(String description) {
             }
             return Utils.processedZigbeeMessage("Active Endpoints Response", "endpointIds=${endpointIds}")
 
-        // Device_annce = { 16:NWKAddr, 64:IEEEAddr , 01:Capability }
-        // Example : [82, CF, A0, 71, 0F, 68, FE, FF, 08, AC, 70, 80] -> addr=A0CF, zigbeeId=70AC08FFFE680F71, capabilities=10000000
+        // Device_annce := { 16:NWKAddr, 64:IEEEAddr , 01:Capability }
+        // Example: [82, CF, A0, 71, 0F, 68, FE, FF, 08, AC, 70, 80] -> addr=A0CF, zigbeeId=70AC08FFFE680F71, capabilities=10000000
         case { contains it, [clusterInt:0x0013, commandInt:0x00] }:
             def addr = msg.data[1..2].reverse().join()
             def zigbeeId = msg.data[3..10].reverse().join()
@@ -360,9 +361,9 @@ def parse(String description) {
             refresh()
             return Utils.processedZigbeeMessage("Device Announce Response", "addr=${addr}, zigbeeId=${zigbeeId}, capabilities=${capabilities}")
 
-        // Bind_rsp = { 08:Status }
-        // Success example : [26, 00] -> status = SUCCESS
-        // Fail example    : [26, 82] -> status = INVALID_EP
+        // Bind_rsp := { 08:Status }
+        // Success example: [26, 00] -> status = SUCCESS
+        // Fail example: [26, 82] -> status = INVALID_EP
         case { contains it, [clusterInt:0x8021] }:
             if (msg.data[1] != "00") {
                 return Utils.failedZigbeeMessage("Bind Response", msg)
@@ -373,8 +374,8 @@ def parse(String description) {
         // capability.ZigbeeRouter
         // ---------------------------------------------------------------------------------------------------------------
 
-        // Mgmt_Lqi_rsp = { 08:Status, 08:NeighborTableEntries, 08:StartIndex, 08:NeighborTableListCount, n*176:NeighborTableList }
-        // NeighborTableList = { 64:ExtendedPanId, 64:IEEEAddress, 16:NetworkAddress, 02:DeviceType, 02:RxOnWhenIdle, 03:Relationship, 01:Reserved, 02:PermitJoining, 06:Reserved, 08:Depth, 08:LQI }
+        // Mgmt_Lqi_rsp := { 08:Status, 08:NeighborTableEntries, 08:StartIndex, 08:NeighborTableListCount, n*176:NeighborTableList }
+        // NeighborTableList := { 64:ExtendedPanId, 64:IEEEAddress, 16:NetworkAddress, 02:DeviceType, 02:RxOnWhenIdle, 03:Relationship, 01:Reserved, 02:PermitJoining, 06:Reserved, 08:Depth, 08:LQI }
         // Example: [6E, 00, 08, 00, 03, 50, 53, 3A, 0D, 00, DF, 66, 15, E9, A6, C9, 17, 00, 6F, 0D, 00, 00, 00, 24, 02, 00, CF, 50, 53, 3A, 0D, 00, DF, 66, 15, 80, BF, CA, 6B, 6A, 38, C1, A4, 4A, 16, 05, 02, 0F, CD, 50, 53, 3A, 0D, 00, DF, 66, 15, D3, FA, E1, 25, 00, 4B, 12, 00, 64, 17, 25, 02, 0F, 36]
         case { contains it, [clusterInt:0x8031, commandInt:0x00] }:
             if (msg.data[1] != "00") {
@@ -387,9 +388,9 @@ def parse(String description) {
             sendEvent name:"neighbors", value:"${entriesCount} entries", descriptionText:base64, isStateChange:true, type:"physical"
             return Utils.processedZigbeeMessage("Neighbors Table Response", "entries=${entriesCount}, data=${msg.data}")
 
-        // Mgmt_Rtg_rsp = { 08:Status, 08:RoutingTableEntries, 08:StartIndex, 08:RoutingTableListCount, n*40:RoutingTableList }
+        // Mgmt_Rtg_rsp := { 08:Status, 08:RoutingTableEntries, 08:StartIndex, 08:RoutingTableListCount, n*40:RoutingTableList }
+        // RoutingTableList := { 16:DestinationAddress, 03:RouteStatus, 01:MemoryConstrained, 01:ManyToOne, 01:RouteRecordRequired, 02:Reserved, 16:NextHopAddress }
         // Example: [6F, 00, 0A, 00, 0A, 00, 00, 10, 00, 00, AD, 56, 00, AD, 56, ED, EE, 00, 4A, 16, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00]
-        // RoutingTableList = { 16:DestinationAddress, 03:RouteStatus, 01:MemoryConstrained, 01:ManyToOne, 01:RouteRecordRequired, 02:Reserved, 16:NextHopAddress }
         case { contains it, [clusterInt:0x8032, commandInt:0x00] }:
             if (msg.data[1] != "00") {
                 return Utils.failedZigbeeMessage("Routing Table Response", msg)
