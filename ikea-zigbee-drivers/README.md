@@ -88,7 +88,7 @@ Follow the steps below in order to pair the Tradfri On/Off Switch with your Hubi
 | Parameter | Details |
 |-----------|-------------|
 | Product Image | <img src="https://zigbee.blakadder.com/assets/images/devices/Ikea_E1745.webp" style="width: 200px"> |
-| Product Code | `203.563.82`｜`404.677.65`｜`403.563.81` |
+| Product Code | `704.299.13` |
 | Manual install file | `https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1745.groovy` |
 | Tested firmwares | `24.4.5` |
 
