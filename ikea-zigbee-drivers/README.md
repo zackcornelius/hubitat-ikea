@@ -38,8 +38,8 @@ Follow the steps below if you don't know what "Hubitat Package Manager" is:
 | Tested firmwares | `2.0.0244`｜`2.3.089` |
 
 ### Features
-* Power on / off control
-* Configure what happens after a power outage (Turn On, Turn Off, Restore previous state)
+* Commands: On, Off, Toggle, On with Timed Off
+* Configure what happens after a power outage (Power On, Power Off, Restore previous state)
 * Health status (online / offline)
 * Refresh switch state on demand
 * Report Zigbee Neighbors and Routing Tables (device acts as a Zigbee router)
@@ -67,8 +67,6 @@ Follow the steps below in order to pair the Tradfri Control Outlet with your Hub
 * Button Push events for: both buttons
 * Button Hold events for: both buttons
 * Button Release events for: both buttons
-* Buttons also acts as a switch (on / off)
-* Buttons also act as a switch level (0 - 100%)
 * Battery indicator (%)
 * Health status (online / offline)
 
@@ -155,7 +153,6 @@ Follow the steps below in order to pair the Tradfri Remote Control with your Hub
 * Button Double-Tap event (only on firmware `24.4.6` and above)
 * Button Hold event
 * Button Release event
-* Button also acts as a switch (on / off)
 * Battery indicator (%)
 * Health status (online / offline)
 
@@ -183,7 +180,6 @@ Follow the steps below in order to pair the Tradfri Shortcut Button with your Hu
 * Button Push events for: all buttons
 * Button Hold events for: Button 1 (🔆) and Button 2 (🔅)
 * Button Release events for: Button 1 (🔆), Button 2 (🔅)
-* Buttons also act as a switch level (0 - 100%)
 * Battery indicator (%)
 * Health status (online / offline)
 
@@ -215,8 +211,6 @@ Follow the steps below in order to pair the Styrbar Remote Control with your Hub
 * Button Hold events for: Button 2 (Plus), Button 3 (Minus), Button 6 (•) and Button 7 (••)
 * Button Release events for: Button 6 (•) and Button 7 (••)
 * Button Double-Tap events for: Button 6 (•) and Button 7 (••)
-* Button 1 (Play) acts as a switch (on / off)
-* Button 2 (Plus) and Button 3 (Minus) act as a switch level (0 - 100%)
 * Battery indicator (%)
 * Health status (online / offline)
 
@@ -244,8 +238,6 @@ Follow the steps below in order to pair the IKEA Sound Remote Gen2 with your Hub
 * Button Push events for: both buttons
 * Button Hold events for: both buttons
 * Button Release events for: both buttons
-* Buttons also acts as a switch (on / off)
-* Buttons also act as a switch level (0 - 100%)
 * Battery indicator (%)
 * Health status (online / offline)
 

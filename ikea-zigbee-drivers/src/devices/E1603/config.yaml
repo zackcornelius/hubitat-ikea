@@ -4,20 +4,20 @@ device:
   type: E1603
 
   capabilities:
-    Configuration: true
-    HealthCheck:
+    - file: src/capabilities/HealthCheck.groovy
       schedule: 0 0 0/1 ? * * *
       checkInterval: 3600  # every hour
       thereshold: 3600     # report device as offline if no message was received in the last 60 minutes (device should report On/Off status every 5 to 10 minutes)
-    PowerSource:
-      mains: true
-    Outlet: true
-    Refresh:
+    - file: src/capabilities/PowerSource.groovy
+      type: mains
+    - file: src/capabilities/Refresh.groovy
       readAttributes:
-      - { cluster: '0x0006', attr: '0x0000', description: 'Switch status = { 0x00:OFF, 0x01:ON }' }
-      - { cluster: '0x0006', attr: '0x4003', description: 'StartupOnOff = { 0x00:OFF, 0x01:ON, 0xFF:PREVIOUS' }
-    StartupOnOff: true
-    ZigbeeRouter: true
+      - { cluster: '0x0006', attr: '0x0000', description: 'OnOff := { 0x00:Off, 0x01:On }' }
+      - { cluster: '0x0006', attr: '0x4003', description: 'StartupBehavior := { 0x00:TurnPowerOff, 0x01:TurnPowerOn, 0xFF:RestorePreviousState }' }
+    - file: src/capabilities/Switch.groovy
+      startupBehavior: true
+      onWithTimedOff: true
+    - file: src/capabilities/ZigbeeRouter.groovy
 
 zigbee:
   fingerprints:
@@ -31,8 +31,16 @@ zigbee:
   - { cluster: '0x0006', attribute: '0x0000', type: '0x10', min: 300, max: 600, delta: '0x00', reason: 'Report On/Off status every 5 to 10 minutes' }
 
   messages:
-    handle:
+    specific:
     - file: src/devices/E1603/events.groovy
+
+    standard:
+    - file: src/events/read-attributes-response.groovy
+    - file: src/events/simple-description-response.groovy
+    - file: src/events/active-endpoints-response.groovy
+    - file: src/events/device-announce-response.groovy
+      exec: refresh(false)
+    - file: src/events/bind-response.groovy
 
     ignore:
     - cluster: '0x0001'
@@ -56,6 +64,9 @@ zigbee:
     - cluster: '0x0006'
       command: '0x00'
       name: Unknown Zigbee Response with weird payload
+
+    - cluster: '0x8001'
+      name: IEEE Address Response
 
     - cluster: '0x8034'
       name: Leave Response

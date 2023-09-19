@@ -2,24 +2,21 @@ device:
   model: IKEA Tradfri Shortcut Button
   zigbeeId: TRADFRI SHORTCUT Button
   type: E1812
-  buttons:
-    list:
-    - { id: 'ONOFF', name: 'On/Off', number: 1 }
 
   capabilities:
-    Battery: true
-    Configuration: true
-    DoubleTapableButton: true
-    HealthCheck:
+    - file: src/capabilities/Battery.groovy
+    - file: src/capabilities/DoubleTapableButton.groovy
+    - file: src/capabilities/HealthCheck.groovy
       schedule: 0 0 0/1 ? * * *
       checkInterval: 3600  # every hour
       thereshold: 43200    # report device as offline if no message was received in the last 12 hours (device should report battery level every 6 to 12 hours)
-    HoldableButton: true
-    PowerSource:
-      battery: true
-    PushableButton: true
-    ReleasableButton: true
-    Switch: true
+    - file: src/capabilities/HoldableButton.groovy
+    - file: src/capabilities/PowerSource.groovy
+      type: battery
+    - file: src/capabilities/PushableButton.groovy
+      buttons:
+      - { id: 'ONOFF', name: 'On/Off', number: 1 }
+    - file: src/capabilities/ReleasableButton.groovy
 
 zigbee:
   fingerprints:
@@ -39,10 +36,17 @@ zigbee:
   - { cluster: '0x0001', attribute: '0x0021', type: 'DataType.UINT8', min: 21600, max: 43200, delta: '0x00', reason: 'Report battery level every 6 to 12 hours' }
 
   messages:
-    handle:
+    specific:
     - file: src/devices/E1812/events.groovy
+
+    standard:
     - file: src/events/battery-percentage.groovy
-      params: { half: true }
+      half: true
+    - file: src/events/read-attributes-response.groovy
+    - file: src/events/simple-description-response.groovy
+    - file: src/events/active-endpoints-response.groovy
+    - file: src/events/device-announce-response.groovy
+    - file: src/events/bind-response.groovy
 
     ignore:
     - cluster: '0x0001'

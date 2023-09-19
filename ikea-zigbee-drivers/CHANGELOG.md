@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2023-09-20
+### Changed
+- Breaking change: Remove `Switch` and `SwitchLevel` capabilities for button devices
+
+### Added
+ - E1603: Add OnWithTimedOff command (max 6500 seconds)
+
+### Fixed
+ - E1603: Ignore IEEE Address Response cluster:0x8001 (@tom7)
+ - E1603: Add Switch capability for RM usage (@a.mcdear)
+
 ## [2.3.0] - 2023-09-16
 ### Added
  - Add driver for IKEA Tradfri Motion Sensor (E1745)

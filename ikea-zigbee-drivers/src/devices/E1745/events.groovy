@@ -4,4 +4,4 @@
 case { contains it, [clusterInt:0x0006, commandInt:0x42] }:
     def onTime = Math.round(Integer.parseInt(msg.data[1..2].reverse().join(), 16) / 10)
     runIn onTime, "motionInactive"
-    return Utils.sendPhysicalEvent(name:"motion", value:"active", descriptionText:"Is active")
+    return Utils.sendEvent(name:"motion", value:"active", type:"physical", isStateChange:true, descriptionText:"Is active")

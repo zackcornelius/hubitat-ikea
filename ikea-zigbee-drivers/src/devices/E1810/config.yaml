@@ -2,28 +2,24 @@ device:
   model: IKEA Tradfri Remote Control
   zigbeeId: TRADFRI remote control
   type: E1810
-  buttons:
-    list:
-    - { id: 'POWER', name: 'Power', number: 1 }
-    - { id: 'PLUS',  name: '🔆',   number: 2 }
-    - { id: 'MINUS', name: '🔅',   number: 3 }
-    - { id: 'NEXT',  name: 'Next',  number: 4 }
-    - { id: 'PREV',  name: 'Prev',  number: 5 }
 
   capabilities:
-    Battery: true
-    Configuration: true
-    HealthCheck:
+    - file: src/capabilities/Battery.groovy
+    - file: src/capabilities/HealthCheck.groovy
       schedule: 0 0 0/1 ? * * *
       checkInterval: 3600  # every hour
       thereshold: 43200    # report device as offline if no message was received in the last 12 hours (device should report battery level every 6 to 12 hours)
-    HoldableButton: true
-    PowerSource:
-      battery: true
-    PushableButton: true
-    ReleasableButton: true
-    Switch: true
-    SwitchLevel: true
+    - file: src/capabilities/HoldableButton.groovy
+    - file: src/capabilities/PowerSource.groovy
+      type: battery
+    - file: src/capabilities/PushableButton.groovy
+      buttons:
+      - { id: 'POWER', name: 'Power', number: 1 }
+      - { id: 'PLUS',  name: '🔆',   number: 2 }
+      - { id: 'MINUS', name: '🔅',   number: 3 }
+      - { id: 'NEXT',  name: 'Next',  number: 4 }
+      - { id: 'PREV',  name: 'Prev',  number: 5 }
+    - file: src/capabilities/ReleasableButton.groovy
 
 zigbee:
   fingerprints:
@@ -39,10 +35,17 @@ zigbee:
   - { cluster: '0x0001', attribute: '0x0021', type: 'DataType.UINT8', min: 21600, max: 43200, delta: '0x00', reason: 'Report battery level every 6 to 12 hours' }
 
   messages:
-    handle:
+    specific:
     - file: src/devices/E1810/events.groovy
+
+    standard:
     - file: src/events/battery-percentage.groovy
-      params: { half: true }
+      half: true
+    - file: src/events/read-attributes-response.groovy
+    - file: src/events/simple-description-response.groovy
+    - file: src/events/active-endpoints-response.groovy
+    - file: src/events/device-announce-response.groovy
+    - file: src/events/bind-response.groovy
 
     ignore:
     - cluster: '0x0001'

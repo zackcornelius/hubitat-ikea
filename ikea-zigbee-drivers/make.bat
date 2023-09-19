@@ -7,8 +7,8 @@ ECHO Generating driver files:
 SET devices=E1810 E2123
 
 for /D %%A in (src/devices/*) do (
-   ECHO - %%A.groovy
-   tools\yaml-merge.exe src\common.yaml src\devices\%%A\config.yaml | tools\mustache.exe src\blueprint.groovy > %%A.groovy
+    ECHO - %%A.groovy
+    tools\yaml-merge.exe src\common.yaml src\devices\%%A\config.yaml | tools\mustache.exe src\blueprint.groovy > %%A.groovy
 )
 GOTO done
 

@@ -8,7 +8,7 @@ case { contains it, [clusterInt:0x0001, attrInt:0x0021] }:
         return
     }
 
-    {{# params.half }}
+    {{# half }}
     percentage =  Math.round(percentage / 2)
-    {{/ params.half }}
-    return Utils.sendPhysicalEvent(name:"battery", value:percentage, unit:"%", descriptionText:"Battery is ${percentage}% full")
+    {{/ half }}
+    return Utils.sendEvent(name:"battery", value:percentage, unit:"%", type:"physical", isStateChange:true, descriptionText:"Battery is ${percentage}% full")

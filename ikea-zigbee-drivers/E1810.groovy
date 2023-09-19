@@ -10,8 +10,16 @@ import groovy.time.TimeCategory
 import groovy.transform.Field
 
 @Field def DRIVER_NAME = "IKEA Tradfri Remote Control (E1810)"
-@Field def DRIVER_VERSION = "2.3.0"
+@Field def DRIVER_VERSION = "3.0.0"
 @Field def ZDP_STATUS = ["00":"SUCCESS", "80":"INV_REQUESTTYPE", "81":"DEVICE_NOT_FOUND", "82":"INVALID_EP", "83":"NOT_ACTIVE", "84":"NOT_SUPPORTED", "85":"TIMEOUT", "86":"NO_MATCH", "88":"NO_ENTRY", "89":"NO_DESCRIPTOR", "8A":"INSUFFICIENT_SPACE", "8B":"NOT_PERMITTED", "8C":"TABLE_FULL", "8D":"NOT_AUTHORIZED", "8E":"DEVICE_BINDING_TABLE_FULL"]
+
+// Fields for capability.HealthCheck
+@Field def HEALTH_CHECK = [
+    "schedule": "0 0 0/1 ? * * *", // Health will be checked using this cron schedule
+    "thereshold": 43200 // When checking, mark the device as offline if no Zigbee message was received in the last 43200 seconds
+]
+
+// Fields for capability.PushableButton
 @Field def BUTTONS = [
     "POWER": ["1", "Power"],
     "PLUS": ["2", "🔆"],
@@ -20,28 +28,20 @@ import groovy.transform.Field
     "PREV": ["5", "Prev"],
 ]
 
-// Health Check config
-@Field def HEALTH_CHECK = [
-    "schedule"   : "0 0 0/1 ? * * *", // Health will be checked using this cron schedule
-    "thereshold" : 43200              // When checking, mark the device as offline if no Zigbee message was received in the last 43200 seconds
-]
-
 metadata {
     definition(name:DRIVER_NAME, namespace:"dandanache", author:"Dan Danache", importUrl:"https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1810.groovy") {
-        capability "Battery"
         capability "Configuration"
+        capability "Battery"
         capability "HealthCheck"
         capability "HoldableButton"
         capability "PowerSource"
         capability "PushableButton"
         capability "ReleasableButton"
-        capability "Switch"
-        capability "SwitchLevel"
 
         // For firmwares: 24.4.5
         fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC57,FC7C", outClusters:"0003,0004,0005,0006,0008,0019,1000", model:"TRADFRI remote control", manufacturer:"IKEA of Sweden"
-
-        // Should be part of capability.HealthCheck
+        
+        // Attributes for capability.HealthCheck
         attribute "healthStatus", "ENUM", ["offline", "online", "unknown"]
     }
 
@@ -59,23 +59,6 @@ metadata {
             defaultValue: "2",
             required: true
         )
-        input(
-            name: "levelChange",
-            type: "enum",
-            title: "Level adjust on button press (+/- %)",
-            options: ["1":"1%", "2":"2%", "5":"5%", "10":"10%", "20":"20%", "25":"25%", "33":"33%"],
-            defaultValue: "5",
-            required: true
-        )
-        input(
-            name: "minLevel",
-            type: "number",
-            title: "Minimum level",
-            description: "<small>Range 0~90</small>",
-            defaultValue: 0,
-            range: "0..90",
-            required: true
-        )
     }
 }
 
@@ -86,24 +69,23 @@ metadata {
 // Called when the device is first added
 def installed() {
     Log.info "Installing Zigbee device...."
-    Log.warn "[IMPORTANT] Make sure that you keep your IKEA device as close as you can to your Hubitat hub until the LED stops blinking. Otherwise it will successfully pair but it won't work properly!"
 }
 
 // Called when the "Save Preferences" button is clicked
 def updated() {
     Log.info "Saving preferences..."
-    Log.info "🛠️ logLevel = ${logLevel}"
-    Log.info "🛠️ levelChange = ${levelChange}%"
-    minLevel = minLevel.toDouble().trunc().toInteger()
-    device.clearSetting "minLevel"
-    device.removeSetting "minLevel"
-    device.updateSetting "minLevel", minLevel
-    Log.info "🛠️ minLevel = ${minLevel}"
 
     unschedule()
     if (logLevel == "1") runIn 1800, "logsOff"
+    Log.info "🛠️ logLevel = ${logLevel}"
+    
+    // Preferences for capability.HealthCheck
     schedule HEALTH_CHECK.schedule, "healthCheck"
 }
+
+// ===================================================================================================================
+// Capabilities helpers
+// ===================================================================================================================
 
 // Handler method for scheduled job to disable debug logging
 def logsOff() {
@@ -113,13 +95,11 @@ def logsOff() {
    device.updateSetting "logLevel", "2"
 }
 
-// Handler method for scheduled job to check health status
+// Helpers for capability.HealthCheck
 def healthCheck() {
    Log.debug '⏲️ Automatically running health check'
     def healthStatus = state?.lastRx == 0 ? "unknown" : (now() - state.lastRx < HEALTH_CHECK.thereshold * 1000 ? "online" : "offline")
-    if (device.currentValue("healthStatus") != healthStatus) {
-        Utils.sendDigitalEvent name:"healthStatus", value:healthStatus, descriptionText:"Health status changed to ${healthStatus}"
-    }
+    Utils.sendEvent name:"healthStatus", value:healthStatus, type:"physical", descriptionText:"Health status is ${healthStatus}"
 }
 
 // ===================================================================================================================
@@ -130,7 +110,7 @@ def healthCheck() {
 // Note: This method is also called when the device is initially installed
 def configure() {
     Log.info "Configuring device..."
-    Log.debug '[IMPORTANT] Click the "Configure" button immediately after pushing any button on the remote so that the Zigbee messages we send during configuration will reach the device before it goes to sleep!'
+    Log.debug '[IMPORTANT] For battery-powered devices, click the "Configure" button immediately after pushing any button on the device so that the Zigbee messages we send during configuration will reach the device before it goes to sleep!'
 
     // Advertise driver name and value
     updateDataValue "driverName", DRIVER_NAME
@@ -144,57 +124,48 @@ def configure() {
     state.lastRx = 0
     state.lastTx = 0
 
-    // capability.PushableButton
-    push 0
-    def numberOfButtons = BUTTONS.count{_ -> true}
-    sendEvent name:"numberOfButtons", value:numberOfButtons, descriptionText:"Number of buttons set to ${numberOfButtons}"
-
-    // capability.HoldableButton
-    hold 0
-
-    // capability.ReleasableButton
-    release 0
-
-    // capability.Switch
-    on()
-
-    // capability.SwitchLevel
-    setLevel 5
-
-    // capability.PowerSource
-    sendEvent name:"powerSource", value:"battery", descriptionText:"Power source set to battery"
-
-    // capability.HealthCheck
-    sendEvent name:"healthStatus", value:"unknown", descriptionText:"Health status set to unknown"
-    sendEvent name:"checkInterval", value:3600, descriptionText:"Health check interval set to 3600 seconds"
-
-    List<String> cmds = []
+    def cmds = []
 
     // Configure Zigbee reporting
-    cmds.addAll zigbee.configureReporting(0x0001, 0x0021, DataType.UINT8, 21600, 43200, 0x00) // Report battery level every 6 to 12 hours
+    cmds += zigbee.configureReporting(0x0001, 0x0021, DataType.UINT8, 21600, 43200, 0x00) // Report battery level every 6 to 12 hours
 
     // Add Zigbee binds
-    cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0005 {${device.zigbeeId}} {}" // General - Scenes cluster
-    cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {${device.zigbeeId}} {}" // General - On/Off cluster
-    cmds.add "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0008 {${device.zigbeeId}} {}" // General - Level Control cluster
+    cmds += "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0005 {${device.zigbeeId}} {}" // General - Scenes cluster
+    cmds += "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {${device.zigbeeId}} {}" // General - On/Off cluster
+    cmds += "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0008 {${device.zigbeeId}} {}" // General - Level Control cluster
 
     // Query Zigbee attributes
-    cmds.addAll zigbee.readAttribute(0x0000, 0x0001)  // ApplicationVersion
-    cmds.addAll zigbee.readAttribute(0x0000, 0x0003)  // HWVersion
-    cmds.addAll zigbee.readAttribute(0x0000, 0x0004)  // ManufacturerName
-    cmds.addAll zigbee.readAttribute(0x0000, 0x0005)  // ModelIdentifier
-    cmds.addAll zigbee.readAttribute(0x0000, 0x4000)  // SWBuildID
-    cmds.addAll zigbee.readAttribute(0x0001, 0x0021)  // BatteryPercentage
+    cmds += zigbee.readAttribute(0x0000, 0x0001)  // ApplicationVersion
+    cmds += zigbee.readAttribute(0x0000, 0x0003)  // HWVersion
+    cmds += zigbee.readAttribute(0x0000, 0x0004)  // ManufacturerName
+    cmds += zigbee.readAttribute(0x0000, 0x0005)  // ModelIdentifier
+    cmds += zigbee.readAttribute(0x0000, 0x4000)  // SWBuildID
+    
+    // Configuration for capability.Battery
+    cmds += zigbee.readAttribute(0x0001, 0x0021)  // BatteryPercentage
+    
+    // Configuration for capability.HealthCheck
+    sendEvent name:"healthStatus", value:"unknown", descriptionText:"Health status is unknown"
+    sendEvent name:"checkInterval", value:3600, unit:"second", descriptionText:"Health check interval is 3600 seconds"
+    
+    // Configuration for capability.PowerSource
+    sendEvent name:"powerSource", value:"battery", descriptionText:"Power source is battery"
+    
+    // Configuration for capability.PushableButton
+    def numberOfButtons = BUTTONS.count{_ -> true}
+    sendEvent name:"numberOfButtons", value:numberOfButtons, descriptionText:"Number of buttons is ${numberOfButtons}"
 
     // Query all active endpoints
-    cmds.add "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0005 {00 ${zigbee.swapOctets(device.deviceNetworkId)}} {0x0000}"
-
+    cmds += "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0005 {00 ${zigbee.swapOctets(device.deviceNetworkId)}} {0x0000}"
     Utils.sendZigbeeCommands cmds
 }
 
-// capability.HealthCheck
+// Implementation for capability.HealthCheck
 def ping() {
-    pingExecute()
+    Log.info "ping ..."
+    Utils.sendZigbeeCommands(zigbee.readAttribute(0x0000, 0x0000))
+    Log.debug "Ping command sent to the device; we'll wait 5 seconds for a reply ..."
+    runIn 5, "pingExecute"
 }
 
 def pingExecute() {
@@ -215,35 +186,20 @@ def pingExecute() {
     Log.info "Will me marked as offline if no message is received until ${thereshold.format("yyyy-MM-dd HH:mm:ss", location.timeZone)} (${offlineMarkAgo} from now)"
 }
 
-// capability.HoldableButton
+// Implementation for capability.HoldableButton
 def hold(buttonNumber) {
-    Utils.sendDigitalEvent name:"held", value:buttonNumber, descriptionText:"Button ${buttonNumber} was held"
+    Utils.sendEvent name:"held", value:buttonNumber, type:"digital", isStateChange:true, descriptionText:"Button ${buttonNumber} was held"
 }
 
-// capability.PushableButton
+// Implementation for capability.PushableButton
 def push(buttonNumber) {
-    Utils.sendDigitalEvent name:"pushed", value:buttonNumber, descriptionText:"Button ${buttonNumber} was pressed"
+    Utils.sendEvent name:"pushed", value:buttonNumber, type:"digital", isStateChange:true, descriptionText:"Button ${buttonNumber} was pressed"
 }
 
-// capability.ReleasableButton
+// Implementation for capability.ReleasableButton
 def release(buttonNumber) {
-    Utils.sendDigitalEvent name:"released", value:buttonNumber, descriptionText:"Button ${buttonNumber} was released"
+    Utils.sendEvent name:"released", value:buttonNumber, type:"digital", isStateChange:true, descriptionText:"Button ${buttonNumber} was released"
 }
-
-// capability.Switch
-def on() {
-    Utils.sendDigitalEvent name:"switch", value:"on", descriptionText:"Was turned on"
-}
-def off() {
-    Utils.sendDigitalEvent name:"switch", value:"off", descriptionText:"Was turned off"
-}
-
-// capability.SwitchLevel
-def setLevel(level, duration = 0) {
-    def newLevel = level < 0 ? 0 : (level > 100 ? 100 : level)
-    Utils.sendDigitalEvent name:"level", value:newLevel, unit:"%", descriptionText:"Level was set to ${newLevel}%"
-}
-
 
 // ===================================================================================================================
 // Handle incoming Zigbee messages
@@ -254,10 +210,10 @@ def parse(String description) {
     Log.debug "description=[${description}]"
     Log.debug "msg=[${msg}]"
     state.lastRx = now()
-
-    // Update health status
-    if (device.currentValue("healthStatus") != "online") {
-        Utils.sendDigitalEvent name:"healthStatus", value:"online", descriptionText:"Health status changed to online"
+    
+    // Parse for capability.HealthCheck
+    if (device.currentValue("healthStatus", true) != "online") {
+        Utils.sendEvent name:"healthStatus", value:"online", type:"digital", descriptionText:"Health status changed to online"
     }
 
     // Extract cluster and command from message
@@ -267,58 +223,58 @@ def parse(String description) {
     switch (msg) {
 
         // ---------------------------------------------------------------------------------------------------------------
-        // Handle device specific Zigbee messages
+        // Handle E1810 specific Zigbee messages
         // ---------------------------------------------------------------------------------------------------------------
 
         // Button Prev/Next was pressed
         case { contains it, [clusterInt:0x0005, commandInt:0x07] }:
             def button = msg.data[0] == "00" ? BUTTONS.NEXT : BUTTONS.PREV
-            return Utils.sendPhysicalEvent(name:"pushed", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
+            return Utils.sendEvent(name:"pushed", value:button[0], type:"physical", isStateChange:true, descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
         
         // Button Prev/Next was held
         case { contains it, [clusterInt:0x0005, commandInt:0x08] }:
             def button = msg.data[0] == "00" ? BUTTONS.NEXT : BUTTONS.PREV
-            return Utils.sendPhysicalEvent(name:"held", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was held")
+            return Utils.sendEvent(name:"held", value:button[0], type:"physical", isStateChange:true, descriptionText:"Button ${button[0]} (${button[1]}) was held")
         
         // Button Prev/Next was released
         case { contains it, [clusterInt:0x0005, commandInt:0x09] }:
             def button = device.currentValue("held") == 4 ? BUTTONS.NEXT : BUTTONS.PREV
-            return Utils.sendPhysicalEvent(name:"released", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was released")
-        
-        // Set switch state
-        case { contains it, [clusterInt:0x0006, commandInt:0x00] }:
-        case { contains it, [clusterInt:0x0006, commandInt:0x01] }:
-            def newState = msg.commandInt == 0x00 ? "off" : "on"
-            return Utils.sendPhysicalEvent(name:"switch", value:newState, descriptionText:"Was turned ${newState}")
+            return Utils.sendEvent(name:"released", value:button[0], type:"physical", isStateChange:true, descriptionText:"Button ${button[0]} (${button[1]}) was released")
         
         // Power button was pushed
         case { contains it, [clusterInt:0x0006, commandInt:0x02] }:
             def button = BUTTONS.POWER
-            Utils.sendPhysicalEvent(name:"pushed", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
-        
-            // Also act as a switch
-            return Utils.toggleSwitch()
+            return Utils.sendEvent(name:"pushed", value:button[0], type:"physical", isStateChange:true, descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
         
         // Plus/Minus button was pushed
         case { contains it, [clusterInt:0x0008, commandInt:0x02] }:
         case { contains it, [clusterInt:0x0008, commandInt:0x06] }:
             def button = msg.commandInt == 0x02 ? BUTTONS.MINUS : BUTTONS.PLUS
-            Utils.sendPhysicalEvent(name:"pushed", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
-        
-            // Also act as a dimmer
-            return button == BUTTONS.PLUS ? Utils.levelUp() : Utils.levelDown()
+            return Utils.sendEvent(name:"pushed", value:button[0], type:"physical", isStateChange:true, descriptionText:"Button ${button[0]} (${button[1]}) was pushed")
         
         // Plus/Minus button was held
         case { contains it, [clusterInt:0x0008, commandInt:0x01] }:
         case { contains it, [clusterInt:0x0008, commandInt:0x05] }:
             def button = msg.commandInt == 0x01 ? BUTTONS.MINUS : BUTTONS.PLUS
-            return Utils.sendPhysicalEvent(name:"held", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was held")
+            return Utils.sendEvent(name:"held", value:button[0], type:"physical", isStateChange:true, descriptionText:"Button ${button[0]} (${button[1]}) was held")
         
         // Plus/Minus button was released
         case { contains it, [clusterInt:0x0008, commandInt:0x03] }:
         case { contains it, [clusterInt:0x0008, commandInt:0x07] }:
             def button = msg.commandInt == 0x03 ? BUTTONS.MINUS : BUTTONS.PLUS
-            return Utils.sendPhysicalEvent(name:"released", value:button[0], descriptionText:"Button ${button[0]} (${button[1]}) was released")
+            return Utils.sendEvent(name:"released", value:button[0], type:"physical", isStateChange:true, descriptionText:"Button ${button[0]} (${button[1]}) was released")
+
+        // ---------------------------------------------------------------------------------------------------------------
+        // Handle capabilities Zigbee messages
+        // ---------------------------------------------------------------------------------------------------------------
+        
+        // Events for capability.HealthCheck
+        case { contains it, [clusterInt:0x0000, attrInt:0x0000] }:
+            return Log.info("... pong")
+
+        // ---------------------------------------------------------------------------------------------------------------
+        // Handle standard Zigbee messages
+        // ---------------------------------------------------------------------------------------------------------------
 
         // General::Power (0x0001) / Battery report (0x0021)
         case { contains it, [clusterInt:0x0001, attrInt:0x0021] }:
@@ -331,11 +287,7 @@ def parse(String description) {
             }
         
             percentage =  Math.round(percentage / 2)
-            return Utils.sendPhysicalEvent(name:"battery", value:percentage, unit:"%", descriptionText:"Battery is ${percentage}% full")
-
-        // ---------------------------------------------------------------------------------------------------------------
-        // Handle common Zigbee messages
-        // ---------------------------------------------------------------------------------------------------------------
+            return Utils.sendEvent(name:"battery", value:percentage, unit:"%", type:"physical", isStateChange:true, descriptionText:"Battery is ${percentage}% full")
 
         // General::Basic cluster (0x0000) - Read Attribute Response (0x01)
         case { contains it, [clusterInt:0x0000, commandInt:0x01] }:
@@ -357,10 +309,10 @@ def parse(String description) {
             if (msg.data[1] != "00") {
                 return Utils.failedZigbeeMessage("Simple Descriptor Response", msg)
             }
-
+        
             def endpointId = msg.data[5]
             updateDataValue("profileId", msg.data[6..7].reverse().join())
-
+        
             Integer count = Integer.parseInt(msg.data[11], 16)
             Integer position = 12
             Integer positionCounter = null
@@ -381,7 +333,7 @@ def parse(String description) {
                     outClusters.add msg.data[positionCounter..positionCounter+1].reverse().join()
                 }
             }
-
+        
             Utils.zigbeeDataValue "inClusters (${endpointId})", inClusters.join(",")
             Utils.zigbeeDataValue "outClusters (${endpointId})", outClusters.join(",")
             return Utils.processedZigbeeMessage("Simple Descriptor Response", "endpointId=${endpointId}, inClusters=${inClusters}, outClusters=${outClusters}")
@@ -392,10 +344,10 @@ def parse(String description) {
             if (msg.data[1] != "00") {
                 return Utils.failedZigbeeMessage("Active Endpoints Response", msg)
             }
-
-            List<String> cmds = []
+        
+            def cmds = []
             def endpointIds = []
-
+        
             def count = Integer.parseInt(msg.data[4], 16)
             if (count > 0) {
                 (1..count).each() { i ->
@@ -407,7 +359,7 @@ def parse(String description) {
                 }
                 Utils.sendZigbeeCommands cmds
             }
-
+        
             // Add "endpointIds" only if device exposes more then one
             if (count > 1) {
                 Utils.zigbeeDataValue "endpointIds", endpointIds.join(",")
@@ -420,7 +372,8 @@ def parse(String description) {
             def addr = msg.data[1..2].reverse().join()
             def zigbeeId = msg.data[3..10].reverse().join()
             def capabilities = Integer.toBinaryString(Integer.parseInt(msg.data[11], 16))
-            return Utils.processedZigbeeMessage("Device Announce Response", "addr=${addr}, zigbeeId=${zigbeeId}, capabilities=${capabilities}")
+            Utils.processedZigbeeMessage("Device Announce Response", "addr=${addr}, zigbeeId=${zigbeeId}, capabilities=${capabilities}")
+            return
 
         // Bind_rsp := { 08:Status }
         // Success example: [26, 00] -> status = SUCCESS
@@ -473,58 +426,27 @@ def parse(String description) {
         state.lastTx = now()
         sendHubCommand new hubitat.device.HubMultiAction(cmds, hubitat.device.Protocol.ZIGBEE)
     },
-    
-    sendPhysicalEvent: { Map event ->
-        Log.info "${event.descriptionText} [physical]"
-        sendEvent event + [isStateChange:true, type:"physical"]
+
+    sendEvent: { Map event ->
+        Log.info "${event.descriptionText} [${event.type}]"
+        sendEvent event
     },
-    
-    sendDigitalEvent: { Map event ->
-        Log.info "${event.descriptionText} [digital]"
-        sendEvent event + [isStateChange:true, type:"digital"]
-    },
-    
+
     zigbeeDataValue: { String key, String value ->
         Log.debug "Update driver data value: ${key}=${value}"
         updateDataValue key, value
     },
-    
+
     processedZigbeeMessage: { String type, String details ->
         Log.debug "▶ Processed Zigbee message: type=${type}, status=SUCCESS, ${details}"
     },
-    
+
     ignoredZigbeeMessage: { String type, Map msg ->
         Log.debug "▶ Ignored Zigbee message: type=${type}, status=SUCCESS, data=${msg.data}"
     },
-    
+
     failedZigbeeMessage: { String type, Map msg ->
         Log.warn "▶ Received Zigbee message: type=${type}, status=${ZDP_STATUS[msg.data[1]]}, data=${msg.data}"
-    },
-    
-    updateSwitch: { String newState ->
-        def curState = device.currentValue("switch", true) == "off" ? "off" : "on"
-        if (curState != newState) Utils.sendPhysicalEvent(name:"switch", value:newState, descriptionText:"Was turned ${newState}")
-    },
-    
-    toggleSwitch: {
-        def newState = device.currentValue("switch", true) != "on" ? "on" : "off"
-        Utils.sendPhysicalEvent(name:"switch", value:newState, descriptionText:"Was turned ${newState}")
-    },
-    
-    levelUp: {
-        def curLevel = device.currentValue("level", true)
-        def delta = Integer.parseInt(levelChange)
-        def newLevel = curLevel + delta
-        newLevel = newLevel < minLevel ? minLevel : (newLevel > 100 ? 100 : newLevel)
-        if (curLevel != newLevel) Utils.sendPhysicalEvent(name:"level", value:newLevel, descriptionText:"Level was set to ${newLevel}%")
-    },
-    
-    levelDown: {
-        def curLevel = device.currentValue("level", true)
-        def delta = Integer.parseInt(levelChange)
-        def newLevel = curLevel - delta
-        newLevel = newLevel < minLevel ? minLevel : (newLevel > 100 ? 100 : newLevel)
-        if (curLevel != newLevel) Utils.sendPhysicalEvent(name:"level", value:newLevel, descriptionText:"Level was set to ${newLevel}%")
     }
 ]
 
