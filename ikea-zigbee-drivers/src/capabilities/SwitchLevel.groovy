@@ -1,9 +1,9 @@
 {{!--------------------------------------------------------------------------}}
-{{# definition }}
+{{# @definition }}
 capability "SwitchLevel"
-{{/ definition }}
+{{/ @definition }}
 {{!--------------------------------------------------------------------------}}
-{{# inputs }}
+{{# @inputs }}
 
 // Inputs for capability.SwitchLevel
 input(
@@ -23,9 +23,9 @@ input(
     range: "0..90",
     required: true
 )
-{{/ inputs }}
+{{/ @inputs }}
 {{!--------------------------------------------------------------------------}}
-{{# updated }}
+{{# @updated }}
 
 // Preferences for capability.SwitchLevel
 Log.info "🛠️ levelChange = ${levelChange}%"
@@ -34,14 +34,14 @@ device.clearSetting "minLevel"
 device.removeSetting "minLevel"
 device.updateSetting "minLevel", minLevel
 Log.info "🛠️ minLevel = ${minLevel}"
-{{/ updated }}
+{{/ @updated }}
 {{!--------------------------------------------------------------------------}}
-{{# implementation }}
+{{# @implementation }}
 
 // Implementation for capability.SwitchLevel
 def setLevel(level, duration = 0) {
     def newLevel = level < 0 ? 0 : (level > 100 ? 100 : level)
     Utils.sendEvent name:"level", value:newLevel, unit:"%", type:"digital", descriptionText:"Level was set to ${newLevel}%"
 }
-{{/ implementation }}
+{{/ @implementation }}
 {{!--------------------------------------------------------------------------}}

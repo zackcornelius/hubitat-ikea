@@ -1,9 +1,9 @@
 {{!--------------------------------------------------------------------------}}
-{{# definition }}
+{{# @definition }}
 capability "PowerSource"
-{{/ definition }}
+{{/ @definition }}
 {{!--------------------------------------------------------------------------}}
-{{# configuration }}
+{{# @configuration }}
 
 // capability.PowerSource
 {{# battery }}
@@ -12,11 +12,11 @@ sendEvent name:"powerSource", value:"battery", descriptionText:"Power source is 
 {{# mains }}
 sendEvent name:"powerSource", value:"mains", descriptionText:"Power source is mains"
 {{/ mains }}
-{{/ configuration }}
+{{/ @configuration }}
 {{!--------------------------------------------------------------------------}}
-{{# configure }}
+{{# @configure }}
 
 // Configuration for capability.PowerSource
-sendEvent name:"powerSource", value:"{{ type }}", descriptionText:"Power source is {{ type }}"
-{{/ configure }}
+sendEvent name:"powerSource", value:"{{ params.type }}", descriptionText:"Power source is {{ params.type }}"
+{{/ @configure }}
 {{!--------------------------------------------------------------------------}}

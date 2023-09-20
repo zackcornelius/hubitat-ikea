@@ -6,18 +6,21 @@ device:
   capabilities:
     - file: src/capabilities/Battery.groovy
     - file: src/capabilities/HealthCheck.groovy
-      schedule: 0 0 0/1 ? * * *
-      checkInterval: 3600  # every hour
-      thereshold: 43200    # report device as offline if no message was received in the last 12 hours (device should report battery level every 6 to 12 hours)
+      params:
+        schedule: 0 0 0/1 ? * * *
+        checkInterval: 3600  # every hour
+        thereshold: 43200    # report device as offline if no message was received in the last 12 hours (device should report battery level every 6 to 12 hours)
     - file: src/capabilities/HoldableButton.groovy
     - file: src/capabilities/PowerSource.groovy
-      type: battery
+      params:
+        type: battery
     - file: src/capabilities/PushableButton.groovy
-      buttons:
-      - { id: 'PLUS',  name: '🔆',   number: 1 }
-      - { id: 'MINUS', name: '🔅',   number: 2 }
-      - { id: 'NEXT',  name: 'Next',  number: 3 }
-      - { id: 'PREV',  name: 'Prev',  number: 4 }
+      params:
+        buttons:
+        - { id: 'PLUS',  name: '🔆',   number: 1 }
+        - { id: 'MINUS', name: '🔅',   number: 2 }
+        - { id: 'NEXT',  name: 'Next',  number: 3 }
+        - { id: 'PREV',  name: 'Prev',  number: 4 }
     - file: src/capabilities/ReleasableButton.groovy
 
 zigbee:

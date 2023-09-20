@@ -1,30 +1,30 @@
 {{!--------------------------------------------------------------------------}}
-{{# definition }}
+{{# @definition }}
 capability "HealthCheck"
-{{/ definition }}
+{{/ @definition }}
 {{!--------------------------------------------------------------------------}}
-{{# fields }}
+{{# @fields }}
 
 // Fields for capability.HealthCheck
 @Field def HEALTH_CHECK = [
-    "schedule": "{{ schedule }}", // Health will be checked using this cron schedule
-    "thereshold": {{ thereshold }} // When checking, mark the device as offline if no Zigbee message was received in the last {{ thereshold }} seconds
+    "schedule": "{{ params.schedule }}", // Health will be checked using this cron schedule
+    "thereshold": {{ params.thereshold }} // When checking, mark the device as offline if no Zigbee message was received in the last {{ params.thereshold }} seconds
 ]
-{{/ fields }}
+{{/ @fields }}
 {{!--------------------------------------------------------------------------}}
-{{# attributes }}
+{{# @attributes }}
 
 // Attributes for capability.HealthCheck
 attribute "healthStatus", "ENUM", ["offline", "online", "unknown"]
-{{/ attributes }}
+{{/ @attributes }}
 {{!--------------------------------------------------------------------------}}
-{{# updated }}
+{{# @updated }}
 
 // Preferences for capability.HealthCheck
 schedule HEALTH_CHECK.schedule, "healthCheck"
-{{/ updated }}
+{{/ @updated }}
 {{!--------------------------------------------------------------------------}}
-{{# helpers }}
+{{# @helpers }}
 
 // Helpers for capability.HealthCheck
 def healthCheck() {
@@ -32,16 +32,16 @@ def healthCheck() {
     def healthStatus = state?.lastRx == 0 ? "unknown" : (now() - state.lastRx < HEALTH_CHECK.thereshold * 1000 ? "online" : "offline")
     Utils.sendEvent name:"healthStatus", value:healthStatus, type:"physical", descriptionText:"Health status is ${healthStatus}"
 }
-{{/ helpers }}
+{{/ @helpers }}
 {{!--------------------------------------------------------------------------}}
-{{# configure }}
+{{# @configure }}
 
 // Configuration for capability.HealthCheck
 sendEvent name:"healthStatus", value:"unknown", descriptionText:"Health status is unknown"
-sendEvent name:"checkInterval", value:{{ checkInterval }}, unit:"second", descriptionText:"Health check interval is {{ checkInterval }} seconds"
-{{/ configure }}
+sendEvent name:"checkInterval", value:{{ params.checkInterval }}, unit:"second", descriptionText:"Health check interval is {{ params.checkInterval }} seconds"
+{{/ @configure }}
 {{!--------------------------------------------------------------------------}}
-{{# implementation }}
+{{# @implementation }}
 
 // Implementation for capability.HealthCheck
 def ping() {
@@ -68,20 +68,20 @@ def pingExecute() {
     def offlineMarkAgo = TimeCategory.minus(thereshold, now).toString().replace(".000 seconds", " seconds")
     Log.info "Will me marked as offline if no message is received until ${thereshold.format("yyyy-MM-dd HH:mm:ss", location.timeZone)} (${offlineMarkAgo} from now)"
 }
-{{/ implementation }}
+{{/ @implementation }}
 {{!--------------------------------------------------------------------------}}
-{{# parse }}
+{{# @parse }}
 
 // Parse for capability.HealthCheck
 if (device.currentValue("healthStatus", true) != "online") {
     Utils.sendEvent name:"healthStatus", value:"online", type:"digital", descriptionText:"Health status changed to online"
 }
-{{/ parse }}
+{{/ @parse }}
 {{!--------------------------------------------------------------------------}}
-{{# events }}
+{{# @events }}
 
 // Events for capability.HealthCheck
 case { contains it, [clusterInt:0x0000, attrInt:0x0000] }:
     return Log.info("... pong")
-{{/ events }}
+{{/ @events }}
 {{!--------------------------------------------------------------------------}}

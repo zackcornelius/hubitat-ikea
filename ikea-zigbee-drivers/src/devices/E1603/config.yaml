@@ -5,18 +5,22 @@ device:
 
   capabilities:
     - file: src/capabilities/HealthCheck.groovy
-      schedule: 0 0 0/1 ? * * *
-      checkInterval: 3600  # every hour
-      thereshold: 3600     # report device as offline if no message was received in the last 60 minutes (device should report On/Off status every 5 to 10 minutes)
+      params:
+        schedule: 0 0 0/1 ? * * *
+        checkInterval: 3600  # every hour
+        thereshold: 3600     # report device as offline if no message was received in the last 60 minutes (device should report On/Off status every 5 to 10 minutes)
     - file: src/capabilities/PowerSource.groovy
-      type: mains
+      params:
+        type: mains
     - file: src/capabilities/Refresh.groovy
-      readAttributes:
-      - { cluster: '0x0006', attr: '0x0000', description: 'OnOff := { 0x00:Off, 0x01:On }' }
-      - { cluster: '0x0006', attr: '0x4003', description: 'StartupBehavior := { 0x00:TurnPowerOff, 0x01:TurnPowerOn, 0xFF:RestorePreviousState }' }
+      params:
+        readAttributes:
+        - { cluster: '0x0006', attr: '0x0000', description: 'OnOff := { 0x00:Off, 0x01:On }' }
+        - { cluster: '0x0006', attr: '0x4003', description: 'StartupBehavior := { 0x00:TurnPowerOff, 0x01:TurnPowerOn, 0xFF:RestorePreviousState }' }
     - file: src/capabilities/Switch.groovy
-      startupBehavior: true
-      onWithTimedOff: true
+      params:
+        startupBehavior: true
+        onWithTimedOff: true
     - file: src/capabilities/ZigbeeRouter.groovy
 
 zigbee:

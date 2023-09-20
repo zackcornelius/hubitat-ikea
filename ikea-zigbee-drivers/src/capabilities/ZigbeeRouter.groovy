@@ -1,22 +1,22 @@
 {{!--------------------------------------------------------------------------}}
-{{# definition }}
+{{# @definition }}
 capability "HealthCheck"
-{{/ definition }}
+{{/ @definition }}
 {{!--------------------------------------------------------------------------}}
-{{# attributes }}
+{{# @attributes }}
 
 // Attributes for capability.ZigbeeRouter
 attribute "neighbors", "STRING"
 attribute "routes", "STRING"
-{{/ attributes }}
+{{/ @attributes }}
 {{!--------------------------------------------------------------------------}}
-{{# commands }}
+{{# @commands }}
 
 // Commands for capability.ZigbeeRouter
 command "requestRoutingData"
-{{/ commands }}
+{{/ @commands }}
 {{!--------------------------------------------------------------------------}}
-{{# implementation }}
+{{# @implementation }}
 
 // Implementation for capability.ZigbeeRouter
 def requestRoutingData() {
@@ -26,14 +26,14 @@ def requestRoutingData() {
         "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0032 {00} {0x00}"
     ])
 }
-{{/ implementation }}
+{{/ @implementation }}
 {{!--------------------------------------------------------------------------}}
-{{# events }}
+{{# @events }}
 
 // Events for capability.ZigbeeRouter
 
 {{> src/events/mgmt-lqi-response.groovy }}
 
 {{> src/events/mgmt-rtg-response.groovy }}
-{{/ events }}
+{{/ @events }}
 {{!--------------------------------------------------------------------------}}

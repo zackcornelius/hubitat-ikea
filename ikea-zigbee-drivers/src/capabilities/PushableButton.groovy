@@ -1,30 +1,30 @@
 {{!--------------------------------------------------------------------------}}
-{{# definition }}
+{{# @definition }}
 capability "PushableButton"
-{{/ definition }}
+{{/ @definition }}
 {{!--------------------------------------------------------------------------}}
-{{# fields }}
+{{# @fields }}
 
 // Fields for capability.PushableButton
 @Field def BUTTONS = [
-    {{# buttons }}
+    {{# params.buttons }}
     "{{ id }}": ["{{ number }}", "{{ name }}"],
-    {{/ buttons }}
+    {{/ params.buttons }}
 ]
-{{/ fields }}
+{{/ @fields }}
 {{!--------------------------------------------------------------------------}}
-{{# configure }}
+{{# @configure }}
 
 // Configuration for capability.PushableButton
 def numberOfButtons = BUTTONS.count{_ -> true}
 sendEvent name:"numberOfButtons", value:numberOfButtons, descriptionText:"Number of buttons is ${numberOfButtons}"
-{{/ configure }}
+{{/ @configure }}
 {{!--------------------------------------------------------------------------}}
-{{# implementation }}
+{{# @implementation }}
 
 // Implementation for capability.PushableButton
 def push(buttonNumber) {
     Utils.sendEvent name:"pushed", value:buttonNumber, type:"digital", isStateChange:true, descriptionText:"Button ${buttonNumber} was pressed"
 }
-{{/ implementation }}
+{{/ @implementation }}
 {{!--------------------------------------------------------------------------}}

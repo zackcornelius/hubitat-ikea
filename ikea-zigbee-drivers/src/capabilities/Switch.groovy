@@ -1,10 +1,10 @@
 {{!--------------------------------------------------------------------------}}
-{{# definition }}
+{{# @definition }}
 capability "Switch"
-{{/ definition }}
+{{/ @definition }}
 {{!--------------------------------------------------------------------------}}
-{{# inputs }}
-{{# startupBehavior}}
+{{# @inputs }}
+{{# params.startupBehavior }}
 
 // Inputs for capability.Switch
 input(
@@ -15,44 +15,44 @@ input(
     defaultValue: "PREV",
     required: true
 )
-{{/ startupBehavior}}
-{{/ inputs }}
+{{/ params.startupBehavior }}
+{{/ @inputs }}
 {{!--------------------------------------------------------------------------}}
-{{# commands }}
+{{# @commands }}
 
 // Commands for capability.Switch
 command "toggle"
-{{# onWithTimedOff }}
+{{#  params.onWithTimedOff }}
 command "onWithTimedOff", [[name:"On time*", type:"NUMBER", description:"After how many seconds power will be turned Off [1..6500]"]]
-{{/ onWithTimedOff }}
-{{/ commands }}
+{{/  params.onWithTimedOff }}
+{{/ @commands }}
 {{!--------------------------------------------------------------------------}}
-{{# implementation }}
+{{# @implementation }}
 
 // Implementation for capability.Switch
 def on() {
     Log.debug "Sending On command"
     Utils.sendZigbeeCommands(zigbee.on())
-    {{# onWithTimedOff }}
+    {{#  params.onWithTimedOff }}
     unschedule "onWithTimedOff_Completed"
-    {{/ onWithTimedOff }}
+    {{/  params.onWithTimedOff }}
 }
 def off() {
     Log.debug "Sending Off command"
     Utils.sendZigbeeCommands(zigbee.off())
-    {{# onWithTimedOff }}
+    {{#  params.onWithTimedOff }}
     unschedule "onWithTimedOff_Completed"
-    {{/ onWithTimedOff }}
+    {{/  params.onWithTimedOff }}
 }
 
 def toggle() {
     Log.debug "Sending Toggle command"
     Utils.sendZigbeeCommands(zigbee.command(0x0006, 0x02))
-    {{# onWithTimedOff }}
+    {{#  params.onWithTimedOff }}
     unschedule "onWithTimedOff_Completed"
-    {{/ onWithTimedOff }}
+    {{/  params.onWithTimedOff }}
 }
-{{# onWithTimedOff }}
+{{#  params.onWithTimedOff }}
 
 def onWithTimedOff(onTime = 0) {
     if (onTime <= 0 || onTime > 6500) return
@@ -65,20 +65,20 @@ def onWithTimedOff(onTime = 0) {
 def onWithTimedOff_Completed() {
     Utils.sendZigbeeCommands(zigbee.readAttribute(0x0006, 0x0000))
 }
-{{/ onWithTimedOff }}
-{{/ implementation }}
+{{/  params.onWithTimedOff }}
+{{/ @implementation }}
 {{!--------------------------------------------------------------------------}}
-{{# updated }}
-{{# startupBehavior}}
+{{# @updated }}
+{{# params.startupBehavior }}
 
 // Preferences for capability.Switch
 Log.info "🛠️ startupBehavior = ${startupBehavior}"
 Utils.sendZigbeeCommands zigbee.writeAttribute(0x0006, 0x4003, 0x30, startupBehavior == "TURN_POWER_OFF" ? 0x00 : (startupBehavior == "TURN_POWER_ON" ? 0x01 : 0xFF))
-{{/ startupBehavior}}
-{{/ updated }}
+{{/ params.startupBehavior }}
+{{/ @updated }}
 {{!--------------------------------------------------------------------------}}
-{{# events }}
-{{# startupBehavior}}
+{{# @events }}
+{{# params.startupBehavior }}
 
 // Events for capability.Switch
 case { contains it, [clusterInt:0x0006, attrInt: 0x4003] }:
@@ -94,6 +94,6 @@ case { contains it, [clusterInt:0x0006, attrInt: 0x4003] }:
     device.removeSetting "startupBehavior"
     device.updateSetting "startupBehavior", newValue
     return Log.debug("Reported StartupBehavior as ${newValue}")
-{{/ startupBehavior}}
-{{/ events }}
+{{/ params.startupBehavior }}
+{{/ @events }}
 {{!--------------------------------------------------------------------------}}
