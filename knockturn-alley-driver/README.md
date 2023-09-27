@@ -22,7 +22,7 @@ The following functionalities are currently implemented:
 <img src="img/Legilimens.gif" height="200px"/>
 
 The `Legilimens` spell will automatically collect information on all Zigbee attributes that the device exposes. When cast, it will:
-1. Retrieve Zigbee endpoints (e.g.: 0x01 = Default endpoint)
+1. Retrieve all Zigbee endpoints (e.g.: 0x01 = Default endpoint)
 2. For each endpoint, retrieve in and out clusters (e.g.: 0x0006 = On/Off Cluster)
 3. For each in cluster, discover attributes (e.g.: 0x0400 = SWBuildID - for cluster 0x0000)
 4. For each attribute, ask the device to send its current value
@@ -32,14 +32,14 @@ Before casting the spell, have the Logs section open in order to take a peak at 
 
 > **Important**: If the device is battery-powered, press any button to wake it before casting the `Legilimens` spell; then, keep on pressing buttons every second or so in order to prevent the device from going back to sleep.
 
-When the discovery process is complete, refresh the device details page to see what data was gathered. This data will be hard to follow in its raw format, so you should continue with casting the next spell.
+When the discovery process is complete, refresh the device details page to see what data was gathered. This data will be hard to follow in its raw form, so you should continue with casting the next spell.
 
 ### A02 - Scourgify
 <img src="img/Scourgify.webp" height="200px"/>
 
 
 The `Scourgify` spell will cleanup the data mess we got after casting the `Legilimens` spell. When cast, it will:
-1. Read data that was gathered during the `Legilimens` spell. You need to first cast the `Legilimens` otherwise nothing will happen.
+1. Read data gathered using the `Legilimens` spell. You need to first cast the `Legilimens`, otherwise nothing will happen.
 2. Use the raw data to create a friendly attributes report.
 
 After casting the spell, refresh the device details page to see the attributes report. Have fun!
