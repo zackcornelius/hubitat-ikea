@@ -16,7 +16,7 @@
             "name": "Knockturn Alley",
             "description": "Skulking around Knockturn Alley? Dodgy place. Don't want no one to see you there.",
             "namespace": "dandanache",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/knockturn-alley-driver_1.0.0/knockturn-alley-driver/knockturn-alley.groovy",
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/master/knockturn-alley-driver/knockturn-alley.groovy",
             "required": true
         }
     ]
