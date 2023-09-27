@@ -1,6 +1,6 @@
 # Knockturn Alley
 
-Simple toolkit driver to let developers peer deep into the guts of Zigbee devices.
+Simple toolkit driver to help developers peer deep into the guts of Zigbee devices.
 
 **Note:** This driver is useless to non-developers as it cannot actually control any smart device.
 
