@@ -47,16 +47,16 @@ After casting the spell, refresh the device details page to see the attributes r
 ### B01 - Revelio
 <img src="img/Revelio.webp" height="200px"/>
 
-The `Revelio` spell helps you reveal information for a specific Zigbee attribute. When cast, it can:
-1. Read the current value of the attribute identified by the endpoint/cluster/attribute coordinates.
-2. Read the reporting configuration for the attribute identified by the endpoint/cluster/attribute coordinates.
+The `Revelio` spell helps you reveal information for the Zigbee attribute identified by the endpoint / cluster / attribute coordinates. When cast, it can:
+1. Read the current value of the specified attribute.
+2. Read the reporting configuration for the specified attribute.
 
 Before casting the spell, have the Logs section open in order to see the device response.
 
 ### B02 - Obliviate
 <img src="img/Obliviate.gif" height="200px"/>
 
-The `Obliviate` spell is used when you want the driver to forget specific information present in the device details page. When cast, it can remove:
+The `Obliviate` spell is used to forget specific information present in the device details page. When cast, it can remove:
 1. Our state variables (ka_*) - Remove only information that was added by this driver, so that you can go back to using the original driver.
 2. All state variables - Remove all stored state data. You may use this if you want to switch drivers and start with a clean state.
 3. Device data - Remove all information present in the `Device Details -> Data` section. Useful when switching drivers.
