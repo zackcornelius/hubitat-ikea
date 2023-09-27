@@ -6,6 +6,9 @@ Simple toolkit to peer deep into the guts of Zigbee devices.
 |--------|-------------------|
 | ![Spells](img/Screenshot_1.png) | ![Attributes Report](img/Screenshot_2.png) |
 
+> Skulking around Knockturn Alley? Dodgy place. Don't want no one to see you there. \
+> -- Hagrid
+
 ## Spells
 The following functionalities are currently implemented:
 - [A01 - Legilimens](#a01---legilimens)
