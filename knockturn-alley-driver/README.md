@@ -2,7 +2,7 @@
 
 Simple toolkit driver to let developers peer deep into the guts of Zigbee devices.
 
-**Note:** this driver is useless to end-users as it cannot control any smart device.
+**Note:** This driver is useless to non-developers as it cannot actually control any smart device.
 
 | Spells | Attributes Report |
 |--------|-------------------|
@@ -21,7 +21,7 @@ The following functionalities are currently implemented:
 ### A01 - Legilimens
 <img src="img/Legilimens.gif" height="200px"/>
 
-The `Legilimens` spell will try to automatically discover all available attributes for a Zigbee device. When cast, it will:
+The `Legilimens` spell will automatically collect information on all Zigbee attributes that the device exposes. When cast, it will:
 1. Retrieve Zigbee endpoints (e.g.: 0x01 = Default endpoint)
 2. For each endpoint, retrieve in and out clusters (e.g.: 0x0006 = On/Off Cluster)
 3. For each in cluster, discover attributes (e.g.: 0x0400 = SWBuildID - for cluster 0x0000)
@@ -39,7 +39,7 @@ When the discovery process is complete, refresh the device details page to see w
 
 
 The `Scourgify` spell will cleanup the data mess we got after casting the `Legilimens` spell. When cast, it will:
-1. Read data that was gathered during the `Legilimens` spell. You need first cast the `Legilimens` otherwise nothing will happen.
+1. Read data that was gathered during the `Legilimens` spell. You need to first cast the `Legilimens` otherwise nothing will happen.
 2. Use the raw data to create a friendly attributes report.
 
 After casting the spell, refresh the device details page to see the attributes report. Have fun!
@@ -56,7 +56,7 @@ Before casting the spell, have the Logs section open in order to see the device 
 ### B02 - Obliviate
 <img src="img/Obliviate.gif" height="200px"/>
 
-The `Obliviate` spell is used when you want the driver to forget specific information present in the device details page. When cast, it can:
+The `Obliviate` spell is used when you want the driver to forget specific information present in the device details page. When cast, it can remove:
 1. Our state variables (ka_*) - Remove only information that was added by this driver, so that you can go back to using the original driver.
 2. All state variables - Remove all stored state data. You may use this if you want to switch drivers and start with a clean state.
 3. Device data - Remove all information present in the `Device Details -> Data` section. Useful when switching drivers.
