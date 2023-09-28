@@ -1,10 +1,23 @@
+/**
+ * Knockturn Alley - Simple toolkit driver to help developers peer deep into the guts of Zigbee devices.
+ *
+ * @version 1.1.0
+ * @see https://dan-danache.github.io/hubitat/knockturn-alley-driver/
+ * @see https://dan-danache.github.io/hubitat/knockturn-alley-driver/CHANGELOG
+ * @see https://community.hubitat.com/t/dev-knockturn-alley/125167
+ */
 import groovy.time.TimeCategory
 import groovy.transform.Field
 
 metadata {
-    definition(name:"Knockturn Alley", namespace:"dandanache", singleThreaded: true, author:"Dan Danache", importUrl:"https://raw.githubusercontent.com/dan-danache/hubitat/master/knockturn-alley-driver/knockturn-alley.groovy") {
+    definition(name:"Knockturn Alley", namespace:"dandanache", singleThreaded:true, author:"Dan Danache", importUrl:"https://raw.githubusercontent.com/dan-danache/hubitat/master/knockturn-alley-driver/knockturn-alley.groovy") {
         command "a01Legilimens"
-        command "a02Scourgify"
+        command "a02Scourgify", [
+            [name: "Raw data", type: "ENUM", constraints: [
+                "1 - Keep raw data",
+                "2 - Remove raw data",
+            ]],
+        ]
         command "b01Revelio", [
             [name: "What to reveal", type: "ENUM", constraints: [
                 "1 - Get attribute current value",
@@ -23,6 +36,13 @@ metadata {
                 "5 - Everything",
             ]],
         ]
+        command "c01Imperio", [
+            [name: "Endpoint*", description: "Endpoint ID - hex format (e.g.: 0x01)", type: "STRING"],
+            [name: "Cluster*", description: "Cluster ID - hex format (e.g.: 0x0001)", type: "STRING"],
+            [name: "Attribute*", description: "Attribute ID - hex format (e.g.: 0x0001)", type: "STRING"],
+            [name: "Data type*", description: "Attribute data type", type: "ENUM", constraints: ZCL_DATA_TYPES.keySet().findAll { ZCL_DATA_TYPES[it].bytes != "0" && ZCL_DATA_TYPES[it].bytes != "var" }.sort().collect { "${Utils.hex it, 2}: ${ZCL_DATA_TYPES[it].name} (${ZCL_DATA_TYPES[it].bytes} bytes)" }],
+            [name: "Value*", description: "Attribute value - hex format (e.g.: 0001 - for uint16)", type: "STRING"],
+        ]
     }
 }
 
@@ -38,8 +58,8 @@ def a01Legilimens() {
     Utils.sendZigbeeCommands([cmd])
 }
 
-def a02Scourgify() {
-    Log.info "🪄 Scourgify"
+def a02Scourgify(operation) {
+    Log.info "🪄 Scourgify: ${operation}"
     if (!state.ka_endpoints) {
         return Log.warn("Raw data is missing. Maybe you should run Legilimens first if you didn't do that already ...")
     }
@@ -82,6 +102,11 @@ def a02Scourgify() {
     table += "</tbody></table></div>"
     table += "<script>window.addEventListener('load', () => { \$('#ka_report').dataTable() })</script>"
 
+    // Cleanup raw data?
+    if (operation.startsWith("2 - ")) {
+       getState()?.findAll { it.key.startsWith("ka_") }?.collect { it.key }.each { state.remove it }
+    }
+    
     // Show report table
     state.ka_report = table
 }
@@ -131,6 +156,28 @@ def b02Obliviate(operation) {
     }
 }
 
+def c01Imperio(endpointHex, clusterHex, attributeHex, typeStr, valueHex) {
+    Log.info "🪄 Imperio: endpoint=${endpointHex}, cluster=${clusterHex}, attribute=${attributeHex}, type=${typeStr}, value=${valueHex}"
+
+    if (!endpointHex.startsWith("0x") || endpointHex.size() != 4) return Log.error("Invalid value for Endpoint ID: ${endpointHex}")
+    if (!clusterHex.startsWith("0x") || clusterHex.size() != 6) return Log.error("Invalid value for Cluster ID: ${clusterHex}")
+    if (!attributeHex.startsWith("0x") || attributeHex.size() != 6) return Log.error("Invalid value for Attribute ID: ${clusterHex}")
+    Integer endpoint = Integer.parseInt endpointHex.substring(2), 16
+    Integer cluster = Integer.parseInt clusterHex.substring(2), 16
+    Integer attribute = Integer.parseInt attributeHex.substring(2), 16
+    Integer type = Integer.parseInt typeStr.substring(2, 4), 16
+    String value = valueHex.replaceAll " ", ""
+    
+    Integer typeLen = Integer.parseInt ZCL_DATA_TYPES[type].bytes
+    if (value.size() != typeLen * 2) return Log.error("Invalid attribute Value: It must have exactly ${typeLen} bytes but you provided ${value.size()}: ${valueHex}")
+
+    // Transform BE -> LE: "123456" -> ["1", "2", "3", "4", "5", "6"] -> [["1", "2"], ["3", "4"], ["5", "6"]] -> ["12", "34", "56"] -> ["56", "34", "12"] -> "563412"
+    value = (value.split("") as List).collate(2).collect { it.join() }.reverse().join()
+    
+    // Send zigbee command
+    return Utils.sendZigbeeCommands(["he raw ${device.deviceNetworkId} ${Utils.hex endpoint, 2} 0x01 ${Utils.hex cluster} {10 00 02 ${Utils.payload attribute}${typeStr.substring(2, 4)}${value}}"])
+}
+
 // ===================================================================================================================
 // Handle incoming Zigbee messages
 // ===================================================================================================================
@@ -167,6 +214,14 @@ def parse(String description) {
         
             return State.addAttributesValues(endpoint, cluster, attributesValues)
 
+        // Write Attribute Response (0x04)
+        case { contains it, [commandInt:0x04] }:
+            if (msg.data[0] != "00") {
+                return Utils.failedZigbeeMessage("Write Attribute Response", msg, msg.data[0])
+            }
+        return Utils.processedZigbeeMessage("Write Attribute Response", "data=${msg.data}")
+
+        
         // Read Reporting Configuration Response (0x09)
         case { contains it, [commandInt:0x09] }:
             if (msg.data[0] != "00") {
