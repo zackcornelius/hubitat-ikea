@@ -20,6 +20,7 @@ This driver has no registered fingerprints and no configuration / initialization
 4. Cast whatever spells you want using the `Knockturn Alley` driver. Have the `Logs` section opened in a separate tab since the driver talks to you mostly via log entries.
 5. When you decided you had enough fun, cast the `Obliviate` spell with option `1` to get rid of the `ka_*` device state entries (we clean our own mess).
 6. From the device details page, change back to the original driver. Everything should work without the need to reconfigure / re-pair the device.
+7. Pick a new Zigbee device to torture and go back to Step 2 :)
 
 
 ## Spells
