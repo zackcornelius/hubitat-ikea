@@ -29,6 +29,7 @@ The following functionalities are currently implemented:
 - [A02 - Scourgify](#a02---scourgify)
 - [B01 - Revelio](#b01---revelio)
 - [B02 - Obliviate](#b02---obliviate)
+- [C01 - Imperio](#c01---imperio)
 
 ### A01 - Legilimens
 <img src="img/Legilimens.gif" height="200px"/>
@@ -76,6 +77,13 @@ The `Obliviate` spell is used to forget specific information present in the devi
 5. Everything - Forget everything, start anew.
 
 After casting the spell, refresh the device details page to see that the specified information vanished into the void.
+
+### C01 - Imperio
+<img src="img/Imperio.gif" height="200px"/>
+
+The `Imperio` spell helps you update the Zigbee attributes value. You can now fight back and do some real damage to your devices!
+
+After casting the spell, you may want to cast `Revelio` to query the device for the updated attribute value.
 
 ---
 [<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 162px !important">](https://www.buymeacoffee.com/dandanache)
