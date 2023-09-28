@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0] - 2023-09-28
 ### Added
-- Add `Imperio` spell to help you update Zigbee atrributes value
+- Add the `Imperio` spell to help you update Zigbee atrributes value
+- `Scourgify` has now the option to remove or keep the raw data
 
 ## [1.0.0] - 2023-09-27
 ### Added
