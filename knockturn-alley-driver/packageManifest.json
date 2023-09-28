@@ -1,10 +1,10 @@
 {
     "packageName": "Knockturn Alley",
-    "version": "1.0.0",
-    "releaseNotes": "v1.0.0\n - Initial release",
+    "version": "1.1.0",
+    "releaseNotes": "v1.1.0\n - Add the \"Imperio\" spell to help you update Zigbee atrributes value\n - \"Scourgify\" has now the option to remove or keep the raw data",
     "minimumHEVersion": "2.1.9",
     "author": "Dan Danache (@dandanache)",
-    "dateReleased": "2023-09-25",
+    "dateReleased": "2023-09-28",
     "documentationLink": "https://dan-danache.github.io/hubitat/knockturn-alley-driver/",
     "communityLink": "https://community.hubitat.com/t/release-ikea-symfonisk-sound-remote-gen2-e2123/123853",
     "licenseFile": "https://raw.githubusercontent.com/dan-danache/hubitat/master/LICENSE",
