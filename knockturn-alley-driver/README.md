@@ -11,6 +11,17 @@ Simple toolkit driver to help developers peer deep into the guts of Zigbee devic
 > Skulking around Knockturn Alley? Dodgy place. Don't want no one to see you there. \
 > -- Hagrid
 
+## Usage
+This driver has no registered fingerprints and no configuration / initialization procedure so it does not support the pairing process for new devices. Regular hacking workflow goes like this:
+
+1. If you have a new Zigbee device, pair it as usual with the correct driver. For already paired devices, there's nothing to do here.
+2. If you want to know more about a Zigbee device, go to the device details page and change the driver to `Knockturn Alley`.
+3. No initialization / configuration is required.
+4. Cast whatever spells you want using the `Knockturn Alley` driver. Have the `Logs` section opened in a separate tab since the driver talks to you mostly via log entries.
+5. When you decided you had enough fun, cast the `Obliviate` spell with option `1` to get rid of the `ka_*` device state entries (we clean our own mess).
+6. From the device details page, change back to the original driver. Everything should work without the need to reconfigure / re-pair the device.
+
+
 ## Spells
 The following functionalities are currently implemented:
 - [A01 - Legilimens](#a01---legilimens)
