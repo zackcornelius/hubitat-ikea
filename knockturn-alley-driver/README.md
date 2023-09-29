@@ -27,7 +27,7 @@ This driver has no registered fingerprints and no configuration / initialization
 The following functionalities are currently implemented:
 - [A01 - Legilimens](#a01---legilimens)
 - [A02 - Scourgify](#a02---scourgify)
-- [B01 - Revelio](#b01---revelio)
+- [B01 - Accio](#b01---accio)
 - [B02 - Obliviate](#b02---obliviate)
 - [C01 - Imperio](#c01---imperio)
 
@@ -57,10 +57,10 @@ The `Scourgify` spell will cleanup the data mess we got after casting the `Legil
 
 After casting the spell, refresh the device details page to see the attributes report. Have fun!
 
-### B01 - Revelio
-<img src="img/Revelio.webp" height="200px"/>
+### B01 - Accio
+<img src="img/Accio.gif" height="200px"/>
 
-The `Revelio` spell helps you reveal information for the Zigbee attribute identified by the endpoint / cluster / attribute coordinates. When cast, it can:
+The `Accio` spell helps you retrieve information about the Zigbee attribute identified by the endpoint / cluster / attribute coordinates. When cast, it can:
 1. Read the current value of the specified attribute.
 2. Read the reporting configuration for the specified attribute.
 
@@ -83,7 +83,7 @@ After casting the spell, refresh the device details page to see that the specifi
 
 The `Imperio` spell helps you update the Zigbee attributes value. You can now fight back and do some real damage to your devices!
 
-After casting the spell, you may want to cast `Revelio` to query the device for the updated attribute value.
+After casting the spell, you may want to cast `Accio` to query the device for the updated attribute value.
 
 ---
 [<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 162px !important">](https://www.buymeacoffee.com/dandanache)
