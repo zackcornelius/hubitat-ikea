@@ -1,7 +1,7 @@
 {
     "packageName": "Knockturn Alley",
-    "version": "1.1.0",
-    "releaseNotes": "v1.1.0\n - Add the \"Imperio\" spell to help you update Zigbee attributes value\n - \"Scourgify\" has now the option to remove or keep the raw data",
+    "version": "1.2.0",
+    "releaseNotes": "v1.2.0\n - Add \"Bombarda\" spell to execute Zigbee cluster commands\n - \"Legilimens\" spell now also discovers all commands that each cluster can receive",
     "minimumHEVersion": "2.1.9",
     "author": "Dan Danache (@dandanache)",
     "dateReleased": "2023-09-28",
