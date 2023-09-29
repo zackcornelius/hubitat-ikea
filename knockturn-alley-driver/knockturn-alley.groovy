@@ -101,6 +101,15 @@ def a02Scourgify(operation) {
                         attributeSpec = [ type:0x21, req:"Yes", acc:"R--", name:"Cluster Revision" ]
                         attributeType = ZCL_DATA_TYPES[0x21]
                     }
+
+                    // Pretty value
+                    String value = "${attributeValue?.value ?: "--"}"
+                    if (attributeValue?.value && attributeSpec?.constraints) {
+                        value += " = ${attributeSpec.constraints[Utils.dec(attributeValue.value)]}"
+                    }
+                    if (attributeValue?.value && attributeSpec?.decorate) {
+                        value += " = ${attributeSpec.decorate(attributeValue.value)}"
+                    }
                     
                     table += "<tr>"
                     table += "<td><pre>${Utils.hex attribute, 4}</pre></td>"
@@ -110,7 +119,7 @@ def a02Scourgify(operation) {
                     table += "<td>${attributeType?.name ?: "--"}</td>"
                     table += "<td>${attributeType?.bytes ?: "--"}</td>"
                     table += "<td>${attributeValue?.encoding ?: "--"}</td>"
-                    table += "<td><pre>${attributeValue?.value ?: "--"}${attributeSpec && attributeSpec.constraints ? " = ${attributeSpec.constraints[Utils.dec(attributeValue.value)]}" : ""}</pre></td>"
+                    table += "<td><pre>${value}</pre></td>"
                     table += "<td>${attributeReporting ?: "--"}</td>"
                     table += "</tr>"
                 }
@@ -395,7 +404,7 @@ def parse(String description) {
 
             if (attributes.size() != 0) {
                 List<String> cmds = []
-                attributes.keySet().collate(3).each { attrs ->
+                attributes.keySet().collate(2).each { attrs ->
 
                     // Read attribute value (use batches of 3 to reduce mesh traffic)
                     cmds += "he raw ${device.deviceNetworkId} ${Utils.hex endpoint, 2} 0x01 ${Utils.hex cluster} {10 00 00 ${attrs.collect { Utils.payload it }.join()}}"
@@ -676,7 +685,7 @@ private boolean contains(Map msg, Map spec) {
             0x0013: [ type:0x21, req:"No",  acc:"RW-", name:"Mains Voltage Dwell Trip Point" ],
             
             0x0020: [ type:0x20, req:"No",  acc:"R--", name:"Battery Voltage" ],
-            0x0021: [ type:0x20, req:"No",  acc:"R-P", name:"Battery Percentage Remaining" ],
+            0x0021: [ type:0x20, req:"No",  acc:"R-P", name:"Battery Percentage Remaining", decorate: { value -> "${Math.round(Integer.parseInt(value, 16) / 2) as Integer}%" } ],
 
             0x0030: [ type:0x42, req:"No",  acc:"RW-", name:"Battery Manufacturer" ],
             0x0031: [ type:0x30, req:"No",  acc:"RW-", name:"Battery Size", constraints: [
