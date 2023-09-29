@@ -28,13 +28,14 @@ The following functionalities are currently implemented:
 - [A01 - Legilimens](#a01---legilimens)
 - [A02 - Scourgify](#a02---scourgify)
 - [B01 - Accio](#b01---accio)
-- [B02 - Obliviate](#b02---obliviate)
-- [C01 - Imperio](#c01---imperio)
+- [C01 - Obliviate](#c01---obliviate)
+- [C02 - Imperio](#c02---imperio)
+- [C03 - Bombarda](#c03---bombarda)
 
 ### A01 - Legilimens
 <img src="img/Legilimens.gif" height="200px"/>
 
-The `Legilimens` spell will automatically collect information on all Zigbee attributes that the device exposes. When cast, it will:
+`Legilimens` spell automatically collects information on all Zigbee attributes that the device exposes. When cast, it will:
 1. Retrieve all Zigbee endpoints (e.g.: 0x01 = Default endpoint)
 2. For each endpoint, retrieve in and out clusters (e.g.: 0x0006 = On/Off Cluster)
 3. For each in cluster, discover attributes (e.g.: 0x0400 = SWBuildID - for cluster 0x0000)
@@ -50,8 +51,7 @@ When the discovery process is complete, refresh the device details page to see w
 ### A02 - Scourgify
 <img src="img/Scourgify.webp" height="200px"/>
 
-
-The `Scourgify` spell will cleanup the data mess we got after casting the `Legilimens` spell. When cast, it will:
+`Scourgify` spell cleans up the data mess we got after casting the `Legilimens` spell. When cast, it will:
 1. Read data gathered using the `Legilimens` spell. You need to first cast the `Legilimens`, otherwise nothing will happen.
 2. Use the raw data to create a friendly attributes report.
 
@@ -60,16 +60,16 @@ After casting the spell, refresh the device details page to see the attributes r
 ### B01 - Accio
 <img src="img/Accio.gif" height="200px"/>
 
-The `Accio` spell helps you retrieve information about the Zigbee attribute identified by the endpoint / cluster / attribute coordinates. When cast, it can:
+`Accio` spell retrieves information about the Zigbee attribute identified by the endpoint / cluster / attribute coordinates. When cast, it can:
 1. Read the current value of the specified attribute.
 2. Read the reporting configuration for the specified attribute.
 
 Before casting the spell, have the Logs section open in order to see the device response.
 
-### B02 - Obliviate
+### C01 - Obliviate
 <img src="img/Obliviate.gif" height="200px"/>
 
-The `Obliviate` spell is used to forget specific information present in the device details page. When cast, it can remove:
+`Obliviate` spell is used to forget specific information present in the device details page. When cast, it can remove:
 1. Our state variables (ka_*) - Remove only information that was added by this driver, so that you can go back to using the original driver.
 2. All state variables - Remove all stored state data. You may use this if you want to switch drivers and start with a clean state.
 3. Device data - Remove all information present in the `Device Details -> Data` section. Useful when switching drivers.
@@ -78,12 +78,17 @@ The `Obliviate` spell is used to forget specific information present in the devi
 
 After casting the spell, refresh the device details page to see that the specified information vanished into the void.
 
-### C01 - Imperio
+### C02 - Imperio
 <img src="img/Imperio.gif" height="200px"/>
 
-The `Imperio` spell helps you update the Zigbee attributes value. You can now fight back and do some real damage to your devices!
+`Imperio` spell updates the value for the specified Zigbee attribute. You can now fight back and do some real damage to your devices!
 
 After casting the spell, you may want to cast `Accio` to query the device for the updated attribute value.
+
+### C03 - Bombarda
+<img src="img/Bombarda.gif" height="200px"/>
+
+`Bombarda` spell executes the specified Zigbee command. Keep an eye on the Logs section to see if you got the command payload right!
 
 ---
 [<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 162px !important">](https://www.buymeacoffee.com/dandanache)
