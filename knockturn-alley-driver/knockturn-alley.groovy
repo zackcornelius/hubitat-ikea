@@ -1,13 +1,15 @@
 /**
  * Knockturn Alley - Simple toolkit driver to help developers peer deep into the guts of Zigbee devices.
  *
- * @version 1.2.0
+ * @version 1.3.0
  * @see https://dan-danache.github.io/hubitat/knockturn-alley-driver/
  * @see https://dan-danache.github.io/hubitat/knockturn-alley-driver/CHANGELOG
  * @see https://community.hubitat.com/t/dev-knockturn-alley/125167
  */
 import groovy.time.TimeCategory
 import groovy.transform.Field
+
+@Field static final def HEXADECIMAL_PATTERN = ~/\p{XDigit}+/
 
 metadata {
     definition(name:"Knockturn Alley", namespace:"dandanache", singleThreaded:true, author:"Dan Danache", importUrl:"https://raw.githubusercontent.com/dan-danache/hubitat/master/knockturn-alley-driver/knockturn-alley.groovy") {
@@ -26,8 +28,29 @@ metadata {
             [name: "Endpoint*", description: "Endpoint ID - hex format (e.g.: 0x01)", type: "STRING"],
             [name: "Cluster*", description: "Cluster ID - hex format (e.g.: 0x0001)", type: "STRING"],
             [name: "Attribute*", description: "Attribute ID - hex format (e.g.: 0x0001)", type: "STRING"],
+            [name: "Manufacturer", description: "Manufacturer Code - hex format (e.g.: 0x117C)", type: "STRING"],
         ]
-        command "c01Obliviate", [
+        command "b02EverteStatum", [
+            [name: "Endpoint*", description: "Endpoint ID - hex format (e.g.: 0x01)", type: "STRING"],
+            [name: "Cluster*", description: "Cluster ID - hex format (e.g.: 0x0001)", type: "STRING"],
+            [name: "Attribute*", description: "Attribute ID - hex format (e.g.: 0x0001)", type: "STRING"],
+            [name: "Manufacturer", description: "Manufacturer Code - hex format (e.g.: 0x117C)", type: "STRING"],
+            [name: "Data type*", description: "Attribute data type", type: "ENUM", constraints:
+                 ZCL_DATA_TYPES.keySet()
+                     .findAll { ZCL_DATA_TYPES[it].bytes != "0" && ZCL_DATA_TYPES[it].bytes != "var" }
+                     .sort()
+                     .collect { "0x${Utils.hex it, 2}: ${ZCL_DATA_TYPES[it].name} (${ZCL_DATA_TYPES[it].bytes} bytes)" }
+            ],
+            [name: "Value*", description: "Attribute value - hex format (e.g.: 0001 - for uint16)", type: "STRING"],
+        ]
+        command "c01Imperio", [
+            [name: "Endpoint*", description: "Endpoint ID - hex format (e.g.: 0x01)", type: "STRING"],
+            [name: "Cluster*", description: "Cluster ID - hex format (e.g.: 0x0001)", type: "STRING"],
+            [name: "Command*", description: "Command ID - hex format (e.g.: 0x01)", type: "STRING"],
+            [name: "Manufacturer", description: "Manufacturer Code - hex format (e.g.: 0x117C)", type: "STRING"],
+            [name: "Payload", description: "Raw payload - sent as is, spaces are removed", type: "STRING"],
+        ]
+        command "c02Obliviate", [
             [name: "What to forget", type: "ENUM", constraints: [
                 "1 - Our state variables (ka_*) - Restore previous driver state",
                 "2 - All state variables",
@@ -35,19 +58,6 @@ metadata {
                 "4 - Scheduled jobs configured by the previous driver",
                 "5 - Everything",
             ]],
-        ]
-        command "c02Imperio", [
-            [name: "Endpoint*", description: "Endpoint ID - hex format (e.g.: 0x01)", type: "STRING"],
-            [name: "Cluster*", description: "Cluster ID - hex format (e.g.: 0x0001)", type: "STRING"],
-            [name: "Attribute*", description: "Attribute ID - hex format (e.g.: 0x0001)", type: "STRING"],
-            [name: "Data type*", description: "Attribute data type", type: "ENUM", constraints: ZCL_DATA_TYPES.keySet().findAll { ZCL_DATA_TYPES[it].bytes != "0" && ZCL_DATA_TYPES[it].bytes != "var" }.sort().collect { "${Utils.hex it, 2}: ${ZCL_DATA_TYPES[it].name} (${ZCL_DATA_TYPES[it].bytes} bytes)" }],
-            [name: "Value*", description: "Attribute value - hex format (e.g.: 0001 - for uint16)", type: "STRING"],
-        ]
-        command "c03Bombarda", [
-            [name: "Endpoint*", description: "Endpoint ID - hex format (e.g.: 0x01)", type: "STRING"],
-            [name: "Cluster*", description: "Cluster ID - hex format (e.g.: 0x0001)", type: "STRING"],
-            [name: "Command*", description: "Command ID - hex format (e.g.: 0x01)", type: "STRING"],
-            [name: "Payload", description: "Raw payload - sent as is, spaces are removed", type: "STRING"],
         ]
     }
 }
@@ -58,7 +68,7 @@ metadata {
 
 def a01Legilimens() {
     Log.info "🪄 Legilimens"
-
+  
     // Discover active endpoints
     def cmd = "he raw 0x${device.deviceNetworkId} 0x0000 0x0000 0x0005 {00 ${zigbee.swapOctets(device.deviceNetworkId)}} {0x0000}"
     Utils.sendZigbeeCommands([cmd])
@@ -73,13 +83,16 @@ def a02Scourgify(operation) {
     // Make data pretty
     String table = "<style>#ka_report { border-collapse:collapse; font-weight:normal } #ka_report th { background-color:#F2F2F2 } #ka_report pre { margin:0 } #ka_report_div { margin-left:-40px; width:calc(100% + 40px) } @media (max-width: 840px) { #ka_report_div { margin-left:-64px; width:calc(100% + 87px) } }</style>"
     table += "<div id=ka_report_div style='overflow-x:scroll; padding:0 1px'><table id=ka_report class='cell-border nowrap hover stripe'>"
-    table += "<thead><tr><th>ID</th><th>Name</th><th>Required</th><th>Access</th><th>Type</th><th>Bytes</th><th>Encoding</th><th>Value</th><th>Reporting</th></tr></thead><tbody>"
+    table += "<thead>"
+    //table += "<tr><th colspan=9><a href=\"javascript:void\" onclick=\"navigator.clipboard.writeText(document.getElementById('ka_report').outerHTML)\">Copy</a></tr>"
+    table += "<tr><th>ID</th><th>Name</th><th>Required</th><th>Access</th><th>Type</th><th>Bytes</th><th>Encoding</th><th>Value</th><th>Reporting</th></tr>"
+    table += "</thead><tbody>"
     
     state.ka_endpoints?.sort().each { endpoint ->
-        table += "<tr><th colspan=9 style='background-color:SteelBlue; color:White'>Endpoint: ${Utils.hex endpoint, 2}</th></tr>"
-        table += "<tr><th colspan=9>Out Clusters: ${state["ka_outClusters_${endpoint}"]?.sort().collect { "${Utils.hex it, 4} (${ZCL_CLUSTERS.get(it)?.name ?: "Unknown Cluster"})" }.join(", ")}</th></tr>"
+        table += "<tr><th colspan=9 style='background-color:SteelBlue; color:White'>Endpoint: 0x${Utils.hex endpoint, 2}</th></tr>"
+        table += "<tr><th colspan=9>Out Clusters: ${state["ka_outClusters_${endpoint}"]?.sort().collect { "0x${Utils.hex it, 4} (${ZCL_CLUSTERS.get(it)?.name ?: "Unknown Cluster"})" }.join(", ")}</th></tr>"
         state["ka_inClusters_${endpoint}"]?.sort().each { cluster ->
-            table += "<tr><th colspan=9>In Cluster: ${"${Utils.hex cluster, 4} (${ZCL_CLUSTERS.get(cluster)?.name ?: "Unknown Cluster"})"}</th></tr>"
+            table += "<tr><th colspan=9>In Cluster: ${"0x${Utils.hex cluster, 4} (${ZCL_CLUSTERS.get(cluster)?.name ?: "Unknown Cluster"})"}</th></tr>"
 
             Set<Integer> attributes = []
             getState()?.each {
@@ -112,7 +125,7 @@ def a02Scourgify(operation) {
                     }
                     
                     table += "<tr>"
-                    table += "<td><pre>${Utils.hex attribute, 4}</pre></td>"
+                    table += "<td><pre>0x${Utils.hex attribute, 4}</pre></td>"
                     table += "<td>${attributeSpec?.name ?: "--"}</td>"
                     table += "<td>${attributeSpec?.req ?: "--"}</td>"
                     table += "<td><pre>${attributeSpec?.acc ?: "--"}</pre></td>"
@@ -136,7 +149,7 @@ def a02Scourgify(operation) {
                 commands.sort().each { command ->
                     def commandSpec = ZCL_CLUSTERS.get(cluster)?.get("commands")?.get(command)
                     table += "<tr>"
-                    table += "<td><pre>${Utils.hex command, 2}</pre></td>"
+                    table += "<td><pre>0x${Utils.hex command, 2}</pre></td>"
                     table += "<td>${commandSpec?.name ?: "--"}</td>"
                     table += "<td>${commandSpec?.req ?: "--"}</td>"
                     table += "<td colspan=6></td>"
@@ -157,26 +170,87 @@ def a02Scourgify(operation) {
     state.ka_report = table
 }
 
-def b01Accio(operation, endpointHex, clusterHex, attributeHex) {
-    Log.info "🪄 Accio: ${operation} (endpoint=${endpointHex}, cluster=${clusterHex}, attribute=${attributeHex})"
+def b01Accio(operation, endpointHex, clusterHex, attributeHex, manufacturerHex="") {
+    Log.info "🪄 Accio: ${operation} (endpoint=${endpointHex}, cluster=${clusterHex}, attribute=${attributeHex}, manufacturer=${manufacturerHex})"
 
-    if (!endpointHex.startsWith("0x") || endpointHex.size() != 4) return Log.error("Invalid value for Endpoint ID: ${endpointHex}")
-    if (!clusterHex.startsWith("0x") || clusterHex.size() != 6) return Log.error("Invalid value for Cluster ID: ${clusterHex}")
-    if (!attributeHex.startsWith("0x") || attributeHex.size() != 6) return Log.error("Invalid value for Attribute ID: ${clusterHex}")
+    if (!endpointHex.startsWith("0x") || endpointHex.size() != 4) return Log.error("Invalid Endpoint ID: ${endpointHex}")
+    if (!clusterHex.startsWith("0x") || clusterHex.size() != 6) return Log.error("Invalid Cluster ID: ${clusterHex}")
+    if (!attributeHex.startsWith("0x") || attributeHex.size() != 6) return Log.error("Invalid Attribute ID: ${clusterHex}")
+    if (manufacturerHex && (!manufacturerHex.startsWith("0x") || manufacturerHex.size() != 6)) return Log.error("Invalid Manufacturer Code: ${manufacturerHex}")
     Integer endpoint = Integer.parseInt endpointHex.substring(2), 16
     Integer cluster = Integer.parseInt clusterHex.substring(2), 16
     Integer attribute = Integer.parseInt attributeHex.substring(2), 16
 
+    Integer manufacturer = manufacturerHex ? Integer.parseInt(manufacturerHex.substring(2), 16) : null
+    String frameStart = "10 75"
+    if (manufacturer != null) {
+        frameStart = "04 ${Utils.payload manufacturer} 75"
+    }
+
     switch (operation) {
         case { it.startsWith("1 - ") }:
-            return Utils.sendZigbeeCommands(["he raw ${device.deviceNetworkId} ${Utils.hex endpoint, 2} 0x01 ${Utils.hex cluster} {10 00 00 ${Utils.payload attribute}}"])
+            return Utils.sendZigbeeCommands(["he raw ${device.deviceNetworkId} 0x${Utils.hex endpoint, 2} 0x01 0x${Utils.hex cluster} {${frameStart} 00 ${Utils.payload attribute}}"])
 
         case { it.startsWith("2 - ") }:
-            return Utils.sendZigbeeCommands(["he raw ${device.deviceNetworkId} ${Utils.hex endpoint, 2} 0x01 ${Utils.hex cluster} {10 00 08 00 ${Utils.payload attribute}}"])
+            return Utils.sendZigbeeCommands(["he raw ${device.deviceNetworkId} 0x${Utils.hex endpoint, 2} 0x01 0x${Utils.hex cluster} {${frameStart} 08 00 ${Utils.payload attribute}}"])
     }
 }
 
-def c01Obliviate(operation) {
+def b02EverteStatum(endpointHex, clusterHex, attributeHex, manufacturerHex="", typeStr, valueHex) {
+    Log.info "🪄 Everte Statum: endpoint=${endpointHex}, cluster=${clusterHex}, attribute=${attributeHex}, manufacturer=${manufacturerHex}, type=${typeStr}, value=${valueHex}"
+
+    if (!endpointHex.startsWith("0x") || endpointHex.size() != 4) return Log.error("Invalid Endpoint ID: ${endpointHex}")
+    if (!clusterHex.startsWith("0x") || clusterHex.size() != 6) return Log.error("Invalid Cluster ID: ${clusterHex}")
+    if (!attributeHex.startsWith("0x") || attributeHex.size() != 6) return Log.error("Invalid Attribute ID: ${clusterHex}")
+    if (manufacturerHex && (!manufacturerHex.startsWith("0x") || manufacturerHex.size() != 6)) return Log.error("Invalid Manufacturer Code: ${manufacturerHex}")
+    if (valueHex && !HEXADECIMAL_PATTERN.matcher(valueHex).matches()) return Log.error("Invalid Value: ${payload}")
+
+    Integer endpoint = Integer.parseInt endpointHex.substring(2), 16
+    Integer cluster = Integer.parseInt clusterHex.substring(2), 16
+    Integer attribute = Integer.parseInt attributeHex.substring(2), 16
+
+    Integer manufacturer = manufacturerHex ? Integer.parseInt(manufacturerHex.substring(2), 16) : null
+    String frameStart = "10 75"
+    if (manufacturer != null) {
+        frameStart = "04 ${Utils.payload manufacturer} 75"
+    }
+ 
+    Integer type = Integer.parseInt typeStr.substring(2, 4), 16
+    String value = valueHex.replaceAll " ", ""
+    Integer typeLen = Integer.parseInt ZCL_DATA_TYPES[type].bytes
+    if (value.size() != typeLen * 2) return Log.error("Invalid Value: It must have exactly ${typeLen} bytes but you provided ${value.size()}: ${valueHex}")
+
+    // Transform BE -> LE: "123456" -> ["1", "2", "3", "4", "5", "6"] -> [["1", "2"], ["3", "4"], ["5", "6"]] -> ["12", "34", "56"] -> ["56", "34", "12"] -> "563412"
+    value = (value.split("") as List).collate(2).collect { it.join() }.reverse().join()
+    
+    // Send zigbee command
+    Utils.sendZigbeeCommands(["he raw ${device.deviceNetworkId} 0x${Utils.hex endpoint, 2} 0x01 0x${Utils.hex cluster} {${frameStart} 02 ${Utils.payload attribute} ${typeStr.substring(2, 4)} ${value}}"])
+}
+
+def c01Imperio(endpointHex, clusterHex, commandHex, manufacturerHex="", payload="") {
+    Log.info "🪄 Imperio: endpoint=${endpointHex}, cluster=${clusterHex}, command=${commandHex}, manufacturer=${manufacturerHex}, payload=${payload}"
+
+    if (!endpointHex.startsWith("0x") || endpointHex.size() != 4) return Log.error("Invalid Endpoint ID: ${endpointHex}")
+    if (!clusterHex.startsWith("0x") || clusterHex.size() != 6) return Log.error("Invalid Cluster ID: ${clusterHex}")
+    if (!commandHex.startsWith("0x") || commandHex.size() != 4) return Log.error("Invalid Command ID: ${commandHex}")
+    if (manufacturerHex && (!manufacturerHex.startsWith("0x") || manufacturerHex.size() != 6)) return Log.error("Invalid value for Manufacturer Code: ${manufacturerHex}")
+    if (payload && !HEXADECIMAL_PATTERN.matcher(payload).matches()) return Log.error("Invalid Payload: ${payload}")
+    
+    Integer endpoint = Integer.parseInt endpointHex.substring(2), 16
+    Integer cluster = Integer.parseInt clusterHex.substring(2), 16
+    Integer command = Integer.parseInt commandHex.substring(2), 16
+
+    Integer manufacturer = manufacturerHex ? Integer.parseInt(manufacturerHex.substring(2), 16) : null
+    String frameTail = ""
+    if (manufacturer != null) {
+        frameTail = " {${Utils.hex manufacturer}}"
+    }
+
+    // Send zigbee command
+    Utils.sendZigbeeCommands(["he cmd 0x${device.deviceNetworkId} 0x${Utils.hex endpoint, 2} 0x${Utils.hex cluster} 0x${Utils.hex command, 2} {${payload}}${frameTail}"])
+}
+
+def c02Obliviate(operation) {
     Log.info "🪄 Obliviate: ${operation}"
 
     switch (operation) {
@@ -200,43 +274,6 @@ def c01Obliviate(operation) {
         default:
             Log.error "Don't know how to ${operation}"
     }
-}
-
-def c02Imperio(endpointHex, clusterHex, attributeHex, typeStr, valueHex) {
-    Log.info "🪄 Imperio: endpoint=${endpointHex}, cluster=${clusterHex}, attribute=${attributeHex}, type=${typeStr}, value=${valueHex}"
-
-    if (!endpointHex.startsWith("0x") || endpointHex.size() != 4) return Log.error("Invalid value for Endpoint ID: ${endpointHex}")
-    if (!clusterHex.startsWith("0x") || clusterHex.size() != 6) return Log.error("Invalid value for Cluster ID: ${clusterHex}")
-    if (!attributeHex.startsWith("0x") || attributeHex.size() != 6) return Log.error("Invalid value for Attribute ID: ${clusterHex}")
-    Integer endpoint = Integer.parseInt endpointHex.substring(2), 16
-    Integer cluster = Integer.parseInt clusterHex.substring(2), 16
-    Integer attribute = Integer.parseInt attributeHex.substring(2), 16
-    Integer type = Integer.parseInt typeStr.substring(2, 4), 16
-    String value = valueHex.replaceAll " ", ""
-    
-    Integer typeLen = Integer.parseInt ZCL_DATA_TYPES[type].bytes
-    if (value.size() != typeLen * 2) return Log.error("Invalid attribute Value: It must have exactly ${typeLen} bytes but you provided ${value.size()}: ${valueHex}")
-
-    // Transform BE -> LE: "123456" -> ["1", "2", "3", "4", "5", "6"] -> [["1", "2"], ["3", "4"], ["5", "6"]] -> ["12", "34", "56"] -> ["56", "34", "12"] -> "563412"
-    value = (value.split("") as List).collate(2).collect { it.join() }.reverse().join()
-    
-    // Send zigbee command
-    return Utils.sendZigbeeCommands(["he raw ${device.deviceNetworkId} ${Utils.hex endpoint, 2} 0x01 ${Utils.hex cluster} {10 00 02 ${Utils.payload attribute}${typeStr.substring(2, 4)}${value}}"])
-}
-
-def c03Bombarda(endpointHex, clusterHex, commandHex, payload = "") {
-    Log.info "🪄 Bombarda: endpoint=${endpointHex}, cluster=${clusterHex}, command=${commandHex}, payload=${payload}"
-
-    if (!endpointHex.startsWith("0x") || endpointHex.size() != 4) return Log.error("Invalid value for Endpoint ID: ${endpointHex}")
-    if (!clusterHex.startsWith("0x") || clusterHex.size() != 6) return Log.error("Invalid value for Cluster ID: ${clusterHex}")
-    if (!commandHex.startsWith("0x") || commandHex.size() != 4) return Log.error("Invalid value for Command ID: ${commandHex}")
-    Integer endpoint = Integer.parseInt endpointHex.substring(2), 16
-    Integer cluster = Integer.parseInt clusterHex.substring(2), 16
-    Integer command = Integer.parseInt commandHex.substring(2), 16
-    String value = payload.replaceAll " ", ""
-    
-    // Send zigbee command
-    return Utils.sendZigbeeCommands(["he cmd 0x${device.deviceNetworkId} ${Utils.hex endpoint, 2} ${Utils.hex cluster} ${Utils.hex command, 2} {${value}}"])
 }
 
 // ===================================================================================================================
@@ -266,11 +303,11 @@ def parse(String description) {
 
             Map<Integer, Map<String, String>> attributesValues = [:]
             attributesValues[msg.attrInt] = [encoding: msg.encoding, value: msg.value]
-            Utils.processedZigbeeMessage "Read Attribute Response", "endpoint=${Utils.hex endpoint, 2}, cluster=${Utils.hex cluster}, attribute=${Utils.hex msg.attrInt}, value=${msg.value}"
+            Utils.processedZigbeeMessage "Read Attribute Response", "endpoint=0x${Utils.hex endpoint, 2}, cluster=0x${Utils.hex cluster}, attribute=0x${Utils.hex msg.attrInt}, value=${msg.value}"
 
             msg.additionalAttrs?.each {
                 attributesValues[it.attrInt] = [encoding: it.encoding, value: it.value]
-                Utils.processedZigbeeMessage "Additional Attribute", "endpoint=${Utils.hex endpoint, 2}, cluster=${Utils.hex cluster}, attribute=${Utils.hex it.attrInt}, value=${it.value}"
+                Utils.processedZigbeeMessage "Additional Attribute", "endpoint=0x${Utils.hex endpoint, 2}, cluster=0x${Utils.hex cluster}, attribute=0x${Utils.hex it.attrInt}, value=${it.value}"
             }
         
             return State.addAttributesValues(endpoint, cluster, attributesValues)
@@ -286,7 +323,7 @@ def parse(String description) {
             Integer cluster = msg.clusterInt
             Integer command = Utils.dec msg.data[0]
         
-            return Utils.processedZigbeeMessage("Default Response", "endpoint=${Utils.hex endpoint, 2}, cluster=${Utils.hex cluster}, command=${Utils.hex command, 2}")
+            return Utils.processedZigbeeMessage("Default Response", "endpoint=0x${Utils.hex endpoint, 2}, cluster=0x${Utils.hex cluster}, command=0x${Utils.hex command, 2}")
         
         // Write Attribute Response (0x04)
         case { contains it, [commandInt:0x04] }:
@@ -309,7 +346,7 @@ def parse(String description) {
             Integer maxPeriod = Utils.dec msg.data[7..8].reverse().join()
 
             State.addAttributeReporting endpoint, cluster, attribute, minPeriod, maxPeriod
-            return Utils.processedZigbeeMessage("Read Reporting Configuration Response", "endpoint=${Utils.hex endpoint, 2}, cluster=${Utils.hex cluster}, attribute=${Utils.hex attribute}, minPeriod=${minPeriod}, maxPeriod=${maxPeriod}")
+            return Utils.processedZigbeeMessage("Read Reporting Configuration Response", "endpoint=0x${Utils.hex endpoint, 2}, cluster=0x${Utils.hex cluster}, attribute=0x${Utils.hex attribute}, minPeriod=${minPeriod}, maxPeriod=${maxPeriod}")
         
         // Active_EP_rsp := { 08:Status, 16:NWKAddrOfInterest, 08:ActiveEPCount, n*08:ActiveEPList }
         // Three endpoints example: [83, 00, 18, 4A, 03, 01, 02, 03] -> endpointIds=[01, 02, 03]
@@ -356,10 +393,10 @@ def parse(String description) {
                     inClusters += cluster
 
                     // Discover cluster attributes
-                    cmds += "he raw ${device.deviceNetworkId} ${Utils.hex endpoint, 2} 0x01 ${Utils.hex cluster} {10 00 0C 00 00 FF}"
+                    cmds += "he raw ${device.deviceNetworkId} 0x${Utils.hex endpoint, 2} 0x01 0x${Utils.hex cluster} {10 00 0C 00 00 FF}"
                     
                     // Discover cluster commands
-                    cmds += "he raw ${device.deviceNetworkId} ${Utils.hex endpoint, 2} 0x01 ${Utils.hex cluster} {10 00 11 00 FF}"
+                    cmds += "he raw ${device.deviceNetworkId} 0x${Utils.hex endpoint, 2} 0x01 0x${Utils.hex cluster} {10 00 11 00 FF}"
                 }
                 State.addInClusters endpoint, inClusters
             }
@@ -378,7 +415,7 @@ def parse(String description) {
             }
 
             if (cmds.size != 0) Utils.sendZigbeeCommands delayBetween(cmds, 1000)
-            return Utils.processedZigbeeMessage("Simple Descriptor Response", "endpoint=${Utils.hex endpoint, 2}, inClusters=${Utils.hexs inClusters}, outClusters=${Utils.hexs outClusters}")
+            return Utils.processedZigbeeMessage("Simple Descriptor Response", "endpoint=0x${Utils.hex endpoint, 2}, inClusters=${Utils.hexs inClusters}, outClusters=${Utils.hexs outClusters}")
 
         // DiscoverAttributesResponse := { 08:Complete?, n*24:AttributeInformation }
         // AttributeInformation := { 16:AttributeIdentifier, 08:AttributeDataType }
@@ -407,19 +444,19 @@ def parse(String description) {
                 attributes.keySet().collate(2).each { attrs ->
 
                     // Read attribute value (use batches of 3 to reduce mesh traffic)
-                    cmds += "he raw ${device.deviceNetworkId} ${Utils.hex endpoint, 2} 0x01 ${Utils.hex cluster} {10 00 00 ${attrs.collect { Utils.payload it }.join()}}"
+                    cmds += "he raw ${device.deviceNetworkId} 0x${Utils.hex endpoint, 2} 0x01 0x${Utils.hex cluster} {10 00 00 ${attrs.collect { Utils.payload it }.join()}}"
 
                     // If attribute is reportable, also inquire its reporting status
                     attrs.each {
                         if (ZCL_CLUSTERS.get(cluster)?.get("attributes")?.get(it)?.get("acc")?.endsWith("P")) {
-                            cmds += "he raw ${device.deviceNetworkId} ${Utils.hex endpoint, 2} 0x01 ${Utils.hex cluster} {10 00 08 00 ${Utils.payload it}}"
+                            cmds += "he raw ${device.deviceNetworkId} 0x${Utils.hex endpoint, 2} 0x01 0x${Utils.hex cluster} {10 00 08 00 ${Utils.payload it}}"
                         }
                     }
                 }
                 Utils.sendZigbeeCommands delayBetween(cmds, 1000)
                 State.addAttributes endpoint, cluster, attributes
             }
-            return Utils.processedZigbeeMessage("Discover Attributes Response", "endpoint=${Utils.hex endpoint, 2}, cluster=${Utils.hex cluster}, attributes=${attributes}")
+            return Utils.processedZigbeeMessage("Discover Attributes Response", "endpoint=0x${Utils.hex endpoint, 2}, cluster=0x${Utils.hex cluster}, attributes=${attributes}")
 
         // DiscoverCommandsReceivedResponse := { 08:Complete?, n*08:CommandIdentifier }
         // Example: [01, 00, 01, 40] -> commands: 0x00, 0x01, 0x40
@@ -431,7 +468,7 @@ def parse(String description) {
             List<Integer> commands = data.collect {Utils.dec it  }
 
             State.addCommands endpoint, cluster, commands
-            return Utils.processedZigbeeMessage("Discover Commands Received Response", "endpoint=${Utils.hex endpoint, 2}, cluster=${Utils.hex cluster}, commands=${commands}")
+            return Utils.processedZigbeeMessage("Discover Commands Received Response", "endpoint=0x${Utils.hex endpoint, 2}, cluster=0x${Utils.hex cluster}, commands=${commands}")
 
         // ---------------------------------------------------------------------------------------------------------------
         // Unexpected Zigbee message
@@ -458,7 +495,7 @@ def parse(String description) {
 
 @Field def Utils = [
     dec: { String value -> Integer.parseInt(value, 16) },
-    hex: { Integer value, Integer chars = 4 -> "0x${zigbee.convertToHexString value, chars}" },
+    hex: { Integer value, Integer chars = 4 -> "${zigbee.convertToHexString value, chars}" },
     hexs: { Collection<Integer> values, Integer chars = 4 -> values.collect { "0x${zigbee.convertToHexString it, chars}" } },
     payload: { Integer value -> zigbee.swapOctets(zigbee.convertToHexString(value, 4)) },
 
@@ -1090,6 +1127,9 @@ private boolean contains(Map msg, Map spec) {
             0x08: [ req:"No",  name:"Query Device Specific File Request" ],
             0x09: [ req:"No",  name:"Query Device Specific File Response" ]
         ]
+    ],
+    0x0021: [
+        name: "Green Power Cluster"
     ],
     0x001A: [
         name: "Power Profile Cluster",
@@ -1766,4 +1806,7 @@ private boolean contains(Map msg, Map spec) {
             0x011D: [ req:"No",  acc:"R--", name:"Last Message RSSI" ]
         ]
     ],
+    0x1000: [
+        name: "ZLL/Touchlink Commissioning Cluster"
+    ]
 ]
