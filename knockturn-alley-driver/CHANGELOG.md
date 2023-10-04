@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2023-10-04
+### Added
+- Add option to specify manufacturer code when handling Zigbee attributes and when executing Zigbee commands
+
+### Changed
+- Change / shuffle some spells name
+
 ## [1.2.0] - 2023-09-29
 ### Added
 - Add `Bombarda` spell to execute Zigbee cluster commands
