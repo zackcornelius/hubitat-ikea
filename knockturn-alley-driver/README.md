@@ -33,7 +33,7 @@ Spells for handling Zigbee Attributes:
 - [B01 - Accio](#b01---accio)
 - [B02 - Everte Statum](#b02---everte-statum)
 
-Spells for issuing Zigbee Commands:
+Spells for executing Zigbee Commands and managing driver state:
 - [C01 - Imperio](#c01---imperio)
 - [C02 - Obliviate](#c02---obliviate)
 
