@@ -24,13 +24,19 @@ This driver has no registered fingerprints and no configuration / initialization
 
 
 ## Spells
-The following functionalities are currently implemented:
+
+Spells for auto discovering Zigbee features:
 - [A01 - Legilimens](#a01---legilimens)
 - [A02 - Scourgify](#a02---scourgify)
+
+Spells for handling Zigbee Attributes:
 - [B01 - Accio](#b01---accio)
-- [C01 - Obliviate](#c01---obliviate)
-- [C02 - Imperio](#c02---imperio)
-- [C03 - Bombarda](#c03---bombarda)
+- [B02 - Everte Statum](#b02---everte-statum)
+
+Spells for issuing Zigbee Commands:
+- [C01 - Imperio](#c01---imperio)
+- [C02 - Obliviate](#c02---obliviate)
+
 
 ### A01 - Legilimens
 <img src="img/Legilimens.gif" height="200px"/>
@@ -66,7 +72,19 @@ After casting the spell, refresh the device details page to see the attributes r
 
 Before casting the spell, have the Logs section open in order to see the device response.
 
-### C01 - Obliviate
+### B02 - Everte Statum
+<img src="img/Everte_Statum.webp" height="200px"/>
+
+`Everte Statum` spell updates the value for the specified Zigbee attribute. You can now fight back and do some real damage to your devices!
+
+After casting the spell, you may want to cast `Accio` to query the device for the updated attribute value.
+
+### C01 - Imperio
+<img src="img/Imperio.gif" height="200px"/>
+
+`Imperio` spell executes the specified Zigbee command. Keep an eye on the Logs section to see if you got the command payload right!
+
+### C02 - Obliviate
 <img src="img/Obliviate.gif" height="200px"/>
 
 `Obliviate` spell is used to forget specific information present in the device details page. When cast, it can remove:
@@ -78,17 +96,6 @@ Before casting the spell, have the Logs section open in order to see the device 
 
 After casting the spell, refresh the device details page to see that the specified information vanished into the void.
 
-### C02 - Imperio
-<img src="img/Imperio.gif" height="200px"/>
-
-`Imperio` spell updates the value for the specified Zigbee attribute. You can now fight back and do some real damage to your devices!
-
-After casting the spell, you may want to cast `Accio` to query the device for the updated attribute value.
-
-### C03 - Bombarda
-<img src="img/Bombarda.gif" height="200px"/>
-
-`Bombarda` spell executes the specified Zigbee command. Keep an eye on the Logs section to see if you got the command payload right!
 
 ---
 [<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 162px !important">](https://www.buymeacoffee.com/dandanache)
