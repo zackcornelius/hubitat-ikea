@@ -13,6 +13,8 @@ import groovy.transform.Field
 
 metadata {
     definition(name:"Knockturn Alley", namespace:"dandanache", singleThreaded:true, author:"Dan Danache", importUrl:"https://raw.githubusercontent.com/dan-danache/hubitat/master/knockturn-alley-driver/knockturn-alley.groovy") {
+        attribute "documentation", "STRING"
+        
         command "a01Legilimens"
         command "a02Scourgify", [
             [name: "Raw data", type: "ENUM", constraints: [
@@ -67,6 +69,7 @@ metadata {
 // ===================================================================================================================
 
 def a01Legilimens() {
+    sendEvent name:"documentation", value:"<a href=\"https://dan-danache.github.io/hubitat/knockturn-alley-driver/\" target=\"_blank\">README</a>", isStateChange:false
     Log.info "🪄 Legilimens"
   
     // Discover active endpoints
@@ -75,6 +78,7 @@ def a01Legilimens() {
 }
 
 def a02Scourgify(operation) {
+    sendEvent name:"documentation", value:"<a href=\"https://dan-danache.github.io/hubitat/knockturn-alley-driver/\">README</a>", isStateChange:false
     Log.info "🪄 Scourgify: ${operation}"
     if (!state.ka_endpoints) {
         return Log.warn("Raw data is missing. Maybe you should run Legilimens first if you didn't do that already ...")
@@ -171,6 +175,7 @@ def a02Scourgify(operation) {
 }
 
 def b01Accio(operation, endpointHex, clusterHex, attributeHex, manufacturerHex="") {
+    sendEvent name:"documentation", value:"<a href=\"https://dan-danache.github.io/hubitat/knockturn-alley-driver/\" target=\"_blank\">README</a>", isStateChange:false
     Log.info "🪄 Accio: ${operation} (endpoint=${endpointHex}, cluster=${clusterHex}, attribute=${attributeHex}, manufacturer=${manufacturerHex})"
 
     if (!endpointHex.startsWith("0x") || endpointHex.size() != 4) return Log.error("Invalid Endpoint ID: ${endpointHex}")
@@ -197,6 +202,7 @@ def b01Accio(operation, endpointHex, clusterHex, attributeHex, manufacturerHex="
 }
 
 def b02EverteStatum(endpointHex, clusterHex, attributeHex, manufacturerHex="", typeStr, valueHex) {
+    sendEvent name:"documentation", value:"<a href=\"https://dan-danache.github.io/hubitat/knockturn-alley-driver/\" target=\"_blank\">README</a>", isStateChange:false
     Log.info "🪄 Everte Statum: endpoint=${endpointHex}, cluster=${clusterHex}, attribute=${attributeHex}, manufacturer=${manufacturerHex}, type=${typeStr}, value=${valueHex}"
 
     if (!endpointHex.startsWith("0x") || endpointHex.size() != 4) return Log.error("Invalid Endpoint ID: ${endpointHex}")
@@ -228,6 +234,7 @@ def b02EverteStatum(endpointHex, clusterHex, attributeHex, manufacturerHex="", t
 }
 
 def c01Imperio(endpointHex, clusterHex, commandHex, manufacturerHex="", payload="") {
+    sendEvent name:"documentation", value:"<a href=\"https://dan-danache.github.io/hubitat/knockturn-alley-driver/\" target=\"_blank\">README</a>", isStateChange:false
     Log.info "🪄 Imperio: endpoint=${endpointHex}, cluster=${clusterHex}, command=${commandHex}, manufacturer=${manufacturerHex}, payload=${payload}"
 
     if (!endpointHex.startsWith("0x") || endpointHex.size() != 4) return Log.error("Invalid Endpoint ID: ${endpointHex}")
@@ -251,6 +258,7 @@ def c01Imperio(endpointHex, clusterHex, commandHex, manufacturerHex="", payload=
 }
 
 def c02Obliviate(operation) {
+    sendEvent name:"documentation", value:"<a href=\"https://dan-danache.github.io/hubitat/knockturn-alley-driver/\" target=\"_blank\">README</a>", isStateChange:false
     Log.info "🪄 Obliviate: ${operation}"
 
     switch (operation) {
