@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add option to specify manufacturer code when handling Zigbee attributes and when executing Zigbee commands
 
 ### Changed
-- Change / shuffle some spells name
+- Change / shuffle some spell names
 
 ## [1.2.0] - 2023-09-29
 ### Added
