@@ -37,7 +37,7 @@ def healthCheck() {
 {{# @configure }}
 
 // Configuration for capability.HealthCheck
-sendEvent name:"healthStatus", value:"unknown", descriptionText:"Health status is unknown"
+sendEvent name:"healthStatus", value:"online", descriptionText:"Health status initialized to online"
 sendEvent name:"checkInterval", value:{{ params.checkInterval }}, unit:"second", descriptionText:"Health check interval is {{ params.checkInterval }} seconds"
 {{/ @configure }}
 {{!--------------------------------------------------------------------------}}
@@ -53,7 +53,7 @@ def ping() {
 
 def pingExecute() {
     if (state.lastRx == null || state.lastRx == 0) {
-        return info("Did not sent any messages since it was last configured")
+        return Log.info("Did not sent any messages since it was last configured")
     }
 
     def now = new Date(Math.round(now() / 1000) * 1000)

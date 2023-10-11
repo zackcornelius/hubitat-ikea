@@ -10,7 +10,7 @@ case { contains it, [clusterInt:0x0005, commandInt:0x08] }:
 
 // Button Prev/Next was released
 case { contains it, [clusterInt:0x0005, commandInt:0x09] }:
-    def button = device.currentValue("held") == 4 ? BUTTONS.NEXT : BUTTONS.PREV
+    def button = device.currentValue("held", true) == 4 ? BUTTONS.NEXT : BUTTONS.PREV
     return Utils.sendEvent(name:"released", value:button[0], type:"physical", isStateChange:true, descriptionText:"Button ${button[0]} (${button[1]}) was released")
 
 // Power button was pushed

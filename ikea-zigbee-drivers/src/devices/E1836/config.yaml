@@ -1,6 +1,7 @@
 device:
-  model: IKEA Tradfri Control Outlet
-  type: E1603
+  model: IKEA Askvader On/Off Switch
+  zigbeeId: ASKVADER on/off switch
+  type: E1836
 
   capabilities:
     - file: src/capabilities/Switch.groovy
@@ -22,11 +23,8 @@ device:
 
 zigbee:
   fingerprints:
-  - firmwares: 2.0.024
-    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0003,0004,0005,0006,0008,1000,FC7C", outClusters:"0005,0019,0020,1000", model:"TRADFRI control outlet", manufacturer:"IKEA of Sweden"
-
-  - firmwares: 2.3.089
-    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0003,0004,0005,0006,0008,1000,FC7C", outClusters:"0019,0020,1000", model:"TRADFRI control outlet", manufacturer:"IKEA of Sweden"
+  - firmwares: 1.0.002
+    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0003,0004,0005,0006,0008,1000,FC57", outClusters:"0019", model:"ASKVADER on/off switch", manufacturer:"IKEA of Sweden"
 
   messages:
-  - file: src/devices/E1603/events.groovy
+  - file: src/devices/E1836/events.groovy

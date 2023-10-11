@@ -5,12 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2023-10-11
+
+### Added
+ - Add driver for Askvader On/Off Switch (E1836)
+ - Add driver for Tradfri LED Driver (ICPSHC24)
+
+### Fixed
+ - E1603: `OnWithTimedOff` command now works without the need to add a temporary timer (runIn)
+
 ## [3.0.0] - 2023-09-20
 ### Changed
-- Breaking change: Remove `Switch` and `SwitchLevel` capabilities for button devices
+- Breaking Change: Remove `Switch` and `SwitchLevel` capabilities for button devices
 
 ### Added
  - E1603: Add OnWithTimedOff command (max 6500 seconds)
+ - All: Determine power source automatically
 
 ### Fixed
  - E1603: Ignore IEEE Address Response cluster:0x8001 (@tom7)

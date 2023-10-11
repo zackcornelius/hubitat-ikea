@@ -12,5 +12,5 @@ case { contains it, [clusterInt:0x0008, commandInt:0x05] }:
 
 // On/Off button was released
 case { contains it, [clusterInt:0x0008, commandInt:0x07] }:
-    def button = device.currentValue("held") == "1" ? BUTTONS.ON : BUTTONS.OFF
+    def button = device.currentValue("held", true) == 1 ? BUTTONS.ON : BUTTONS.OFF
     return Utils.sendEvent(name:"released", value:button[0], type:"physical", isStateChange:true, descriptionText:"Button ${button[0]} (${button[1]}) was released")

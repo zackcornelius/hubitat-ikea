@@ -6,9 +6,11 @@ Supported devices:
 * [Tradfri Motion Sensor (E1745)](#tradfri-motion-sensor-e1745)
 * [Tradfri Remote Control (E1810)](#tradfri-remote-control-e1810)
 * [Tradfri Shortcut Button (E1812)](#tradfri-shortcut-button-e1812)
+* [Askvader On/Off Switch (E1836)](#askvader-onoff-switch-e1836)
 * [Styrbar Remote Control N2 (E2002)](#styrbar-remote-control-n2-e2002)
 * [Symfonisk Sound Remote Gen2 (E2123)](#symfonisk-sound-remote-gen2-e2123)
 * [Rodret Dimmer (E2201)](#rodret-dimmer-e2201)
+* [Tradfri LED Driver (ICPSHC24)](#tradfri-led-driver-icpshc24)
 
 ## Driver Install
 ### Install using HPM (offers automatic updates)
@@ -45,13 +47,16 @@ Follow the steps below if you don't know what "Hubitat Package Manager" is:
 * Report Zigbee Neighbors and Routing Tables (device acts as a Zigbee router)
 
 ### Device Pairing
-Follow the steps below in order to pair the Tradfri Control Outlet with your Hubitat hub:
-   * Find the small reset hole on the side of the device and make sure you have at hand a pin that can fit the reset hole (e.g.: a paper clip or SIM card eject pin)
-   * Plug the device in an outlet
-   * In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start Zigbee pairing"
-   * Insert the pin into the reset hole and press it for at least 5 seconds; upon release, the LED light will start blinking
-   * Return to the pairing page and give your device a name and assign it to a room (optional)
-   * That's it, Have fun!
+1. Find the small reset hole on the side of the device and make sure you have at hand a pin that can fit the reset hole
+   (e.g.: a paper clip or SIM card eject pin)
+1. If the device is already plugged in, take it out for 20 seconds (power-cycle); do this before each pair attempt
+1. Plug the device in an outlet
+1. In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start
+   Zigbee pairing"
+1. Insert the pin into the reset hole and press it for at least 5 seconds; upon release, the LED light will start
+   blinking
+1. Return to the pairing page and give your device a name and assign it to a room (optional)
+1. That's it, Have fun!
 
 
 ## Tradfri On/Off Switch (E1743)
@@ -71,14 +76,16 @@ Follow the steps below in order to pair the Tradfri Control Outlet with your Hub
 * Health status (online / offline)
 
 ### Device Pairing
-Follow the steps below in order to pair the Tradfri On/Off Switch with your Hubitat hub:
-   * Using a small screwdriver, open the battery compartiment and you should see the small pair button (don't push it!)
-   * In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start Zigbee pairing"
-   * > IMPORTANT: Move close to your Hubitat hub, then click the pair button in the battery compartiment **4 times within 5 seconds**
-   * > IMPORTANT: Immediately after the device LED starts blinking red, keep the device **as close as you can** against your Hubitat hub for **at least 30 seconds** (after the LED stops blinking and turns off)
-   * Return to the pairing page and give your device a name and assign it to a room (optional)
-   * Close the device battery compartiment
-   * That's it, Have fun!
+1. Using a small screwdriver, open the battery compartiment and you should see the small pair button (don't push it!)
+1. In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start
+   Zigbee pairing"
+1. > IMPORTANT: Move close to your Hubitat hub, then click the pair button in the battery compartiment **4 times within
+   > 5 seconds**
+1. > IMPORTANT: Immediately after the device LED starts blinking red, keep the device **as close as you can** against
+   > your Hubitat hub for **at least 30 seconds** (after the LED stops blinking and turns off)
+1. Return to the pairing page and give your device a name and assign it to a room (optional)
+1. Close the device battery compartiment
+1. That's it, Have fun!
 
 
 ## Tradfri Motion Sensor (E1745)
@@ -90,22 +97,28 @@ Follow the steps below in order to pair the Tradfri On/Off Switch with your Hubi
 | Manual install file | `https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1745.groovy` |
 | Tested firmwares | `24.4.5` |
 
-> IMPORTANT: Old firmware versions (below 24.4.5) suppport binding to groups only and this functionality is not supported by the Hubitat hub. Please update the remote to the latest version.
-
 ### Features
 * Motion detection
 * Battery indicator (%)
 * Health status (online / offline)
 
+### Known Issues
+* Old firmware versions (below 24.4.5) suppport binding to groups only and this functionality is not supported by the
+  Hubitat hub.
+* Moreover, the Tradfri Gateway does not currently offer the newer firmware version as a possible update.
+* You can update the device to the latest version only if you own the new Dirigera Hub.
+
 ### Device Pairing
-Follow the steps below in order to pair the Tradfri Motion Sensor with your Hubitat hub:
-   * Open the back compartiment and you should see the small pair button (don't push it!)
-   * In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start Zigbee pairing"
-   * > IMPORTANT: Move close to your Hubitat hub, then click the pair button in the battery compartiment **4 times within 5 seconds**
-   * > IMPORTANT: Immediately after the device LED starts blinking red, keep the device **as close as you can** against your Hubitat hub for **at least 30 seconds** (after the LED stops blinking and turns off)
-   * Return to the pairing page and give your device a name and assign it to a room (optional)
-   * Close the device battery compartiment
-   * That's it, Have fun!
+1. Open the back compartiment and you should see the small pair button (don't push it!)
+1. In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start
+   Zigbee pairing"
+1. > IMPORTANT: Move close to your Hubitat hub, then click the pair button in the battery compartiment **4 times within
+   > 5 seconds**
+1. > IMPORTANT: Immediately after the device LED starts blinking red, keep the device **as close as you can** against
+   > your Hubitat hub for **at least 30 seconds** (after the LED stops blinking and turns off)
+1. Return to the pairing page and give your device a name and assign it to a room (optional)
+1. Close the device battery compartiment
+1. That's it, Have fun!
 
 
 ## Tradfri Remote Control (E1810)
@@ -117,8 +130,6 @@ Follow the steps below in order to pair the Tradfri Motion Sensor with your Hubi
 | Manual install file | `https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1810.groovy` |
 | Tested firmwares | `24.4.5` |
 
-> IMPORTANT: Old firmware versions suppport binding to groups only and this functionality is not supported by the Hubitat hub. Please update the remote to the latest version.
-
 ### Features
 * Button Push events for: all buttons
 * Button Hold events for: Button 2 (🔆), Button 3 (🔅), Button 4 (Next) and Button 5 (Prev)
@@ -128,15 +139,21 @@ Follow the steps below in order to pair the Tradfri Motion Sensor with your Hubi
 * Battery indicator (%)
 * Health status (online / offline)
 
+### Known Issues
+* Old firmware versions suppport binding to groups only and this functionality is not supported by the Hubitat hub.
+  Please update the remote to the latest version.
+
 ### Device Pairing
-Follow the steps below in order to pair the Tradfri Remote Control with your Hubitat hub:
-   * Open the battery compartiment and you should see the small pair button (don't push it!)
-   * In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start Zigbee pairing"
-   * > IMPORTANT: Move close to your Hubitat hub, then click the pair button in the battery compartiment **4 times within 5 seconds**
-   * > IMPORTANT: Immediately after the device LED starts blinking red, keep the device **as close as you can** against your Hubitat hub for **at least 30 seconds** (after the LED stops blinking and turns off)
-   * Return to the pairing page and give your device a name and assign it to a room (optional)
-   * Close the device battery compartiment
-   * That's it, Have fun!
+1. Open the battery compartiment and you should see the small pair button (don't push it!)
+1. In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start
+   Zigbee pairing"
+1. > IMPORTANT: Move close to your Hubitat hub, then click the pair button in the battery compartiment **4 times within
+   > 5 seconds**
+1. > IMPORTANT: Immediately after the device LED starts blinking red, keep the device **as close as you can** against
+   > your Hubitat hub for **at least 30 seconds** (after the LED stops blinking and turns off)
+1. Return to the pairing page and give your device a name and assign it to a room (optional)
+1. Close the device battery compartiment
+1. That's it, Have fun!
 
 
 ## Tradfri Shortcut Button (E1812)
@@ -157,14 +174,45 @@ Follow the steps below in order to pair the Tradfri Remote Control with your Hub
 * Health status (online / offline)
 
 ### Device Pairing
-Follow the steps below in order to pair the Tradfri Shortcut Button with your Hubitat hub:
-   * Using a small screwdriver, open the battery compartiment and you should see the small pair button (don't push it!)
-   * In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start Zigbee pairing"
-   * > IMPORTANT: Move close to your Hubitat hub, then click the pair button in the battery compartiment **4 times within 5 seconds**
-   * > IMPORTANT: Immediately after the device LED starts blinking red, keep the device **as close as you can** against your Hubitat hub for **at least 30 seconds** (after the LED stops blinking and turns off)
-   * Return to the pairing page and give your device a name and assign it to a room (optional)
-   * Close the device battery compartiment
-   * That's it, Have fun!
+1. Using a small screwdriver, open the battery compartiment and you should see the small pair button (don't push it!)
+1. In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start
+   Zigbee pairing"
+1. > IMPORTANT: Move close to your Hubitat hub, then click the pair button in the battery compartiment **4 times within
+   > 5 seconds**; the red LED light can be seen from the back / battery side
+1. > IMPORTANT: Immediately after the device LED starts blinking red, keep the device **as close as you can** against
+   > your Hubitat hub for **at least 30 seconds** (after the LED stops blinking and turns off)
+1. Return to the pairing page and give your device a name and assign it to a room (optional)
+1. Close the device battery compartiment
+1. That's it, Have fun!
+
+
+## Askvader On/Off Switch (E1836)
+
+| Parameter | Details |
+|-----------|-------------|
+| Product Image | <img src="https://zigbee.blakadder.com/assets/images/devices/Ikea_E1836.webp" style="width: 200px"> |
+| Product Code | `504.638.80` |
+| Manual install file | `https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1836.groovy` |
+| Tested firmwares | `1.0.002` |
+
+### Features
+* Commands: On, Off, Toggle, On with Timed Off
+* Configure what happens after a power outage (Power On, Power Off, Restore previous state)
+* Health status (online / offline)
+* Refresh switch state on demand
+* Report Zigbee Neighbors and Routing Tables (device acts as a Zigbee router)
+
+### Device Pairing
+1. Find the small reset hole (between the On/Off button and the LED light) and make sure you have at hand a pin or
+   pencil that can fit the reset hole
+1. If the device is already plugged in, take it out for 20 seconds (power-cycle); do this before each pair attempt
+1. Plug the device in an outlet
+1. In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start
+   Zigbee pairing"
+1. Insert the pin into the reset hole and press it for at least 5 seconds; upon release, the LED light will start
+   blinking
+1. Return to the pairing page and give your device a name and assign it to a room (optional)
+1. That's it, Have fun!
 
 
 ## Styrbar Remote Control N2 (E2002)
@@ -183,18 +231,20 @@ Follow the steps below in order to pair the Tradfri Shortcut Button with your Hu
 * Battery indicator (%)
 * Health status (online / offline)
 
-### Issues
+### Known Issues
 * The Hold / Release events don't work correctly on the Next and Prev buttons
 
 ### Device Pairing
-Follow the steps below in order to pair the Styrbar Remote Control with your Hubitat hub:
-   * Using a small screwdriver, open the battery compartiment and you should see the small pair button (don't push it!)
-   * In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start Zigbee pairing"
-   * > IMPORTANT: Move close to your Hubitat hub, then click the pair button in the battery compartiment **4 times within 5 seconds**
-   * > IMPORTANT: Immediately after the device LED starts blinking red, keep the device **as close as you can** against your Hubitat hub for **at least 30 seconds** (after the LED stops blinking and turns off)
-   * Return to the pairing page and give your device a name and assign it to a room (optional)
-   * Close the device battery compartiment
-   * That's it, Have fun!
+1. Using a small screwdriver, open the battery compartiment and you should see the small pair button (don't push it!)
+1. In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start
+   Zigbee pairing"
+1. > IMPORTANT: Move close to your Hubitat hub, then click the pair button in the battery compartiment **4 times within
+   > 5 seconds**
+1. > IMPORTANT: Immediately after the device LED starts blinking red, keep the device **as close as you can** against
+   > your Hubitat hub for **at least 30 seconds** (after the LED stops blinking and turns off)
+1. Return to the pairing page and give your device a name and assign it to a room (optional)
+1. Close the device battery compartiment
+1. That's it, Have fun!
 
 
 ## Symfonisk Sound Remote Gen2 (E2123)
@@ -215,14 +265,16 @@ Follow the steps below in order to pair the Styrbar Remote Control with your Hub
 * Health status (online / offline)
 
 ### Device Pairing
-Follow the steps below in order to pair the IKEA Sound Remote Gen2 with your Hubitat hub:
-   * Open the battery compartiment and you should see the small pair button - with two chain links on it (don't push it!)
-   * In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start Zigbee pairing"
-   * > IMPORTANT: Move close to your Hubitat hub, then click the pair button in the battery compartiment **4 times within 5 seconds**
-   * > IMPORTANT: Immediately after the device LED starts blinking red, keep the device **as close as you can** against your Hubitat hub until the LED stops blinking and turns off
-   * Return to the pairing page and give your device a name and assign it to a room (optional)
-   * Close the device battery compartiment
-   * That's it, Have fun!
+1. Open the battery compartiment and you should see the small pair button - with two chain links on it (don't push it!)
+1. In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start
+   Zigbee pairing"
+1. > IMPORTANT: Move close to your Hubitat hub, then click the pair button in the battery compartiment **4 times within
+   > 5 seconds**
+1. > IMPORTANT: Immediately after the device LED starts blinking red, keep the device **as close as you can** against
+   > your Hubitat hub until the LED stops blinking and turns off
+1. Return to the pairing page and give your device a name and assign it to a room (optional)
+1. Close the device battery compartiment
+1. That's it, Have fun!
 
 
 ## Rodret Dimmer (E2201)
@@ -242,14 +294,52 @@ Follow the steps below in order to pair the IKEA Sound Remote Gen2 with your Hub
 * Health status (online / offline)
 
 ### Device Pairing
-Follow the steps below in order to pair the Rodret Dimmer with your Hubitat hub:
-   * Open the battery compartiment and you should see the small pair button (don't push it!)
-   * In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start Zigbee pairing"
-   * > IMPORTANT: Move close to your Hubitat hub, then click the pair button in the battery compartiment **4 times within 5 seconds**
-   * > IMPORTANT: Immediately after the device LED starts blinking red, keep the device **as close as you can** against your Hubitat hub for **at least 30 seconds** (after the LED stops blinking and turns off)
-   * Return to the pairing page and give your device a name and assign it to a room (optional)
-   * Close the device battery compartiment
-   * That's it, Have fun!
+1. Open the battery compartiment and you should see the small pair button (don't push it!)
+1. In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start
+   Zigbee pairing"
+1. > IMPORTANT: Move close to your Hubitat hub, then click the pair button in the battery compartiment **4 times within
+   > 5 seconds**
+1. > IMPORTANT: Immediately after the device LED starts blinking red, keep the device **as close as you can** against
+   > your Hubitat hub for **at least 30 seconds** (after the LED stops blinking and turns off)
+1. Return to the pairing page and give your device a name and assign it to a room (optional)
+1. Close the device battery compartiment
+1. That's it, Have fun!
+
+
+## Tradfri LED Driver (ICPSHC24)
+
+| Parameter | Details |
+|-----------|-------------|
+| Product Image | <img src="https://zigbee.blakadder.com/assets/images/devices/Ikea_ICPSHC24-30EU-IL-1.webp" style="width: 200px"> |
+| Product Code | `603.426.56`｜`503.561.87` |
+| Manual install file | `https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/ICPSHC24.groovy` |
+| Tested firmwares | 10EU-IL-1: `1.2.245` |
+|| 30EU-IL-2: `1.0.002` |
+
+### Features
+1. Commands: On, Off, Toggle, On with Timed Off
+1. Configure what happens after a power outage (Power On, Power Off, Restore previous state)
+1. Brightness control: Set brightness level, Start/Stop level change, Level up/down
+1. Configure brightness level when turned on (Always the same value, Restore last level)
+1. Can set the brightness level when the lights are off (and they stay off). When the lights are turned on, they will start at the specified level.
+1. Health status (online / offline)
+1. Refresh switch state on demand
+1. Report Zigbee Neighbors and Routing Tables (device acts as a Zigbee router)
+
+### Known Issues
+* Smaller (10W) drivers do not honor the Power On Behavior
+
+### Device Pairing
+1. Have a light attached to the LED Driver device
+1. Find the small reset hole on the device and make sure you have at hand a pin that can fit the reset hole (e.g.: a
+   paper clip or SIM card eject pin)
+1. If the device is already plugged in, take it out for 20 seconds (power-cycle); do this before each pair attempt
+1. Plug the device in an outlet
+1. In the Hubitat interface, go to "Devices", click "Add Device" in the top right, click "Zigbee", then click "Start
+   Zigbee pairing"
+1. Insert the pin into the reset hole and press it for at least 5 seconds; the attached light will blink then stay on
+1. Return to the pairing page and give your device a name and assign it to a room (optional)
+1. That's it, Have fun!
 
 ---
 [<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 162px !important">](https://www.buymeacoffee.com/dandanache)

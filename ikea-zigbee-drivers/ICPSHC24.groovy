@@ -1,15 +1,15 @@
 /**
- * IKEA Tradfri Motion Sensor (E1745)
+ * IKEA Tradfri LED Driver (ICPSHC24)
  *
  * @see https://dan-danache.github.io/hubitat/ikea-zigbee-drivers/
- * @see https://zigbee.blakadder.com/Ikea_E1745.html
+ * @see https://zigbee.blakadder.com/Ikea_ICPSHC24.html
  * @see https://ww8.ikea.com/ikeahomesmart/releasenotes/releasenotes.html
  */
 
 import groovy.time.TimeCategory
 import groovy.transform.Field
 
-@Field static final String DRIVER_NAME = "IKEA Tradfri Motion Sensor (E1745)"
+@Field static final String DRIVER_NAME = "IKEA Tradfri LED Driver (ICPSHC24)"
 @Field static final String DRIVER_VERSION = "3.1.0"
 @Field static final Map<String, String> ZDP_STATUS = ["00":"SUCCESS", "80":"INV_REQUESTTYPE", "81":"DEVICE_NOT_FOUND", "82":"INVALID_EP", "83":"NOT_ACTIVE", "84":"NOT_SUPPORTED", "85":"TIMEOUT", "86":"NO_MATCH", "88":"NO_ENTRY", "89":"NO_DESCRIPTOR", "8A":"INSUFFICIENT_SPACE", "8B":"NOT_PERMITTED", "8C":"TABLE_FULL", "8D":"NOT_AUTHORIZED", "8E":"DEVICE_BINDING_TABLE_FULL"]
 @Field static final Map<String, String> ZCL_STATUS = ["00":"SUCCESS", "01":"FAILURE", "7E":"NOT_AUTHORIZED", "7F":"RESERVED_FIELD_NOT_ZERO", "80":"MALFORMED_COMMAND", "81":"UNSUP_CLUSTER_COMMAND", "82":"UNSUP_GENERAL_COMMAND", "83":"UNSUP_MANUF_CLUSTER_COMMAND", "84":"UNSUP_MANUF_GENERAL_COMMAND", "85":"INVALID_FIELD", "86":"UNSUPPORTED_ATTRIBUTE", "87":"INVALID_VALUE", "88":"READ_ONLY", "89":"INSUFFICIENT_SPACE", "8A":"DUPLICATE_EXISTS", "8B":"NOT_FOUND", "8C":"UNREPORTABLE_ATTRIBUTE", "8D":"INVALID_DATA_TYPE", "8E":"INVALID_SELECTOR", "8F":"WRITE_ONLY", "90":"INCONSISTENT_STARTUP_STATE", "91":"DEFINED_OUT_OF_BAND", "92":"INCONSISTENT", "93":"ACTION_DENIED", "94":"TIMEOUT", "95":"ABORT", "96":"INVALID_IMAGE", "97":"WAIT_FOR_DATA", "98":"NO_IMAGE_AVAILABLE", "99":"REQUIRE_MORE_IMAGE", "9A":"NOTIFICATION_PENDING", "C0":"HARDWARE_FAILURE", "C1":"SOFTWARE_FAILURE", "C2":"CALIBRATION_ERROR", "C3":"UNSUPPORTED_CLUSTER"]
@@ -17,23 +17,44 @@ import groovy.transform.Field
 // Fields for capability.HealthCheck
 @Field def HEALTH_CHECK = [
     "schedule": "0 0 0/1 ? * * *", // Health will be checked using this cron schedule
-    "thereshold": 43200 // When checking, mark the device as offline if no Zigbee message was received in the last 43200 seconds
+    "thereshold": 3600 // When checking, mark the device as offline if no Zigbee message was received in the last 3600 seconds
 ]
 
 metadata {
-    definition(name:DRIVER_NAME, namespace:"dandanache", author:"Dan Danache", importUrl:"https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1745.groovy") {
+    definition(name:DRIVER_NAME, namespace:"dandanache", author:"Dan Danache", importUrl:"https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/ICPSHC24.groovy") {
         capability "Configuration"
-        capability "Battery"
+        capability "Switch"
+        capability "ChangeLevel"
+        capability "SwitchLevel"
         capability "HealthCheck"
-        capability "MotionSensor"
         capability "PowerSource"
+        capability "Refresh"
+        capability "HealthCheck"
 
-        // For firmwares: 24.4.5
-        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC57,FC7C", outClusters:"0003,0004,0006,0008,0019,1000", model:"TRADFRI motion sensor", manufacturer:"IKEA of Sweden"
+        // For firmwares: 1.2.245 (10EU-IL-1)
+        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0003,0004,0005,0006,0008,0B05,1000", outClusters:"0005,0019,0020,1000", model:"TRADFRI Driver 10W", manufacturer:"IKEA of Sweden"
+
+        // For firmwares: 1.0.002 (30EU-IL-2)
+        fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0003,0004,0005,0006,0008,1000,FC57", outClusters:"0019", model:"TRADFRI Driver 30W", manufacturer:"IKEA of Sweden"
         
         // Attributes for capability.HealthCheck
         attribute "healthStatus", "ENUM", ["offline", "online", "unknown"]
+        
+        // Attributes for capability.ZigbeeRouter
+        attribute "neighbors", "STRING"
+        attribute "routes", "STRING"
     }
+    
+    // Commands for capability.Switch
+    command "toggle"
+    command "onWithTimedOff", [[name:"On time*", type:"NUMBER", description:"After how many seconds power will be turned Off [1..6500]"]]
+    
+    // Commands for capability.ChangeLevel
+    command "levelUp"
+    command "levelDown"
+    
+    // Commands for capability.ZigbeeRouter
+    command "requestRoutingData"
 
     preferences {
         input(
@@ -48,6 +69,95 @@ metadata {
                 "4":"Error - log errors"
             ],
             defaultValue: "2",
+            required: true
+        )
+        
+        // Inputs for capability.Switch
+        input(
+            name: "powerOnBehavior",
+            type: "enum",
+            title: "Power On behaviour",
+            description: "<small>Select what happens after a power outage</small>",
+            options: [
+                "TURN_POWER_ON": "Turn power On",
+                "TURN_POWER_OFF": "Turn power Off",
+                "RESTORE_PREVIOUS_STATE": "Restore previous state"
+            ],
+            defaultValue: "RESTORE_PREVIOUS_STATE",
+            required: true
+        )
+        
+        // Inputs for capability.ChangeLevel
+        input(
+            name: "levelStep",
+            type: "enum",
+            title: "Brightness up/down step",
+            description: "<small>Level adjust when using the levelUp/levelDown commands</small>",
+            options: [
+                "1" : "1%",
+                "2" : "2%",
+                "5" : "5%",
+                "10": "10%",
+                "20": "20%",
+                "25": "25%",
+                "33": "33%"],
+            defaultValue: "20",
+            required: true
+        )
+        input(
+            name: "startLevelChangeRate",
+            type: "enum",
+            title: "Brightness change rate",
+            description: "<small>The rate of brightness change when using the startLevelChange() command</small>",
+            options: [
+                "10" : "10% / second : from 0% to 100% in 10 seconds",
+                "20" : "20% / second : from 0% to 100% in 5 seconds",
+                "33" : "33% / second : from 0% to 100% in 3 seconds",
+                "50" : "50% / seconds : from 0% to 100% in 2 seconds",
+                "100": "100% / second : from 0% to 100% in 1 seconds",
+            ],
+            defaultValue: "20",
+            required: true
+        )
+        
+        // Inputs for capability.SwitchLevel
+        input(
+            name: "turnOnBehavior",
+            type: "enum",
+            title: "Turn On behavior",
+            description: "<small>Select what happens when the device is turned On</small>",
+            options: [
+                "RESTORE_PREVIOUS_LEVEL": "Restore previous brightness",
+                "FIXED_VALUE": "Always start with the same fixed brightness"
+            ],
+            defaultValue: "RESTORE_PREVIOUS_LEVEL",
+            required: true
+        )
+        if (turnOnBehavior == "FIXED_VALUE") {
+            input(
+                name: "onLevelValue",
+                type: "number",
+                title: "Fixed brightness value",
+                description: "<small>Range 0~100</small>",
+                defaultValue: 50,
+                range: "0..100",
+                required: true
+            )
+        }
+        input(
+            name: "transitionTime",
+            type: "enum",
+            title: "On/Off transition time",
+            description: "<small>Time taken to move to/from the target brightness when device is turned On/Off</small>",
+            options: [
+                "0" : "Instant",
+                "5" : "0.5 seconds",
+                "10": "1 second",
+                "15": "1.5 seconds",
+                "20": "2 seconds",
+                "50": "5 seconds"
+            ],
+            defaultValue: "5",
             required: true
         )
     }
@@ -70,6 +180,30 @@ def updated() {
     unschedule()
     if (logLevel == "1") runIn 1800, "logsOff"
     Log.info "🛠️ logLevel = ${logLevel}"
+    
+    // Preferences for capability.Switch
+    Log.info "🛠️ powerOnBehavior = ${powerOnBehavior}"
+    Utils.sendZigbeeCommands zigbee.writeAttribute(0x0006, 0x4003, 0x30, powerOnBehavior == "TURN_POWER_OFF" ? 0x00 : (powerOnBehavior == "TURN_POWER_ON" ? 0x01 : 0xFF))
+    
+    // Preferences for capability.ChangeLevel
+    Log.info "🛠️ levelStep = ${levelStep}%"
+    Log.info "🛠️ startLevelChangeRate = ${startLevelChangeRate}% / second"
+    
+    // Preferences for capability.SwitchLevel
+    Log.info "🛠️ turnOnBehavior = ${turnOnBehavior}"
+    if (turnOnBehavior == "FIXED_VALUE") {
+        Integer lvl = onLevelValue == null ? 50 : onLevelValue.intValue()
+        device.clearSetting "onLevelValue"
+        device.removeSetting "onLevelValue"
+        device.updateSetting "onLevelValue", lvl
+        Log.info "🛠️ onLevelValue = ${lvl}%"
+        setOnLevel(lvl)
+    } else {
+        Log.debug "Disabling OnLevel (0xFF)"
+        Utils.sendZigbeeCommands zigbee.writeAttribute(0x0008, 0x0011, 0x20, 0xFF)
+    }
+    Log.info "🛠️ transitionTime = ${Integer.parseInt(transitionTime) / 10} second(s)"
+    Utils.sendZigbeeCommands(zigbee.writeAttribute(0x0008, 0x0010, 0x21, Integer.parseInt(transitionTime)))
     
     // Preferences for capability.HealthCheck
     schedule HEALTH_CHECK.schedule, "healthCheck"
@@ -118,16 +252,22 @@ def configure() {
 
     def cmds = []
 
-    // Configure E1745 specific Zigbee reporting
+    // Configure ICPSHC24 specific Zigbee reporting
     // -- No reporting needed
 
-    // Add E1745 specific Zigbee binds
+    // Add ICPSHC24 specific Zigbee binds
+    // -- No binds needed
+    
+    // Configuration for capability.Switch
+    sendEvent name:"switch", value:"on", type:"digital", descriptionText:"Switch initialized to on"
+    cmds += "he cr 0x${device.deviceNetworkId} 0x01 0x0006 0x0000 0x10 0x0000 0x0258 {01} {}" // Report battery at least every 10 minutes
     cmds += "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {${device.zigbeeId}} {}" // On/Off cluster
     
-    // Configuration for capability.Battery
-    cmds += "he cr 0x${device.deviceNetworkId} 0x01 0x0001 0x0021 0x20 0x0000 0xA8C0 {01} {}" // Report battery at least every 12 hours
-    cmds += "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0001 {${device.zigbeeId}} {}" // Power Configuration cluster
-    cmds += zigbee.readAttribute(0x0001, 0x0021)  // BatteryPercentage
+    // Configuration for capability.SwitchLevel
+    sendEvent name:"level", value:"100", type:"digital", descriptionText:"Brightness initialized to 100%"
+    cmds += "he cr 0x${device.deviceNetworkId} 0x01 0x0008 0x0000 0x20 0x0000 0x0258 {01} {}" // Report CurrentLevel at least every 10 minutes
+    cmds += "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0008 {${device.zigbeeId}} {}" // Level Control cluster
+    //cmds += zigbee.readAttribute(0x0008, 0x0000) // CurrentLevel
     
     // Configuration for capability.HealthCheck
     sendEvent name:"healthStatus", value:"online", descriptionText:"Health status initialized to online"
@@ -136,6 +276,11 @@ def configure() {
     // Configuration for capability.PowerSource
     sendEvent name:"powerSource", value:"unknown", type:"digital", descriptionText:"Power source initialized to unknown"
     cmds += zigbee.readAttribute(0x0000, 0x0007) // PowerSource
+    
+    // Configure for capability.Refresh
+    cmds += zigbee.readAttribute(0x0006, 0x0000) // OnOff := { 0x00:Off, 0x01:On }
+    cmds += zigbee.readAttribute(0x0006, 0x4003) // PowerOnBehavior := { 0x00:TurnPowerOff, 0x01:TurnPowerOn, 0xFF:RestorePreviousState }
+    cmds += zigbee.readAttribute(0x0008, 0x0000) // CurrentLevel := 0x00 to 0xFE (0 to 254)
 
     // Query Basic cluster attributes
     cmds += zigbee.readAttribute(0x0000, [0x0001, 0x0003, 0x0004, 0x0005, 0x000A, 0x4000]) // ApplicationVersion, HWVersion, ManufacturerName, ModelIdentifier, IKEAType, SWBuildID
@@ -143,6 +288,104 @@ def configure() {
     // Query all active endpoints
     cmds += "he raw 0x${device.deviceNetworkId} 0x0000 0x0000 0x0005 {00 ${zigbee.swapOctets(device.deviceNetworkId)}} {0x0000}"
     Utils.sendZigbeeCommands cmds
+}
+
+// Implementation for capability.Switch
+def on() {
+    Log.debug "Sending On command"
+    Utils.sendZigbeeCommands(zigbee.on())
+}
+def off() {
+    Log.debug "Sending Off command"
+    Utils.sendZigbeeCommands(zigbee.off())
+}
+
+def toggle() {
+    Log.debug "Sending Toggle command"
+    Utils.sendZigbeeCommands(zigbee.command(0x0006, 0x02))
+}
+
+def onWithTimedOff(onTime = 1) {
+    Integer delay = onTime < 1 ? 1 : (onTime > 6500 ? 6500 : onTime)
+    Log.debug "Sending OnWithTimedOff command"
+    String delayHex = zigbee.swapOctets(zigbee.convertToHexString(delay * 10, 4))
+    Utils.sendZigbeeCommands(zigbee.command(0x0006, 0x42, "00", delayHex, "0000"))
+}
+
+// Implementation for capability.ChangeLevel
+def startLevelChange(direction) {
+    Log.debug "Starting brightness change ${direction}wards with a rate of ${startLevelChangeRate}% / second"
+
+    Integer mode = direction == "up" ? 0x00 : 0x01
+    Integer rate = Integer.parseInt(startLevelChangeRate) * 2.54
+    Utils.sendZigbeeCommands(zigbee.command(0x0008, 0x01,
+        zigbee.convertToHexString(mode, 2),          // MoveMode (enum8)
+        zigbee.convertToHexString(rate, 2)           // Rate (uint8)
+    ))
+}
+def stopLevelChange() {
+    Log.debug "Stopping brightness change"
+    Utils.sendZigbeeCommands(zigbee.command(0x0008, 0x03))
+}
+def levelUp() {
+    Log.debug "Moving brightness up by ${levelStep}%"
+
+    Integer stepSize = Integer.parseInt(levelStep) * 2.54
+    Integer dur = 0
+    Utils.sendZigbeeCommands(zigbee.command(0x0008, 0x02,
+        zigbee.convertToHexString(0x00, 2),                       // StepMode (enum8)
+        zigbee.convertToHexString(stepSize, 2),                   // StepSize (uint8)
+        zigbee.swapOctets(zigbee.convertToHexString(dur, 4))      // TransitionTime (uint16)
+    ))
+}
+def levelDown() {
+    Log.debug "Moving brightness down by ${levelStep}%"
+
+    Integer stepSize = Integer.parseInt(levelStep) * 2.54
+    Integer dur = 0
+    Utils.sendZigbeeCommands(zigbee.command(0x0008, 0x02,
+        zigbee.convertToHexString(0x01, 2),                       // StepMode (enum8)
+        zigbee.convertToHexString(stepSize, 2),                   // StepSize (uint8)
+        zigbee.swapOctets(zigbee.convertToHexString(dur, 4))      // TransitionTime (uint16)
+    ))
+}
+
+// Implementation for capability.SwitchLevel
+def setLevel(level, duration = 0) {
+    Integer newLevel = level > 100 ? 100 : (level < 0 ? 0 : level)
+    Log.debug "Setting brightness to ${newLevel}% during ${duration} seconds"
+
+    // Device is On: use the Move To Level command
+    if (device.currentValue("switch", true) == "on") {
+        Integer lvl = newLevel * 2.54
+        Integer dur = (duration > 1800 ? 1800 : (duration < 0 ? 0 : duration)) * 10         // Max transition time = 30 min
+        return Utils.sendZigbeeCommands(zigbee.command(0x0008, 0x00,
+            zigbee.convertToHexString(lvl, 2),                        // Level (uint8)
+            zigbee.swapOctets(zigbee.convertToHexString(dur, 4))      // TransitionTime (uint16)
+        ))
+    }
+
+    // Device is Off and onLevel is set to a fixed value: ignore command
+    if (turnOnBehavior == "FIXED_VALUE") {
+        return Log.info("Ignoring Set Level command because the device is turned Off and \"Turn On behavior\" preference is set to \"Always start with the same fixed brightness\"")
+    }
+
+    // Device is Off: keep the device turned Off, use the OnLevel attribute
+    Log.debug("Device is turned Off so we prepare brightness for when the device will be turned On")
+    setOnLevel(newLevel)
+    Utils.sendEvent(name:"level", value:newLevel, descriptionText:"Brightness is ${newLevel}%", type:"digital", isStateChange:true)
+}
+def setOnLevel(level) {
+    Integer newLevel = level > 100 ? 100 : (level < 0 ? 0 : level)
+    Log.debug "Setting Turn On brightness to ${newLevel}%"
+    Integer lvl = newLevel * 2.54
+    Utils.sendZigbeeCommands zigbee.writeAttribute(0x0008, 0x0011, 0x20, lvl)
+}
+def turnOnCallback(switchState) {
+    // Device was just turned on: Read the value of the OnLevel attribute to sync/update its value
+    if (switchState == "on") {
+        Utils.sendZigbeeCommands zigbee.readAttribute(0x0008, 0x0011)
+    }
 }
 
 // Implementation for capability.HealthCheck
@@ -171,9 +414,22 @@ def pingExecute() {
     Log.info "Will me marked as offline if no message is received until ${thereshold.format("yyyy-MM-dd HH:mm:ss", location.timeZone)} (${offlineMarkAgo} from now)"
 }
 
-// Implementation for capability.MotionSensor
-def motionInactive() {
-    return Utils.sendEvent(name:"motion", value:"inactive", type:"digital", descriptionText:"Is inactive")
+// Implementation for capability.Refresh
+def refresh() {
+    List<String> cmds = []
+    cmds += zigbee.readAttribute(0x0006, 0x0000) // OnOff := { 0x00:Off, 0x01:On }
+    cmds += zigbee.readAttribute(0x0006, 0x4003) // PowerOnBehavior := { 0x00:TurnPowerOff, 0x01:TurnPowerOn, 0xFF:RestorePreviousState }
+    cmds += zigbee.readAttribute(0x0008, 0x0000) // CurrentLevel := 0x00 to 0xFE (0 to 254)
+    Utils.sendZigbeeCommands cmds
+}
+
+// Implementation for capability.ZigbeeRouter
+def requestRoutingData() {
+    Log.info "Asking the device to send its Neighbors Table and the Routing Table data ..."
+    Utils.sendZigbeeCommands([
+        "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0031 {00} {0x00}",
+        "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0032 {00} {0x00}"
+    ])
 }
 
 // ===================================================================================================================
@@ -201,44 +457,131 @@ def parse(String description) {
     switch (msg) {
 
         // ---------------------------------------------------------------------------------------------------------------
-        // Handle E1745 specific Zigbee messages
+        // Handle ICPSHC24 specific Zigbee messages
         // ---------------------------------------------------------------------------------------------------------------
 
-        // OnWithTimedOff := { 08:OnOffControl, 16:OnTime, 16:OffWaitTime }
-        // OnOffControl := { 01:AcceptOnlyWhenOn, 07:Reserved }
-        // Example: [01, 08, 07, 00, 00] -> acceptOnlyWhenOn=true, onTime=180, offWaitTime=0
-        case { contains it, [clusterInt:0x0006, commandInt:0x42] }:
-            def onTime = Math.round(Integer.parseInt(msg.data[1..2].reverse().join(), 16) / 10)
-            runIn onTime, "motionInactive"
-            return Utils.sendEvent(name:"motion", value:"active", type:"physical", isStateChange:true, descriptionText:"Is active")
+        // No specific events
 
         // ---------------------------------------------------------------------------------------------------------------
         // Handle capabilities Zigbee messages
         // ---------------------------------------------------------------------------------------------------------------
         
-        // Events for capability.Battery
+        // Events for capability.Switch
         
-        // Report Attributes: BatteryPercentage
-        // Read Attributes Reponse: BatteryPercentage
-        case { contains it, [clusterInt:0x0001, commandInt:0x0A, attrInt:0x0021] }:
-        case { contains it, [clusterInt:0x0001, commandInt:0x01, attrInt:0x0021] }:
-            Integer percentage = Integer.parseInt(msg.value, 16)
+        // ZCL DefaultResponse := { 08:Command, 08:Status }
+        // Examples:
+        // - Off:    [00 00] -> command=0x00, status=SUCCESS
+        // - On:     [01 00] -> command=0x01, status=SUCCESS
+        // - Toggle: [02 00] -> command=0x02, status=SUCCESS
+        case { contains it, [clusterInt:0x0006, commandInt:0x0B] }:
+            if (msg.data[1] != "00") {
+                return Utils.failedZclMessage("Default Response", msg.data[1], msg)
+            }
+            return Utils.processedZclMessage("Default Response", "cluster=0x${msg.clusterId}, command=0x${msg.data[0]}")
         
-            // (0xFF) 255 is an invalid value for the battery percentage attribute, so we just ignore it
-            if (percentage == 255) {
-                Log.warn "Ignored invalid reported battery percentage value: 0xFF (255)"
-                return
+        // Write Attribute Response (0x04)
+        case { contains it, [clusterInt:0x0006, commandInt:0x04] }:
+            if (msg.data[0] != "00") {
+                return Utils.failedZclMessage("Write Attribute Response", msg.data[0], msg)
+            }
+            return Utils.processedZclMessage("Write Attribute Response", "cluster=0x${msg.clusterId}")
+        
+        // Report Attributes: OnOff
+        // Read Attributes Response: OnOff
+        case { contains it, [clusterInt:0x0006, commandInt:0x0A, attrInt: 0x0000] }:
+        case { contains it, [clusterInt:0x0006, commandInt:0x01, attrInt: 0x0000] }:
+        
+            // If we sent a Zigbee command in the last 3 seconds, we assume that this On/Off state change is a consequence of this driver
+            // Therefore, we mark this event as "digital"
+            String type = state.containsKey("lastTx") && (now() - state.lastTx < 3000) ? "digital" : "physical"
+        
+            String newState = msg.value == "00" ? "off" : "on"
+            if (device.currentValue("switch", true) != newState) {
+                Utils.sendEvent name:"switch", value:newState, descriptionText:"Was turned ${newState}", type:type
+        
+                // Execute the configured callback: turnOnCallback
+                turnOnCallback(newState)
+            }
+            return Utils.processedZclMessage("Report/Read Attributes Response", "OnOff=${newState}")
+        
+        // Read Attributes Response: powerOnBehavior
+        case { contains it, [clusterInt:0x0006, commandInt:0x01, attrInt: 0x4003] }:
+            String newValue = ""
+            switch (Integer.parseInt(msg.value, 16)) {
+                case 0x00: newValue = "TURN_POWER_OFF"; break
+                case 0x01: newValue = "TURN_POWER_ON"; break
+                case 0xFF: newValue = "RESTORE_PREVIOUS_STATE"; break
+                default: return Log.warn("Received attribute value: powerOnBehavior=${msg.value}")
             }
         
-            percentage =  percentage / 2
-            Utils.sendEvent name:"battery", value:percentage, unit:"%", type:"physical", descriptionText:"Battery is ${percentage}% full"
-            return Utils.processedZclMessage("Report/Read Attributes Response", "BatteryPercentage=${percentage}")
+            powerOnBehavior = newValue
+            device.clearSetting "powerOnBehavior"
+            device.removeSetting "powerOnBehavior"
+            device.updateSetting "powerOnBehavior", newValue
+            return Utils.processedZclMessage("Read Attributes Response", "powerOnBehavior=${newValue}")
         
-        // Other events that we expect but are not usefull for capability.Battery behavior
+        // Other events that we expect but are not usefull for capability.Switch behavior
         
         // ConfigureReportingResponse := { 08:Status, 08:Direction, 16:AttributeIdentifier }
         // Success example: [00] -> status = SUCCESS
-        case { contains it, [clusterInt:0x0001, commandInt:0x07] }:
+        case { contains it, [clusterInt:0x0006, commandInt:0x07] }:
+            if (msg.data[0] != "00") return Utils.failedZclMessage("Configure Reporting Response", msg.data[0], msg)
+            return Utils.processedZclMessage("Configure Reporting Response", "cluster=0x${msg.clusterId}, data=${msg.data}")
+        
+        // Events for capability.SwitchLevel
+        
+        // Report Attributes: CurrentLevel
+        // Read Attributes Reponse: CurrentLevel
+        case { contains it, [clusterInt:0x0008, commandInt:0x0A, attrInt:0x0000] }:
+        case { contains it, [clusterInt:0x0008, commandInt:0x01, attrInt:0x0000] }:
+            Utils.processedZclMessage("Report/Read Attributes Response", "CurrentLevel=${msg.value}")
+        
+            Integer newLevel = msg.value == "00" ? 0 : Integer.parseInt(msg.value, 16) * 100 / 254
+            if (device.currentValue("level", true) != newLevel) {
+                Utils.sendEvent name:"level", value:newLevel, descriptionText:"Brightness is ${newLevel}%", type:"digital"
+            }
+            return
+        
+        // Read Attributes Reponse: OnLevel
+        // This value is read immediately after the device is turned On
+        // @see turnOnCallback()
+        case { contains it, [clusterInt:0x0008, commandInt:0x01, attrInt:0x0011] }:
+            Utils.processedZclMessage("Read Attributes Response", "OnLevel=${msg.value}")
+            Integer onLevel = msg.value == "00" ? 0 : Integer.parseInt(msg.value, 16) * 100 / 254
+        
+            // Clear OnLevel attribute value (if previously set)
+            if (turnOnBehavior != "FIXED_VALUE" && msg.value != "FF") {
+                setLevel(device.currentValue("level", true))
+                Log.debug "Disabling OnLevel (0xFF)"
+                return Utils.sendZigbeeCommands(zigbee.writeAttribute(0x0008, 0x0011, 0x20, 0xFF))
+            }
+        
+            // Set current level to OnLevel
+            if (turnOnBehavior == "FIXED_VALUE") {
+                setLevel(onLevel)
+            }
+            return
+        
+        // Write Attribute Response (0x04)
+        case { contains it, [clusterInt:0x0008, commandInt:0x04] }:
+            if (msg.data[0] != "00") {
+                return Utils.failedZclMessage("Write Attribute Response", msg.data[0], msg)
+            }
+            return Utils.processedZclMessage("Write Attribute Response", "cluster=0x${msg.clusterId}")
+        
+        // DefaultResponse (0x0B) := { 08:CommandIdentifier, 08:Status }
+        // Example: [00, 80] -> command = 0x00, status = MALFORMED_COMMAND (0x80)
+        case { contains it, [clusterInt:0x0008, commandInt:0x0B] }:
+            if (msg.data[1] != "00") {
+                return Utils.failedZclMessage("Default Response", msg.data[1], msg)
+            }
+            return Utils.processedZclMessage("Default Response", "cluster=0x${msg.clusterId}, command=0x${msg.data[0]}")
+        
+        // Other events that we expect but are not usefull for capability.SwitchLevel behavior
+        
+        // ConfigureReportingResponse := { 08:Status, 08:Direction, 16:AttributeIdentifier }
+        // Success example: [00] -> status = SUCCESS
+        case { contains it, [clusterInt:0x0008, commandInt:0x07] }:
             if (msg.data[0] != "00") return Utils.failedZclMessage("Configure Reporting Response", msg.data[0], msg)
             return Utils.processedZclMessage("Configure Reporting Response", "cluster=0x${msg.clusterId}, data=${msg.data}")
         
@@ -267,6 +610,32 @@ def parse(String description) {
             }
             Utils.sendEvent name:"powerSource", value:powerSource, type:"digital", descriptionText:"Power source is ${powerSource}"
             return Utils.processedZclMessage("Read Attributes Response", "PowerSource=${msg.value}")
+        
+        // Events for capability.ZigbeeRouter
+        
+        // Mgmt_Lqi_rsp := { 08:Status, 08:NeighborTableEntries, 08:StartIndex, 08:NeighborTableListCount, n*176:NeighborTableList }
+        // NeighborTableList := { 64:ExtendedPanId, 64:IEEEAddress, 16:NetworkAddress, 02:DeviceType, 02:RxOnWhenIdle, 03:Relationship, 01:Reserved, 02:PermitJoining, 06:Reserved, 08:Depth, 08:LQI }
+        // Example: [6E, 00, 08, 00, 03, 50, 53, 3A, 0D, 00, DF, 66, 15, E9, A6, C9, 17, 00, 6F, 0D, 00, 00, 00, 24, 02, 00, CF, 50, 53, 3A, 0D, 00, DF, 66, 15, 80, BF, CA, 6B, 6A, 38, C1, A4, 4A, 16, 05, 02, 0F, CD, 50, 53, 3A, 0D, 00, DF, 66, 15, D3, FA, E1, 25, 00, 4B, 12, 00, 64, 17, 25, 02, 0F, 36]
+        case { contains it, [endpointInt:0x00, clusterInt:0x8031, commandInt:0x00] }:
+            if (msg.data[1] != "00") return Utils.failedZdoMessage("Neighbors Table Response", msg.data[1], msg)
+            Integer entriesCount = Integer.parseInt(msg.data[4], 16)
+        
+            // Use base64 encoding instead of hex encoding to make the message a bit shorter
+            String base64 = msg.data.join().decodeHex().encodeBase64().toString() // Decode test: https://base64.guru/converter/decode/hex
+            sendEvent name:"neighbors", value:"${entriesCount} entries", type:"digital", descriptionText:base64
+            return Utils.processedZdoMessage("Neighbors Table Response", "entries=${entriesCount}, data=${msg.data}")
+        
+        // Mgmt_Rtg_rsp := { 08:Status, 08:RoutingTableEntries, 08:StartIndex, 08:RoutingTableListCount, n*40:RoutingTableList }
+        // RoutingTableList := { 16:DestinationAddress, 03:RouteStatus, 01:MemoryConstrained, 01:ManyToOne, 01:RouteRecordRequired, 02:Reserved, 16:NextHopAddress }
+        // Example: [6F, 00, 0A, 00, 0A, 00, 00, 10, 00, 00, AD, 56, 00, AD, 56, ED, EE, 00, 4A, 16, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00, 00, 00, 03, 00, 00]
+        case { contains it, [endpointInt:0x00, clusterInt:0x8032, commandInt:0x00] }:
+            if (msg.data[1] != "00") return Utils.failedZdoMessage("Routing Table Response", msg.data[1], msg)
+            Integer entriesCount = Integer.parseInt(msg.data[4], 16)
+        
+            // Use base64 encoding instead of hex encoding to make the message a bit shorter
+            String base64 = msg.data.join().decodeHex().encodeBase64().toString()
+            sendEvent name:"routes", value:"${entriesCount} entries", type:"digital", descriptionText:base64
+            return Utils.processedZdoMessage("Routing Table Response", "entries=${entriesCount}, data=${msg.data}")
 
         // ---------------------------------------------------------------------------------------------------------------
         // Handle common messages (e.g.: received during pairing when we query the device for information)

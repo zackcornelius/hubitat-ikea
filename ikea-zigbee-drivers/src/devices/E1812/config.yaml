@@ -1,20 +1,19 @@
 device:
   model: IKEA Tradfri Shortcut Button
-  zigbeeId: TRADFRI SHORTCUT Button
   type: E1812
 
   capabilities:
     - file: src/capabilities/Battery.groovy
+      params:
+        half: true
     - file: src/capabilities/DoubleTapableButton.groovy
     - file: src/capabilities/HealthCheck.groovy
       params:
         schedule: 0 0 0/1 ? * * *
         checkInterval: 3600  # every hour
-        thereshold: 43200    # report device as offline if no message was received in the last 12 hours (device should report battery level every 6 to 12 hours)
+        thereshold: 43200    # report device as offline if no message was received in the last 12 hours (device should report battery percentage at least every 12 hours)
     - file: src/capabilities/HoldableButton.groovy
     - file: src/capabilities/PowerSource.groovy
-      params:
-        type: battery
     - file: src/capabilities/PushableButton.groovy
       params:
         buttons:
@@ -27,39 +26,13 @@ zigbee:
     value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0009,0020,1000", outClusters:"0003,0004,0006,0008,0019,0102,1000", model:"TRADFRI SHORTCUT Button", manufacturer:"IKEA of Sweden"
 
   - firmwares: 24.4.6
-    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0009,0020,1000", outClusters:"0003,0004,0006,0008,0019,0102,1000", model:"TRADFRI SHORTCUT Button", manufacturer:"IKEA of Sweden"
+    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0009,0020,1000,FC7C", outClusters:"0003,0004,0006,0008,0019,0102,1000", model:"TRADFRI SHORTCUT Button", manufacturer:"IKEA of Sweden"
 
   binds:
-  - { endpoint: '0x01', cluster: '0x0006', reason: General - On/Off cluster }
+  - { endpoint: '0x01', cluster: '0x0006', reason: On/Off cluster }
 
   # TODO: Second bind was doubling the events on firmware 2.3.015, but held/released events don't fire without it on firmware 24.4.6
-  - { endpoint: '0x01', cluster: '0x0008', reason: General - Level Control cluster }
-
-  reporting:
-  - { cluster: '0x0001', attribute: '0x0021', type: 'DataType.UINT8', min: 21600, max: 43200, delta: '0x00', reason: 'Report battery level every 6 to 12 hours' }
+  - { endpoint: '0x01', cluster: '0x0008', reason: Level Control cluster }
 
   messages:
-    specific:
-    - file: src/devices/E1812/events.groovy
-
-    standard:
-    - file: src/events/battery-percentage.groovy
-      params:
-        half: true
-    - file: src/events/read-attributes-response.groovy
-    - file: src/events/simple-description-response.groovy
-    - file: src/events/active-endpoints-response.groovy
-    - file: src/events/device-announce-response.groovy
-    - file: src/events/bind-response.groovy
-
-    ignore:
-    - cluster: '0x0001'
-      command: '0x07'
-      name: Configure Reporting Response
-
-    - cluster: '0x0003'
-      command: '0x01'
-      name: Identify Query Response
-
-    - cluster: '0x8034'
-      name: Leave Response
+  - file: src/devices/E1812/events.groovy

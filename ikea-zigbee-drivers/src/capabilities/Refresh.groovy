@@ -7,18 +7,17 @@ capability "Refresh"
 
 // Configure for capability.Refresh
 {{#  params.readAttributes }}
-cmds += zigbee.readAttribute({{ cluster }}, {{ attr }})  // {{ description }}
+cmds += zigbee.readAttribute({{ cluster }}, {{ attr }}) // {{ description }}
 {{/  params.readAttributes }}
 {{/ @configure }}
 {{!--------------------------------------------------------------------------}}
 {{# @implementation }}
 
 // Implementation for capability.Refresh
-def refresh(isPhysical = false) {
-    state.isPhysical = isPhysical
-    cmds = []
+def refresh() {
+    List<String> cmds = []
     {{#  params.readAttributes }}
-    cmds += zigbee.readAttribute({{ cluster }}, {{ attr }})  // {{ description }}
+    cmds += zigbee.readAttribute({{ cluster }}, {{ attr }}) // {{ description }}
     {{/  params.readAttributes }}
     Utils.sendZigbeeCommands cmds
 }

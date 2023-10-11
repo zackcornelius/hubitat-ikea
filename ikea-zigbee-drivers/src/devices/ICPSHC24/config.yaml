@@ -1,12 +1,14 @@
 device:
-  model: IKEA Tradfri Control Outlet
-  type: E1603
+  model: IKEA Tradfri LED Driver
+  type: ICPSHC24
 
   capabilities:
     - file: src/capabilities/Switch.groovy
       params:
         powerOnBehavior: true
         onWithTimedOff: true
+        callback: turnOnCallback
+    - file: src/capabilities/Brightness.groovy
     - file: src/capabilities/HealthCheck.groovy
       params:
         schedule: 0 0 0/1 ? * * *
@@ -18,15 +20,16 @@ device:
         readAttributes:
         - { cluster: '0x0006', attr: '0x0000', description: 'OnOff := { 0x00:Off, 0x01:On }' }
         - { cluster: '0x0006', attr: '0x4003', description: 'PowerOnBehavior := { 0x00:TurnPowerOff, 0x01:TurnPowerOn, 0xFF:RestorePreviousState }' }
+        - { cluster: '0x0008', attr: '0x0000', description: 'CurrentLevel := 0x00 to 0xFE (0 to 254)' }
     - file: src/capabilities/ZigbeeRouter.groovy
 
 zigbee:
   fingerprints:
-  - firmwares: 2.0.024
-    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0003,0004,0005,0006,0008,1000,FC7C", outClusters:"0005,0019,0020,1000", model:"TRADFRI control outlet", manufacturer:"IKEA of Sweden"
+  - firmwares: 1.2.245 (10EU-IL-1)
+    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0003,0004,0005,0006,0008,0B05,1000", outClusters:"0005,0019,0020,1000", model:"TRADFRI Driver 10W", manufacturer:"IKEA of Sweden"
 
-  - firmwares: 2.3.089
-    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0003,0004,0005,0006,0008,1000,FC7C", outClusters:"0019,0020,1000", model:"TRADFRI control outlet", manufacturer:"IKEA of Sweden"
+  - firmwares: 1.0.002 (30EU-IL-2)
+    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0003,0004,0005,0006,0008,1000,FC57", outClusters:"0019", model:"TRADFRI Driver 30W", manufacturer:"IKEA of Sweden"
 
   messages:
-  - file: src/devices/E1603/events.groovy
+  - file: src/devices/ICPSHC24/events.groovy
