@@ -7,7 +7,7 @@ node info.js images/xxx.zigbee
 ```
 
 ## IKEA
- To download Zigbee OTA files for IKEA devices, run the following command in the git base directory:
+ To download Zigbee OTA files for IKEA devices, run the following command:
 
  ```sh
  node ikea.js
