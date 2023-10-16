@@ -1,0 +1,12 @@
+Source: http://fw.ota.homesmart.ikea.net/global/GW1.0/01.20.065/bin/10039874-1.0-TRADFRI-motion-sensor-2-2.0.022.ota.ota.signed
+Image Details: {
+    "otaHeaderVersion": 256,
+    "otaHeaderLength": 56,
+    "otaHeaderFieldControl": 0,
+    "manufacturerCode": 4476,
+    "imageType": 4552,
+    "fileVersion": 537011747,
+    "zigbeeStackVersion": 2,
+    "otaHeaderString": "EBL tradfri_motion_sensor_2\u0000\u0000\u0000\u0000\u0000",
+    "totalImageSize": 186814
+}

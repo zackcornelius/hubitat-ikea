@@ -1,0 +1,12 @@
+Source: http://fw.ota.homesmart.ikea.net/global/GW1.0/01.20.065/bin/10082264-zingo_lds_stoftmoln-1.0.006.ota.ota.signed
+Image Details: {
+    "otaHeaderVersion": 256,
+    "otaHeaderLength": 56,
+    "otaHeaderFieldControl": 0,
+    "manufacturerCode": 4476,
+    "imageType": 16645,
+    "fileVersion": 65542,
+    "zigbeeStackVersion": 2,
+    "otaHeaderString": "GBL 10082264-zingo-lds-stoftmoln",
+    "totalImageSize": 212454
+}

@@ -1,0 +1,12 @@
+Source: http://fw.ota.homesmart.ikea.net/global/GW1.0/01.20.065/bin/10076691-zingo_lds_bulb_hwpwm_ww-0x2102-1.1.006-prod.ota.ota.signed
+Image Details: {
+    "otaHeaderVersion": 256,
+    "otaHeaderLength": 56,
+    "otaHeaderFieldControl": 0,
+    "manufacturerCode": 4476,
+    "imageType": 8450,
+    "fileVersion": 69638,
+    "zigbeeStackVersion": 2,
+    "otaHeaderString": "GBL 10076691-zingo-lds-bulb-hwpw",
+    "totalImageSize": 236274
+}

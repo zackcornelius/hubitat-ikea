@@ -1,0 +1,12 @@
+Source: http://fw.ota.homesmart.ikea.net/global/GW1.0/01.20.065/bin/10047227-1.2-TRADFRI-cv-cct-unified-2.3.087.ota.ota.signed
+Image Details: {
+    "otaHeaderVersion": 256,
+    "otaHeaderLength": 56,
+    "otaHeaderFieldControl": 0,
+    "manufacturerCode": 4476,
+    "imageType": 16902,
+    "fileVersion": 587757105,
+    "zigbeeStackVersion": 2,
+    "otaHeaderString": "GBL GBL_tradfri_cv_cct_unified\u0000\u0000",
+    "totalImageSize": 215884
+}

@@ -1,0 +1,12 @@
+Source: http://fw.ota.homesmart.ikea.net/global/GW1.0/01.20.065/bin/10038562-2.1-TRADFRI-sy5882-bulb-ws-2.3.095.ota.ota.signed
+Image Details: {
+    "otaHeaderVersion": 256,
+    "otaHeaderLength": 56,
+    "otaHeaderFieldControl": 0,
+    "manufacturerCode": 4476,
+    "imageType": 16900,
+    "fileVersion": 587814449,
+    "zigbeeStackVersion": 2,
+    "otaHeaderString": "GBL GBL_tradfri_sy5882_bulb_ws\u0000\u0000",
+    "totalImageSize": 214716
+}

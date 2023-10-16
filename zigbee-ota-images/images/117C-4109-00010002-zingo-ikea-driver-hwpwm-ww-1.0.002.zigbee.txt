@@ -1,0 +1,12 @@
+Source: http://fw.ota.homesmart.ikea.net/global/GW1.0/01.20.065/bin/10077684-zingo_ikea_driver_hwpwm_ww-1.0.002.ota.ota.signed
+Image Details: {
+    "otaHeaderVersion": 256,
+    "otaHeaderLength": 56,
+    "otaHeaderFieldControl": 0,
+    "manufacturerCode": 4476,
+    "imageType": 16649,
+    "fileVersion": 65538,
+    "zigbeeStackVersion": 2,
+    "otaHeaderString": "GBL zingo-ikea-driver-hwpwm-ww\u0000\u0000",
+    "totalImageSize": 253042
+}

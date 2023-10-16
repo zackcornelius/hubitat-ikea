@@ -1,0 +1,12 @@
+Source: http://fw.ota.homesmart.ikea.net/global/GW1.0/01.20.065/bin/159701-2.1-TRADFRI-wireless-dimmer-2.3.028.ota.ota.signed
+Image Details: {
+    "otaHeaderVersion": 256,
+    "otaHeaderLength": 56,
+    "otaHeaderFieldControl": 0,
+    "manufacturerCode": 4476,
+    "imageType": 4546,
+    "fileVersion": 587367985,
+    "zigbeeStackVersion": 2,
+    "otaHeaderString": "EBL tradfri_switch_basic\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+    "totalImageSize": 179390
+}

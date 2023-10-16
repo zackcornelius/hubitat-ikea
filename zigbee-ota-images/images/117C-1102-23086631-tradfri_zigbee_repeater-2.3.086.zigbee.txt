@@ -1,0 +1,12 @@
+Source: http://fw.ota.homesmart.ikea.net/global/GW1.0/01.20.065/bin/10037603-3.1-TRADFRI-signal-repeater-2.3.086.ota.ota.signed
+Image Details: {
+    "otaHeaderVersion": 256,
+    "otaHeaderLength": 56,
+    "otaHeaderFieldControl": 0,
+    "manufacturerCode": 4476,
+    "imageType": 4354,
+    "fileVersion": 587753009,
+    "zigbeeStackVersion": 2,
+    "otaHeaderString": "GBL GBL_tradfri_zigbee_repeater\u0000",
+    "totalImageSize": 197052
+}

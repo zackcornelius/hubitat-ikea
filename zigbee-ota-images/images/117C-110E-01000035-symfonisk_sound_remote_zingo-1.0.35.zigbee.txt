@@ -1,0 +1,12 @@
+Source: http://fw.ota.homesmart.ikea.net/global/GW1.0/01.20.065/bin/symfonisk_sound_remote_zingo-0x110e-1.0.35-prod.ota.ota.signed
+Image Details: {
+    "otaHeaderVersion": 256,
+    "otaHeaderLength": 56,
+    "otaHeaderFieldControl": 0,
+    "manufacturerCode": 4476,
+    "imageType": 4366,
+    "fileVersion": 16777269,
+    "zigbeeStackVersion": 2,
+    "otaHeaderString": "GBL symfonisk_sound_remote_zingo",
+    "totalImageSize": 305574
+}

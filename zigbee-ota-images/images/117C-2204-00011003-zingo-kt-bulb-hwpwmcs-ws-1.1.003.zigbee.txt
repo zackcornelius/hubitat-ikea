@@ -1,0 +1,12 @@
+Source: http://fw.ota.homesmart.ikea.net/global/GW1.0/01.20.065/bin/10080506-zingo_kt_bulb_hwpwmcs_ws-1.1.003.ota.ota.signed
+Image Details: {
+    "otaHeaderVersion": 256,
+    "otaHeaderLength": 56,
+    "otaHeaderFieldControl": 0,
+    "manufacturerCode": 4476,
+    "imageType": 8708,
+    "fileVersion": 69635,
+    "zigbeeStackVersion": 2,
+    "otaHeaderString": "GBL zingo-kt-bulb-hwpwmcs-ws\u0000\u0000\u0000\u0000",
+    "totalImageSize": 259294
+}

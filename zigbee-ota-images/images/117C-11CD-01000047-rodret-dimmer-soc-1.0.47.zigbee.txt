@@ -1,0 +1,12 @@
+Source: http://fw.ota.homesmart.ikea.net/global/GW1.0/01.20.065/bin/rodret_dimmer_soc-0x11cd-1.0.47-prod.ota.ota.signed
+Image Details: {
+    "otaHeaderVersion": 256,
+    "otaHeaderLength": 56,
+    "otaHeaderFieldControl": 0,
+    "manufacturerCode": 4476,
+    "imageType": 4557,
+    "fileVersion": 16777287,
+    "zigbeeStackVersion": 2,
+    "otaHeaderString": "GBL rodret-dimmer-soc\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+    "totalImageSize": 379378
+}
