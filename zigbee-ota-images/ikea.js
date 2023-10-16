@@ -1,3 +1,9 @@
+/**
+ * Download Zigbee OTA images for IKEA devices
+ * 
+ * @see http://fw.ota.homesmart.ikea.net/feed/version_info.json
+ * @see https://github.com/Koenkk/zigbee-OTA/blob/master/lib/ota.js
+ */
 const path = require('path');
 const fs = require('fs');
 const assert = require('assert');
