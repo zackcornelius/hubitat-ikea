@@ -34,3 +34,6 @@ node info.js images/xxx.zigbee
 | [TRÅDFRI LED Driver 30W](https://www.ikea.com/us/en/p/tradfri-driver-for-wireless-control-smart-gray-60342661/) | `ICPSHC2430EUIL2` | [`117C-4109-00010002`](images/117C-4109-00010002-zingo-ikea-driver-hwpwm-ww-1.0.002.zigbee)｜[info](images/117C-4109-00010002-zingo-ikea-driver-hwpwm-ww-1.0.002.zigbee.txt) | `1.0.002` |
 | [STOFTMOLN Ceiling/Wall Lamp](https://www.ikea.com/us/en/p/stoftmoln-led-ceiling-wall-lamp-smart-wireless-dimmable-warm-white-white-60519688/) | `T2037` | [`117C-4105-00010006`](images/117C-4105-00010006-10082264-zingo-lds-stoftmoln-1.0.006.zigbee)｜[info](images/117C-4105-00010006-10082264-zingo-lds-stoftmoln-1.0.006.zigbee.txt) | `1.0.006` |
 
+
+---
+[<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 162px !important">](https://www.buymeacoffee.com/dandanache)
