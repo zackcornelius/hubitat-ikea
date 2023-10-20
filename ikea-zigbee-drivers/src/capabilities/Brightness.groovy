@@ -96,36 +96,31 @@ def startLevelChange(direction) {
 
     Integer mode = direction == "up" ? 0x00 : 0x01
     Integer rate = Integer.parseInt(startLevelChangeRate) * 2.54
-    Utils.sendZigbeeCommands(zigbee.command(0x0008, 0x01,
-        zigbee.convertToHexString(mode, 2),          // MoveMode (enum8)
-        zigbee.convertToHexString(rate, 2)           // Rate (uint8)
-    ))
+
+    String payload = "${zigbee.convertToHexString(mode, 2)} ${zigbee.convertToHexString(rate, 2)}"
+    Utils.sendZigbeeCommands(["he raw 0x${device.deviceNetworkId} 0x01 0x01 0x0008 {114301 ${payload}}"])
 }
 def stopLevelChange() {
     Log.debug "Stopping brightness change"
-    Utils.sendZigbeeCommands(zigbee.command(0x0008, 0x03))
+    Utils.sendZigbeeCommands(["he raw 0x${device.deviceNetworkId} 0x01 0x01 0x0008 {114303}"])
 }
 def levelUp() {
     Log.debug "Moving brightness up by ${levelStep}%"
 
     Integer stepSize = Integer.parseInt(levelStep) * 2.54
     Integer dur = 0
-    Utils.sendZigbeeCommands(zigbee.command(0x0008, 0x02,
-        zigbee.convertToHexString(0x00, 2),                       // StepMode (enum8)
-        zigbee.convertToHexString(stepSize, 2),                   // StepSize (uint8)
-        zigbee.swapOctets(zigbee.convertToHexString(dur, 4))      // TransitionTime (uint16)
-    ))
+
+    String payload = "${zigbee.convertToHexString(0x00, 2)} ${zigbee.convertToHexString(stepSize, 2)} ${zigbee.swapOctets(zigbee.convertToHexString(dur, 4))}"
+    Utils.sendZigbeeCommands(["he raw 0x${device.deviceNetworkId} 0x01 0x01 0x0008 {114302 ${payload}}"])
 }
 def levelDown() {
     Log.debug "Moving brightness down by ${levelStep}%"
 
     Integer stepSize = Integer.parseInt(levelStep) * 2.54
     Integer dur = 0
-    Utils.sendZigbeeCommands(zigbee.command(0x0008, 0x02,
-        zigbee.convertToHexString(0x01, 2),                       // StepMode (enum8)
-        zigbee.convertToHexString(stepSize, 2),                   // StepSize (uint8)
-        zigbee.swapOctets(zigbee.convertToHexString(dur, 4))      // TransitionTime (uint16)
-    ))
+
+    String payload = "${zigbee.convertToHexString(0x01, 2)} ${zigbee.convertToHexString(stepSize, 2)} ${zigbee.swapOctets(zigbee.convertToHexString(dur, 4))}"
+    Utils.sendZigbeeCommands(["he raw 0x${device.deviceNetworkId} 0x01 0x01 0x0008 {114302 ${payload}}"])
 }
 
 // Implementation for capability.SwitchLevel
@@ -137,10 +132,9 @@ def setLevel(level, duration = 0) {
     if (device.currentValue("switch", true) == "on") {
         Integer lvl = newLevel * 2.54
         Integer dur = (duration > 1800 ? 1800 : (duration < 0 ? 0 : duration)) * 10         // Max transition time = 30 min
-        return Utils.sendZigbeeCommands(zigbee.command(0x0008, 0x00,
-            zigbee.convertToHexString(lvl, 2),                        // Level (uint8)
-            zigbee.swapOctets(zigbee.convertToHexString(dur, 4))      // TransitionTime (uint16)
-        ))
+
+        String payload = "${zigbee.convertToHexString(lvl, 2)} ${zigbee.swapOctets(zigbee.convertToHexString(dur, 4))}"
+        return Utils.sendZigbeeCommands(["he raw 0x${device.deviceNetworkId} 0x01 0x01 0x0008 {114300 ${payload}}"])
     }
 
     // Device is Off and onLevel is set to a fixed value: ignore command
@@ -235,22 +229,12 @@ case { contains it, [clusterInt:0x0008, commandInt:0x01, attrInt:0x0011] }:
     }
     return
 
+// Other events that we expect but are not usefull for capability.SwitchLevel behavior
+
 // Write Attribute Response (0x04)
 case { contains it, [clusterInt:0x0008, commandInt:0x04] }:
-    if (msg.data[0] != "00") {
-        return Utils.failedZclMessage("Write Attribute Response", msg.data[0], msg)
-    }
+    if (msg.data[0] != "00") return Utils.failedZclMessage("Write Attribute Response", msg.data[0], msg)
     return Utils.processedZclMessage("Write Attribute Response", "cluster=0x${msg.clusterId}")
-
-// DefaultResponse (0x0B) := { 08:CommandIdentifier, 08:Status }
-// Example: [00, 80] -> command = 0x00, status = MALFORMED_COMMAND (0x80)
-case { contains it, [clusterInt:0x0008, commandInt:0x0B] }:
-    if (msg.data[1] != "00") {
-        return Utils.failedZclMessage("Default Response", msg.data[1], msg)
-    }
-    return Utils.processedZclMessage("Default Response", "cluster=0x${msg.clusterId}, command=0x${msg.data[0]}")
-
-// Other events that we expect but are not usefull for capability.SwitchLevel behavior
 
 // ConfigureReportingResponse := { 08:Status, 08:Direction, 16:AttributeIdentifier }
 // Success example: [00] -> status = SUCCESS

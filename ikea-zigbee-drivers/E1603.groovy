@@ -4,20 +4,20 @@
  * @see https://dan-danache.github.io/hubitat/ikea-zigbee-drivers/
  * @see https://zigbee.blakadder.com/Ikea_E1603.html
  * @see https://ww8.ikea.com/ikeahomesmart/releasenotes/releasenotes.html
+ * @see https://static.homesmart.ikea.com/releaseNotes/
  */
-
 import groovy.time.TimeCategory
 import groovy.transform.Field
 
 @Field static final String DRIVER_NAME = "IKEA Tradfri Control Outlet (E1603)"
-@Field static final String DRIVER_VERSION = "3.1.0"
+@Field static final String DRIVER_VERSION = "3.2.0"
 @Field static final Map<String, String> ZDP_STATUS = ["00":"SUCCESS", "80":"INV_REQUESTTYPE", "81":"DEVICE_NOT_FOUND", "82":"INVALID_EP", "83":"NOT_ACTIVE", "84":"NOT_SUPPORTED", "85":"TIMEOUT", "86":"NO_MATCH", "88":"NO_ENTRY", "89":"NO_DESCRIPTOR", "8A":"INSUFFICIENT_SPACE", "8B":"NOT_PERMITTED", "8C":"TABLE_FULL", "8D":"NOT_AUTHORIZED", "8E":"DEVICE_BINDING_TABLE_FULL"]
 @Field static final Map<String, String> ZCL_STATUS = ["00":"SUCCESS", "01":"FAILURE", "7E":"NOT_AUTHORIZED", "7F":"RESERVED_FIELD_NOT_ZERO", "80":"MALFORMED_COMMAND", "81":"UNSUP_CLUSTER_COMMAND", "82":"UNSUP_GENERAL_COMMAND", "83":"UNSUP_MANUF_CLUSTER_COMMAND", "84":"UNSUP_MANUF_GENERAL_COMMAND", "85":"INVALID_FIELD", "86":"UNSUPPORTED_ATTRIBUTE", "87":"INVALID_VALUE", "88":"READ_ONLY", "89":"INSUFFICIENT_SPACE", "8A":"DUPLICATE_EXISTS", "8B":"NOT_FOUND", "8C":"UNREPORTABLE_ATTRIBUTE", "8D":"INVALID_DATA_TYPE", "8E":"INVALID_SELECTOR", "8F":"WRITE_ONLY", "90":"INCONSISTENT_STARTUP_STATE", "91":"DEFINED_OUT_OF_BAND", "92":"INCONSISTENT", "93":"ACTION_DENIED", "94":"TIMEOUT", "95":"ABORT", "96":"INVALID_IMAGE", "97":"WAIT_FOR_DATA", "98":"NO_IMAGE_AVAILABLE", "99":"REQUIRE_MORE_IMAGE", "9A":"NOTIFICATION_PENDING", "C0":"HARDWARE_FAILURE", "C1":"SOFTWARE_FAILURE", "C2":"CALIBRATION_ERROR", "C3":"UNSUPPORTED_CLUSTER"]
 
 // Fields for capability.HealthCheck
-@Field def HEALTH_CHECK = [
+@Field static final Map<String, String> HEALTH_CHECK = [
     "schedule": "0 0 0/1 ? * * *", // Health will be checked using this cron schedule
-    "thereshold": 3600 // When checking, mark the device as offline if no Zigbee message was received in the last 3600 seconds
+    "thereshold": "3600" // When checking, mark the device as offline if no Zigbee message was received in the last 3600 seconds
 ]
 
 metadata {
@@ -123,8 +123,8 @@ def logsOff() {
 
 // Helpers for capability.HealthCheck
 def healthCheck() {
-   Log.debug '⏲️ Automatically running health check'
-    def healthStatus = state?.lastRx == 0 ? "unknown" : (now() - state.lastRx < HEALTH_CHECK.thereshold * 1000 ? "online" : "offline")
+    Log.debug '⏲️ Automatically running health check'
+    def healthStatus = state.lastRx == 0 ? "unknown" : (now() - state.lastRx < Integer.parseInt(HEALTH_CHECK.thereshold) * 1000 ? "online" : "offline")
     Utils.sendEvent name:"healthStatus", value:healthStatus, type:"physical", descriptionText:"Health status is ${healthStatus}"
 }
 
@@ -147,8 +147,6 @@ def configure() {
 
     // Clear state
     state.clear()
-    state.lastRx = 0
-    state.lastTx = 0
 
     def cmds = []
 
@@ -164,6 +162,8 @@ def configure() {
     cmds += "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {${device.zigbeeId}} {}" // On/Off cluster
     
     // Configuration for capability.HealthCheck
+    state.lastRx == 0
+    state.lastTx == 0
     sendEvent name:"healthStatus", value:"online", descriptionText:"Health status initialized to online"
     sendEvent name:"checkInterval", value:3600, unit:"second", descriptionText:"Health check interval is 3600 seconds"
     
@@ -179,30 +179,31 @@ def configure() {
     cmds += zigbee.readAttribute(0x0000, [0x0001, 0x0003, 0x0004, 0x0005, 0x000A, 0x4000]) // ApplicationVersion, HWVersion, ManufacturerName, ModelIdentifier, IKEAType, SWBuildID
 
     // Query all active endpoints
-    cmds += "he raw 0x${device.deviceNetworkId} 0x0000 0x0000 0x0005 {00 ${zigbee.swapOctets(device.deviceNetworkId)}} {0x0000}"
+    cmds += "he raw 0x${device.deviceNetworkId} 0x00 0x00 0x0005 {00 ${zigbee.swapOctets(device.deviceNetworkId)}} {0x0000}"
     Utils.sendZigbeeCommands cmds
 }
 
 // Implementation for capability.Switch
 def on() {
     Log.debug "Sending On command"
-    Utils.sendZigbeeCommands(zigbee.on())
+    Utils.sendZigbeeCommands(["he raw 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {114301}"])
 }
 def off() {
     Log.debug "Sending Off command"
-    Utils.sendZigbeeCommands(zigbee.off())
+    Utils.sendZigbeeCommands(["he raw 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {114300}"])
 }
 
 def toggle() {
     Log.debug "Sending Toggle command"
-    Utils.sendZigbeeCommands(zigbee.command(0x0006, 0x02))
+    Utils.sendZigbeeCommands(["he raw 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {114302}"])
 }
 
 def onWithTimedOff(onTime = 1) {
     Integer delay = onTime < 1 ? 1 : (onTime > 6500 ? 6500 : onTime)
     Log.debug "Sending OnWithTimedOff command"
-    String delayHex = zigbee.swapOctets(zigbee.convertToHexString(delay * 10, 4))
-    Utils.sendZigbeeCommands(zigbee.command(0x0006, 0x42, "00", delayHex, "0000"))
+
+    String payload = "00 ${zigbee.swapOctets(zigbee.convertToHexString(delay * 10, 4))} 0000"
+    Utils.sendZigbeeCommands(["he raw 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {114342 ${payload}}"])
 }
 
 // Implementation for capability.HealthCheck
@@ -214,7 +215,7 @@ def ping() {
 }
 
 def pingExecute() {
-    if (state.lastRx == null || state.lastRx == 0) {
+    if (state.lastRx == 0) {
         return Log.info("Did not sent any messages since it was last configured")
     }
 
@@ -223,7 +224,7 @@ def pingExecute() {
     def lastRxAgo = TimeCategory.minus(now, lastRx).toString().replace(".000 seconds", " seconds")
     Log.info "Sent last message at ${lastRx.format("yyyy-MM-dd HH:mm:ss", location.timeZone)} (${lastRxAgo} ago)"
 
-    def thereshold = new Date(Math.round(state.lastRx / 1000 + HEALTH_CHECK.thereshold) * 1000)
+    def thereshold = new Date(Math.round(state.lastRx / 1000 + Integer.parseInt(HEALTH_CHECK.thereshold)) * 1000)
     def theresholdAgo = TimeCategory.minus(thereshold, lastRx).toString().replace(".000 seconds", " seconds")
     Log.info "Will me marked as offline if no message is received for ${theresholdAgo} (hardcoded)"
 
@@ -243,8 +244,8 @@ def refresh() {
 def requestRoutingData() {
     Log.info "Asking the device to send its Neighbors Table and the Routing Table data ..."
     Utils.sendZigbeeCommands([
-        "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0031 {00} {0x00}",
-        "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0032 {00} {0x00}"
+        "he raw 0x${device.deviceNetworkId} 0x00 0x00 0x0031 {00} {0x00}",
+        "he raw 0x${device.deviceNetworkId} 0x00 0x00 0x0032 {00} {0x00}"
     ])
 }
 
@@ -284,24 +285,6 @@ def parse(String description) {
         
         // Events for capability.Switch
         
-        // ZCL DefaultResponse := { 08:Command, 08:Status }
-        // Examples:
-        // - Off:    [00 00] -> command=0x00, status=SUCCESS
-        // - On:     [01 00] -> command=0x01, status=SUCCESS
-        // - Toggle: [02 00] -> command=0x02, status=SUCCESS
-        case { contains it, [clusterInt:0x0006, commandInt:0x0B] }:
-            if (msg.data[1] != "00") {
-                return Utils.failedZclMessage("Default Response", msg.data[1], msg)
-            }
-            return Utils.processedZclMessage("Default Response", "cluster=0x${msg.clusterId}, command=0x${msg.data[0]}")
-        
-        // Write Attribute Response (0x04)
-        case { contains it, [clusterInt:0x0006, commandInt:0x04] }:
-            if (msg.data[0] != "00") {
-                return Utils.failedZclMessage("Write Attribute Response", msg.data[0], msg)
-            }
-            return Utils.processedZclMessage("Write Attribute Response", "cluster=0x${msg.clusterId}")
-        
         // Report Attributes: OnOff
         // Read Attributes Response: OnOff
         case { contains it, [clusterInt:0x0006, commandInt:0x0A, attrInt: 0x0000] }:
@@ -334,6 +317,11 @@ def parse(String description) {
             return Utils.processedZclMessage("Read Attributes Response", "powerOnBehavior=${newValue}")
         
         // Other events that we expect but are not usefull for capability.Switch behavior
+        
+        // Write Attribute Response (0x04)
+        case { contains it, [clusterInt:0x0006, commandInt:0x04] }:
+            if (msg.data[0] != "00") return Utils.failedZclMessage("Write Attribute Response", msg.data[0], msg)
+            return Utils.processedZclMessage("Write Attribute Response", "cluster=0x${msg.clusterId}")
         
         // ConfigureReportingResponse := { 08:Status, 08:Direction, 16:AttributeIdentifier }
         // Success example: [00] -> status = SUCCESS
@@ -460,7 +448,7 @@ def parse(String description) {
                     endpointIds.add endpointId
                     
                     // Query simple descriptor data
-                    cmds.add "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0004 {00 ${zigbee.swapOctets(device.deviceNetworkId)} ${endpointId}} {0x0000}"
+                    cmds.add "he raw 0x${device.deviceNetworkId} 0x00 0x00 0x0004 {00 ${zigbee.swapOctets(device.deviceNetworkId)} ${endpointId}} {0x0000}"
                 }
                 Utils.sendZigbeeCommands cmds
             }
@@ -557,7 +545,11 @@ def parse(String description) {
     },
 
     sendEvent: { Map event ->
-        Log.info "${event.descriptionText} [${event.type}]"
+        if (device.currentValue(event.name, true) != event.value || event.isStateChange) {
+            Log.info "${event.descriptionText} [${event.type}]"
+        } else {
+            Log.debug "${event.descriptionText} [${event.type}]"
+        }
         sendEvent event
     },
 

@@ -6,7 +6,7 @@ capability "PushableButton"
 {{# @fields }}
 
 // Fields for capability.PushableButton
-@Field def BUTTONS = [
+@Field static final Map<String, List<String>> BUTTONS = [
     {{# params.buttons }}
     "{{ id }}": ["{{ number }}", "{{ name }}"],
     {{/ params.buttons }}
@@ -24,7 +24,9 @@ sendEvent name:"numberOfButtons", value:numberOfButtons, descriptionText:"Number
 
 // Implementation for capability.PushableButton
 def push(buttonNumber) {
-    Utils.sendEvent name:"pushed", value:buttonNumber, type:"digital", isStateChange:true, descriptionText:"Button ${buttonNumber} was pressed"
+    String buttonName = BUTTONS.find { it.value[0] == "${buttonNumber}" }?.value?.getAt(1)
+    if (buttonName == null) return Log.warn("Cannot push button ${buttonNumber} because it is not defined")
+    Utils.sendEvent name:"pushed", value:buttonNumber, type:"digital", isStateChange:true, descriptionText:"Button ${buttonNumber} (${buttonName}) was pressed"
 }
 {{/ @implementation }}
 {{!--------------------------------------------------------------------------}}

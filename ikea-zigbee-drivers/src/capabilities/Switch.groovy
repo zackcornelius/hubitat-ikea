@@ -37,24 +37,25 @@ command "onWithTimedOff", [[name:"On time*", type:"NUMBER", description:"After h
 // Implementation for capability.Switch
 def on() {
     Log.debug "Sending On command"
-    Utils.sendZigbeeCommands(zigbee.on())
+    Utils.sendZigbeeCommands(["he raw 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {114301}"])
 }
 def off() {
     Log.debug "Sending Off command"
-    Utils.sendZigbeeCommands(zigbee.off())
+    Utils.sendZigbeeCommands(["he raw 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {114300}"])
 }
 
 def toggle() {
     Log.debug "Sending Toggle command"
-    Utils.sendZigbeeCommands(zigbee.command(0x0006, 0x02))
+    Utils.sendZigbeeCommands(["he raw 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {114302}"])
 }
 {{# params.onWithTimedOff }}
 
 def onWithTimedOff(onTime = 1) {
     Integer delay = onTime < 1 ? 1 : (onTime > 6500 ? 6500 : onTime)
     Log.debug "Sending OnWithTimedOff command"
-    String delayHex = zigbee.swapOctets(zigbee.convertToHexString(delay * 10, 4))
-    Utils.sendZigbeeCommands(zigbee.command(0x0006, 0x42, "00", delayHex, "0000"))
+
+    String payload = "00 ${zigbee.swapOctets(zigbee.convertToHexString(delay * 10, 4))} 0000"
+    Utils.sendZigbeeCommands(["he raw 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {114342 ${payload}}"])
 }
 {{/  params.onWithTimedOff }}
 {{/ @implementation }}
@@ -79,24 +80,6 @@ cmds += "zdo bind 0x${device.deviceNetworkId} 0x01 0x01 0x0006 {${device.zigbeeI
 {{# @events }}
 
 // Events for capability.Switch
-
-// ZCL DefaultResponse := { 08:Command, 08:Status }
-// Examples:
-// - Off:    [00 00] -> command=0x00, status=SUCCESS
-// - On:     [01 00] -> command=0x01, status=SUCCESS
-// - Toggle: [02 00] -> command=0x02, status=SUCCESS
-case { contains it, [clusterInt:0x0006, commandInt:0x0B] }:
-    if (msg.data[1] != "00") {
-        return Utils.failedZclMessage("Default Response", msg.data[1], msg)
-    }
-    return Utils.processedZclMessage("Default Response", "cluster=0x${msg.clusterId}, command=0x${msg.data[0]}")
-
-// Write Attribute Response (0x04)
-case { contains it, [clusterInt:0x0006, commandInt:0x04] }:
-    if (msg.data[0] != "00") {
-        return Utils.failedZclMessage("Write Attribute Response", msg.data[0], msg)
-    }
-    return Utils.processedZclMessage("Write Attribute Response", "cluster=0x${msg.clusterId}")
 
 // Report Attributes: OnOff
 // Read Attributes Response: OnOff
@@ -137,6 +120,11 @@ case { contains it, [clusterInt:0x0006, commandInt:0x01, attrInt: 0x4003] }:
 {{/ params.powerOnBehavior }}
 
 // Other events that we expect but are not usefull for capability.Switch behavior
+
+// Write Attribute Response (0x04)
+case { contains it, [clusterInt:0x0006, commandInt:0x04] }:
+    if (msg.data[0] != "00") return Utils.failedZclMessage("Write Attribute Response", msg.data[0], msg)
+    return Utils.processedZclMessage("Write Attribute Response", "cluster=0x${msg.clusterId}")
 
 // ConfigureReportingResponse := { 08:Status, 08:Direction, 16:AttributeIdentifier }
 // Success example: [00] -> status = SUCCESS

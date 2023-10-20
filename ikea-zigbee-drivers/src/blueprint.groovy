@@ -4,8 +4,8 @@
  * @see https://dan-danache.github.io/hubitat/ikea-zigbee-drivers/
  * @see https://zigbee.blakadder.com/Ikea_{{ device.type }}.html
  * @see https://ww8.ikea.com/ikeahomesmart/releasenotes/releasenotes.html
+ * @see https://static.homesmart.ikea.com/releaseNotes/
  */
-
 import groovy.time.TimeCategory
 import groovy.transform.Field
 
@@ -113,8 +113,6 @@ def configure() {
 
     // Clear state
     state.clear()
-    state.lastRx = 0
-    state.lastTx = 0
 
     def cmds = []
 
@@ -141,7 +139,7 @@ def configure() {
     cmds += zigbee.readAttribute(0x0000, [0x0001, 0x0003, 0x0004, 0x0005, 0x000A, 0x4000]) // ApplicationVersion, HWVersion, ManufacturerName, ModelIdentifier, IKEAType, SWBuildID
 
     // Query all active endpoints
-    cmds += "he raw 0x${device.deviceNetworkId} 0x0000 0x0000 0x0005 {00 ${zigbee.swapOctets(device.deviceNetworkId)}} {0x0000}"
+    cmds += "he raw 0x${device.deviceNetworkId} 0x00 0x00 0x0005 {00 ${zigbee.swapOctets(device.deviceNetworkId)}} {0x0000}"
     Utils.sendZigbeeCommands cmds
 }
 {{# device.capabilities }}
@@ -252,7 +250,7 @@ def parse(String description) {
                     endpointIds.add endpointId
                     
                     // Query simple descriptor data
-                    cmds.add "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0004 {00 ${zigbee.swapOctets(device.deviceNetworkId)} ${endpointId}} {0x0000}"
+                    cmds.add "he raw 0x${device.deviceNetworkId} 0x00 0x00 0x0004 {00 ${zigbee.swapOctets(device.deviceNetworkId)} ${endpointId}} {0x0000}"
                 }
                 Utils.sendZigbeeCommands cmds
             }
@@ -349,7 +347,11 @@ def parse(String description) {
     },
 
     sendEvent: { Map event ->
-        Log.info "${event.descriptionText} [${event.type}]"
+        if (device.currentValue(event.name, true) != event.value || event.isStateChange) {
+            Log.info "${event.descriptionText} [${event.type}]"
+        } else {
+            Log.debug "${event.descriptionText} [${event.type}]"
+        }
         sendEvent event
     },
 

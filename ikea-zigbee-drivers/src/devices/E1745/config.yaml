@@ -6,6 +6,7 @@ device:
   type: E1745
 
   capabilities:
+    - file: src/capabilities/MotionSensor.groovy
     - file: src/capabilities/Battery.groovy
       params:
         half: true
@@ -14,7 +15,6 @@ device:
         schedule: 0 0 0/1 ? * * *
         checkInterval: 3600  # every hour
         thereshold: 43200    # report device as offline if no message was received in the last 12 hours (device should report battery percentage at least every 12 hours)
-    - file: src/capabilities/MotionSensor.groovy
     - file: src/capabilities/PowerSource.groovy
 
 zigbee:

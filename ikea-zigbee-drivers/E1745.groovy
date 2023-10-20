@@ -4,32 +4,36 @@
  * @see https://dan-danache.github.io/hubitat/ikea-zigbee-drivers/
  * @see https://zigbee.blakadder.com/Ikea_E1745.html
  * @see https://ww8.ikea.com/ikeahomesmart/releasenotes/releasenotes.html
+ * @see https://static.homesmart.ikea.com/releaseNotes/
  */
-
 import groovy.time.TimeCategory
 import groovy.transform.Field
 
 @Field static final String DRIVER_NAME = "IKEA Tradfri Motion Sensor (E1745)"
-@Field static final String DRIVER_VERSION = "3.1.0"
+@Field static final String DRIVER_VERSION = "3.2.0"
 @Field static final Map<String, String> ZDP_STATUS = ["00":"SUCCESS", "80":"INV_REQUESTTYPE", "81":"DEVICE_NOT_FOUND", "82":"INVALID_EP", "83":"NOT_ACTIVE", "84":"NOT_SUPPORTED", "85":"TIMEOUT", "86":"NO_MATCH", "88":"NO_ENTRY", "89":"NO_DESCRIPTOR", "8A":"INSUFFICIENT_SPACE", "8B":"NOT_PERMITTED", "8C":"TABLE_FULL", "8D":"NOT_AUTHORIZED", "8E":"DEVICE_BINDING_TABLE_FULL"]
 @Field static final Map<String, String> ZCL_STATUS = ["00":"SUCCESS", "01":"FAILURE", "7E":"NOT_AUTHORIZED", "7F":"RESERVED_FIELD_NOT_ZERO", "80":"MALFORMED_COMMAND", "81":"UNSUP_CLUSTER_COMMAND", "82":"UNSUP_GENERAL_COMMAND", "83":"UNSUP_MANUF_CLUSTER_COMMAND", "84":"UNSUP_MANUF_GENERAL_COMMAND", "85":"INVALID_FIELD", "86":"UNSUPPORTED_ATTRIBUTE", "87":"INVALID_VALUE", "88":"READ_ONLY", "89":"INSUFFICIENT_SPACE", "8A":"DUPLICATE_EXISTS", "8B":"NOT_FOUND", "8C":"UNREPORTABLE_ATTRIBUTE", "8D":"INVALID_DATA_TYPE", "8E":"INVALID_SELECTOR", "8F":"WRITE_ONLY", "90":"INCONSISTENT_STARTUP_STATE", "91":"DEFINED_OUT_OF_BAND", "92":"INCONSISTENT", "93":"ACTION_DENIED", "94":"TIMEOUT", "95":"ABORT", "96":"INVALID_IMAGE", "97":"WAIT_FOR_DATA", "98":"NO_IMAGE_AVAILABLE", "99":"REQUIRE_MORE_IMAGE", "9A":"NOTIFICATION_PENDING", "C0":"HARDWARE_FAILURE", "C1":"SOFTWARE_FAILURE", "C2":"CALIBRATION_ERROR", "C3":"UNSUPPORTED_CLUSTER"]
 
 // Fields for capability.HealthCheck
-@Field def HEALTH_CHECK = [
+@Field static final Map<String, String> HEALTH_CHECK = [
     "schedule": "0 0 0/1 ? * * *", // Health will be checked using this cron schedule
-    "thereshold": 43200 // When checking, mark the device as offline if no Zigbee message was received in the last 43200 seconds
+    "thereshold": "43200" // When checking, mark the device as offline if no Zigbee message was received in the last 43200 seconds
 ]
 
 metadata {
     definition(name:DRIVER_NAME, namespace:"dandanache", author:"Dan Danache", importUrl:"https://raw.githubusercontent.com/dan-danache/hubitat/master/ikea-zigbee-drivers/E1745.groovy") {
         capability "Configuration"
+        capability "MotionSensor"
         capability "Battery"
         capability "HealthCheck"
-        capability "MotionSensor"
         capability "PowerSource"
 
         // For firmwares: 24.4.5
         fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0020,1000,FC57,FC7C", outClusters:"0003,0004,0006,0008,0019,1000", model:"TRADFRI motion sensor", manufacturer:"IKEA of Sweden"
+        
+        // Attributes for capability.MotionSensor
+        attribute "requestedBrightness", "NUMBER"            // Syncs with the brightness option on device (◐/⭘)
+        attribute "illumination", "ENUM", ["dim", "bright"]  // Works only in night mode 🌙
         
         // Attributes for capability.HealthCheck
         attribute "healthStatus", "ENUM", ["offline", "online", "unknown"]
@@ -48,6 +52,37 @@ metadata {
                 "4":"Error - log errors"
             ],
             defaultValue: "2",
+            required: true
+        )
+        
+        // Inputs for capability.MotionSensor
+        input(
+            name: "clearMotionPeriod",
+            type: "enum",
+            title: "Clear motion after",
+            description: "<small>Set status inactive if no motion is detected in this period</small>",
+            options: [
+                "60"  : "1 minute",
+                "120" : "2 minutes",
+                "180" : "3 minutes",
+                "240" : "4 minutes",
+                "300" : "5 minutes",
+                "360" : "6 minutes",
+                "420" : "7 minutes",
+                "480" : "8 minutes",
+                "540" : "9 minutes",
+                "600" : "10 minutes"
+            ],
+            defaultValue: "180",
+            required: true
+        )
+        // Inputs for capability.MotionSensor
+        input(
+            name: "onlyTriggerInDimLight",
+            type: "bool",
+            title: "Only detect motion in the dark",
+            description: "<small>Select the night mode 🌙 option on device for this to work</small>",
+            defaultValue: false,
             required: true
         )
     }
@@ -71,6 +106,10 @@ def updated() {
     if (logLevel == "1") runIn 1800, "logsOff"
     Log.info "🛠️ logLevel = ${logLevel}"
     
+    // Preferences for capability.MotionSensor
+    Log.info "🛠️ clearMotionPeriod = ${clearMotionPeriod} seconds"
+    Log.info "🛠️ onlyTriggerInDimLight = ${onlyTriggerInDimLight}"
+    
     // Preferences for capability.HealthCheck
     schedule HEALTH_CHECK.schedule, "healthCheck"
 }
@@ -89,8 +128,8 @@ def logsOff() {
 
 // Helpers for capability.HealthCheck
 def healthCheck() {
-   Log.debug '⏲️ Automatically running health check'
-    def healthStatus = state?.lastRx == 0 ? "unknown" : (now() - state.lastRx < HEALTH_CHECK.thereshold * 1000 ? "online" : "offline")
+    Log.debug '⏲️ Automatically running health check'
+    def healthStatus = state.lastRx == 0 ? "unknown" : (now() - state.lastRx < Integer.parseInt(HEALTH_CHECK.thereshold) * 1000 ? "online" : "offline")
     Utils.sendEvent name:"healthStatus", value:healthStatus, type:"physical", descriptionText:"Health status is ${healthStatus}"
 }
 
@@ -113,8 +152,6 @@ def configure() {
 
     // Clear state
     state.clear()
-    state.lastRx = 0
-    state.lastTx = 0
 
     def cmds = []
 
@@ -130,6 +167,8 @@ def configure() {
     cmds += zigbee.readAttribute(0x0001, 0x0021)  // BatteryPercentage
     
     // Configuration for capability.HealthCheck
+    state.lastRx == 0
+    state.lastTx == 0
     sendEvent name:"healthStatus", value:"online", descriptionText:"Health status initialized to online"
     sendEvent name:"checkInterval", value:3600, unit:"second", descriptionText:"Health check interval is 3600 seconds"
     
@@ -141,8 +180,13 @@ def configure() {
     cmds += zigbee.readAttribute(0x0000, [0x0001, 0x0003, 0x0004, 0x0005, 0x000A, 0x4000]) // ApplicationVersion, HWVersion, ManufacturerName, ModelIdentifier, IKEAType, SWBuildID
 
     // Query all active endpoints
-    cmds += "he raw 0x${device.deviceNetworkId} 0x0000 0x0000 0x0005 {00 ${zigbee.swapOctets(device.deviceNetworkId)}} {0x0000}"
+    cmds += "he raw 0x${device.deviceNetworkId} 0x00 0x00 0x0005 {00 ${zigbee.swapOctets(device.deviceNetworkId)}} {0x0000}"
     Utils.sendZigbeeCommands cmds
+}
+
+// Implementation for capability.MotionSensor
+def clearMotion() {
+    return Utils.sendEvent(name:"motion", value:"inactive", type:"digital", descriptionText:"Is inactive")
 }
 
 // Implementation for capability.HealthCheck
@@ -154,7 +198,7 @@ def ping() {
 }
 
 def pingExecute() {
-    if (state.lastRx == null || state.lastRx == 0) {
+    if (state.lastRx == 0) {
         return Log.info("Did not sent any messages since it was last configured")
     }
 
@@ -163,17 +207,12 @@ def pingExecute() {
     def lastRxAgo = TimeCategory.minus(now, lastRx).toString().replace(".000 seconds", " seconds")
     Log.info "Sent last message at ${lastRx.format("yyyy-MM-dd HH:mm:ss", location.timeZone)} (${lastRxAgo} ago)"
 
-    def thereshold = new Date(Math.round(state.lastRx / 1000 + HEALTH_CHECK.thereshold) * 1000)
+    def thereshold = new Date(Math.round(state.lastRx / 1000 + Integer.parseInt(HEALTH_CHECK.thereshold)) * 1000)
     def theresholdAgo = TimeCategory.minus(thereshold, lastRx).toString().replace(".000 seconds", " seconds")
     Log.info "Will me marked as offline if no message is received for ${theresholdAgo} (hardcoded)"
 
     def offlineMarkAgo = TimeCategory.minus(thereshold, now).toString().replace(".000 seconds", " seconds")
     Log.info "Will me marked as offline if no message is received until ${thereshold.format("yyyy-MM-dd HH:mm:ss", location.timeZone)} (${offlineMarkAgo} from now)"
-}
-
-// Implementation for capability.MotionSensor
-def motionInactive() {
-    return Utils.sendEvent(name:"motion", value:"inactive", type:"digital", descriptionText:"Is inactive")
 }
 
 // ===================================================================================================================
@@ -204,17 +243,34 @@ def parse(String description) {
         // Handle E1745 specific Zigbee messages
         // ---------------------------------------------------------------------------------------------------------------
 
-        // OnWithTimedOff := { 08:OnOffControl, 16:OnTime, 16:OffWaitTime }
-        // OnOffControl := { 01:AcceptOnlyWhenOn, 07:Reserved }
-        // Example: [01, 08, 07, 00, 00] -> acceptOnlyWhenOn=true, onTime=180, offWaitTime=0
-        case { contains it, [clusterInt:0x0006, commandInt:0x42] }:
-            def onTime = Math.round(Integer.parseInt(msg.data[1..2].reverse().join(), 16) / 10)
-            runIn onTime, "motionInactive"
-            return Utils.sendEvent(name:"motion", value:"active", type:"physical", isStateChange:true, descriptionText:"Is active")
+        // No specific events
 
         // ---------------------------------------------------------------------------------------------------------------
         // Handle capabilities Zigbee messages
         // ---------------------------------------------------------------------------------------------------------------
+        
+        // Events for capability.MotionSensor
+        
+        // OnWithTimedOff := { 08:OnOffControl, 16:OnTime, 16:OffWaitTime }
+        // OnOffControl := { 01:AcceptOnlyWhenOn, 07:Reserved }
+        // Example: [01, 08, 07, 00, 00] -> acceptOnlyWhenOn=true, onTime=180, offWaitTime=0
+        case { contains it, [clusterInt:0x0006, commandInt:0x42] }:
+            String illumination = msg.data[0] == "01" ? "bright" : "dim"
+            Utils.sendEvent(name:"illumination", value:illumination, type:"physical", descriptionText:"Illumination is ${illumination}")
+        
+            if (illumination == "bright" && onlyTriggerInDimLight) {
+                return Log.debug("Ignored detected motion because the \"Only detect motion in the dark\" option is active and the sensor detected plenty of light")
+            }
+        
+            runIn Integer.parseInt(clearMotionPeriod), "clearMotion", [ overwrite:true ]
+            return Utils.sendEvent(name:"motion", value:"active", type:"physical", descriptionText:"Is active")
+        
+        // MoveToLevelWithOnOff := { 08:Level, 16:TransitionTime }
+        // Example: [4C, 01, 00] -> level=30%, transitionTime=1/10seconds
+        // Example: :[FE, 01, 00 -> level=100%, transitionTime=1/10seconds
+        case { contains it, [clusterInt:0x0008, commandInt:0x04] }:
+            Integer requestedBrightness = Math.round(Integer.parseInt(msg.data[0], 16) * 100 / 254)
+            return Utils.sendEvent(name:"requestedBrightness", value:requestedBrightness, unit:"%", type:"physical", descriptionText:"Requested brightness set too ${requestedBrightness}%")
         
         // Events for capability.Battery
         
@@ -335,7 +391,7 @@ def parse(String description) {
                     endpointIds.add endpointId
                     
                     // Query simple descriptor data
-                    cmds.add "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0004 {00 ${zigbee.swapOctets(device.deviceNetworkId)} ${endpointId}} {0x0000}"
+                    cmds.add "he raw 0x${device.deviceNetworkId} 0x00 0x00 0x0004 {00 ${zigbee.swapOctets(device.deviceNetworkId)} ${endpointId}} {0x0000}"
                 }
                 Utils.sendZigbeeCommands cmds
             }
@@ -432,7 +488,11 @@ def parse(String description) {
     },
 
     sendEvent: { Map event ->
-        Log.info "${event.descriptionText} [${event.type}]"
+        if (device.currentValue(event.name, true) != event.value || event.isStateChange) {
+            Log.info "${event.descriptionText} [${event.type}]"
+        } else {
+            Log.debug "${event.descriptionText} [${event.type}]"
+        }
         sendEvent event
     },
 

@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2023-10-20
+
+### Added
+ - E1745: Add option to specify the period of time for the motion to become "inactive" (from 1 to 10 minutes,
+   default 3 minutes)
+ - E1745: Add option to only detect motion in the dark
+ - E1745: Add `requestedBrightness` and `illumination` attributes
+ 
+### Changed
+ - Instruct mains-powered devices to skip sending the (useless) DefaultResponse Zigbee message after executing
+   received commands (reduce some Zigbee traffic)
+
+### Fixed
+ - Make health check logging less verbose (info -> debug)
+ - Drivers will now refuse to (digitally) push/hold/release/double-tap buttons that are not present on the
+   device (e.g push button 10)
+
 ## [3.1.0] - 2023-10-11
 
 ### Added

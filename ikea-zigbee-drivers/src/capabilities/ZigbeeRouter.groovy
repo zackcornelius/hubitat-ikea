@@ -22,8 +22,8 @@ command "requestRoutingData"
 def requestRoutingData() {
     Log.info "Asking the device to send its Neighbors Table and the Routing Table data ..."
     Utils.sendZigbeeCommands([
-        "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0031 {00} {0x00}",
-        "he raw ${device.deviceNetworkId} 0x0000 0x0000 0x0032 {00} {0x00}"
+        "he raw 0x${device.deviceNetworkId} 0x00 0x00 0x0031 {00} {0x00}",
+        "he raw 0x${device.deviceNetworkId} 0x00 0x00 0x0032 {00} {0x00}"
     ])
 }
 {{/ @implementation }}
