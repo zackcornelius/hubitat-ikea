@@ -1,10 +1,10 @@
 {
     "packageName": "IKEA Zigbee drivers",
-    "version": "3.1.0",
-    "releaseNotes": "v3.1.0\n - Add driver for Askvader On/Off Switch (E1836)\n - Add driver for Tradfri LED Driver (ICPSHC24)",
+    "version": "3.2.0",
+    "releaseNotes": "v3.2.0\n - E1745: Add option to specify the period of time for the motion to become \"inactive\" (from 1 to 10 minutes, default 3 minutes)\n - E1745: Add option to only detect motion in the dark\n - E1745: Add \"requestedBrightness\" and \"illumination\" attributes\n - Instruct mains-powered devices to skip sending the (useless) DefaultResponse Zigbee message after executing received commands (reduce some Zigbee traffic)\n - Make health check logging less verbose (info -> debug)\n - Drivers will now refuse to (digitally) push/hold/release/double-tap buttons that are not present on the device (e.g push button 10)",
     "minimumHEVersion": "2.1.9",
     "author": "Dan Danache (@dandanache)",
-    "dateReleased": "2023-10-11",
+    "dateReleased": "2023-10-20",
     "documentationLink": "https://dan-danache.github.io/hubitat/ikea-zigbee-drivers/",
     "communityLink": "https://community.hubitat.com/t/release-ikea-zigbee-drivers/123853",
     "licenseFile": "https://raw.githubusercontent.com/dan-danache/hubitat/master/LICENSE",
@@ -16,7 +16,7 @@
             "name": "IKEA Tradfri Control Outlet (E1603)",
             "description": "Zigbee driver for IKEA Tradfri Control Outlet (E1603)",
             "namespace": "dandanache",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.1.0/ikea-zigbee-drivers/E1603.groovy",
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.2.0/ikea-zigbee-drivers/E1603.groovy",
             "required": false
         },
         {
@@ -24,7 +24,7 @@
             "name": "IKEA Tradfri On/Off Switch (E1743)",
             "description": "Zigbee driver for IKEA Tradfri On/Off Switch (E1743)",
             "namespace": "dandanache",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.1.0/ikea-zigbee-drivers/E1743.groovy",
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.2.0/ikea-zigbee-drivers/E1743.groovy",
             "required": false
         },
         {
@@ -32,7 +32,7 @@
             "name": "IKEA Tradfri Motion Sensor (E1745)",
             "description": "Zigbee driver for IKEA Tradfri Motion Sensor (E1745)",
             "namespace": "dandanache",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.1.0/ikea-zigbee-drivers/E1745.groovy",
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.2.0/ikea-zigbee-drivers/E1745.groovy",
             "required": false
         },
         {
@@ -40,7 +40,7 @@
             "name": "IKEA Tradfri Remote Control (E1810)",
             "description": "Zigbee driver for IKEA Tradfri Remote Control (E1810)",
             "namespace": "dandanache",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.1.0/ikea-zigbee-drivers/E1810.groovy",
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.2.0/ikea-zigbee-drivers/E1810.groovy",
             "required": false
         },
         {
@@ -48,7 +48,7 @@
             "name": "IKEA Tradfri Shortcut Button (E1812)",
             "description": "Zigbee driver for IKEA Tradfri Shortcut Button (E1812)",
             "namespace": "dandanache",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.1.0/ikea-zigbee-drivers/E1812.groovy",
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.2.0/ikea-zigbee-drivers/E1812.groovy",
             "required": false
         },
         {
@@ -56,7 +56,7 @@
             "name": "IKEA Askvader On/Off Switch (E1836)",
             "description": "Zigbee driver for Askvader On/Off Switch (E1836)",
             "namespace": "dandanache",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.1.0/ikea-zigbee-drivers/E1836.groovy",
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.2.0/ikea-zigbee-drivers/E1836.groovy",
             "required": false
         },
         {
@@ -64,7 +64,7 @@
             "name": "IKEA Styrbar Remote Control N2 (E2002)",
             "description": "Zigbee driver for IKEA Styrbar Remote Control N2 (E2002)",
             "namespace": "dandanache",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.1.0/ikea-zigbee-drivers/E2002.groovy",
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.2.0/ikea-zigbee-drivers/E2002.groovy",
             "required": false
         },
         {
@@ -72,7 +72,7 @@
             "name": "IKEA Symfonisk Sound Remote Gen2 (E2123)",
             "description": "Zigbee driver for IKEA Symfonisk Sound Remote Gen2 (E2123)",
             "namespace": "dandanache",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.1.0/ikea-zigbee-drivers/E2123.groovy",
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.2.0/ikea-zigbee-drivers/E2123.groovy",
             "required": false
         },
         {
@@ -80,7 +80,7 @@
             "name": "IKEA Rodret Dimmer (E2201)",
             "description": "Zigbee driver for IKEA Rodret Dimmer (E2201)",
             "namespace": "dandanache",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.1.0/ikea-zigbee-drivers/E2201.groovy",
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.2.0/ikea-zigbee-drivers/E2201.groovy",
             "required": false
         },
         {
@@ -88,7 +88,7 @@
             "name": "IKEA Tradfri LED Driver (ICPSHC24)",
             "description": "Zigbee driver for IKEA Tradfri LED Driver (ICPSHC24)",
             "namespace": "dandanache",
-            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.1.0/ikea-zigbee-drivers/ICPSHC24.groovy",
+            "location": "https://raw.githubusercontent.com/dan-danache/hubitat/ikea-zigbe-drivers_3.2.0/ikea-zigbee-drivers/ICPSHC24.groovy",
             "required": false
         }
     ]
