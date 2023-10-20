@@ -99,14 +99,15 @@ Follow the steps below if you don't know what "Hubitat Package Manager" is:
 
 ### Features
 * Motion detection
+* Illumination detection ("dim" or "bright")
+* Option to detect motion only when dark
 * Battery indicator (%)
 * Health status (online / offline)
 
 ### Known Issues
 * Old firmware versions (below 24.4.5) suppport binding to groups only and this functionality is not supported by the
   Hubitat hub.
-* Moreover, the Tradfri Gateway does not currently offer the newer firmware version as a possible update.
-* You can update the device to the latest version only if you own the new Dirigera Hub.
+* You can update the device to the latest version (24.4.5) using via Hubitat
 
 ### Device Pairing
 1. Open the back compartiment and you should see the small pair button (don't push it!)
