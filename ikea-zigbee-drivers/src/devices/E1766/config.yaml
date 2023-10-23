@@ -1,0 +1,32 @@
+device:
+  model: IKEA Tradfri Open/Close remote
+  type: E1766
+
+  capabilities:
+    - file: src/capabilities/Battery.groovy
+      params:
+        half: true
+    - file: src/capabilities/HealthCheck.groovy
+      params:
+        schedule: 0 0 0/1 ? * * *
+        checkInterval: 3600  # every hour
+        thereshold: 43200    # report device as offline if no message was received in the last 12 hours (device should report battery percentage at least every 12 hours)
+    - file: src/capabilities/HoldableButton.groovy
+    - file: src/capabilities/PowerSource.groovy
+    - file: src/capabilities/PushableButton.groovy
+      params:
+        buttons:
+        - { id: 'OPEN',  name: 'Open',  number: 1 }
+        - { id: 'CLOSE', name: 'Close', number: 2 }
+    - file: src/capabilities/ReleasableButton.groovy
+
+zigbee:
+  fingerprints:
+  - firmwares: 2.2.010, 24.4.6
+    value: fingerprint profileId:"0104", endpointId:"01", inClusters:"0000,0001,0003,0009,0020,1000,FC7C", outClusters:"0003,0004,0006,0008,0019,0102,1000", model:"TRADFRI open/close remote", manufacturer:"IKEA of Sweden"
+
+  binds:
+  - { endpoint: '0x01', cluster: '0x0106', reason: Window Covering cluster }
+
+  messages:
+  - file: src/devices/E1766/events.groovy
