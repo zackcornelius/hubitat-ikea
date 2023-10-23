@@ -16,6 +16,7 @@ device:
         checkInterval: 3600  # every hour
         thereshold: 43200    # report device as offline if no message was received in the last 12 hours (device should report battery percentage at least every 12 hours)
     - file: src/capabilities/PowerSource.groovy
+    - file: src/capabilities/FirmwareUpdate.groovy
 
 zigbee:
   fingerprints:
